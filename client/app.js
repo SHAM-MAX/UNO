@@ -15,6 +15,8 @@ class UnoArenaApp {
     this.playerId = null;
     this.sessionToken = null;
     this.playerName = localStorage.getItem('uno_arena_name') || '';
+    this.preferredMode = localStorage.getItem('uno_arena_mode') || 'classic';
+    this.mercyKnockoutLimit = Number(localStorage.getItem('uno_arena_mercy_limit')) || 25;
     this.gameState = null;
     this.clientView = null;
     this.pendingPlayCard = null; // Card awaiting color or target selection
@@ -33,6 +35,10 @@ class UnoArenaApp {
       soundIcon: document.getElementById('soundIcon'),
       howToPlayBtn: document.getElementById('howToPlayBtn'),
       leaveBtn: document.getElementById('leaveBtn'),
+      leaveConfirmModal: document.getElementById('leaveConfirmModal'),
+      cancelLeaveBtn: document.getElementById('cancelLeaveBtn'),
+      closeLeaveConfirmBtn: document.getElementById('closeLeaveConfirmBtn'),
+      confirmLeaveBtn: document.getElementById('confirmLeaveBtn'),
       toast: document.getElementById('toast'),
 
       // Containers
@@ -44,6 +50,17 @@ class UnoArenaApp {
       roomCodeInput: document.getElementById('roomCodeInput'),
       createRoomBtn: document.getElementById('createRoomBtn'),
       joinRoomBtn: document.getElementById('joinRoomBtn'),
+      modeHomeScreen: document.getElementById('homeLandingSection'),
+      modeSetupSection: document.getElementById('modeSetupSection'),
+      setupModeTitle: document.getElementById('setupModeTitle'),
+      setupModeDescription: document.getElementById('setupModeDescription'),
+      backToModesBtn: document.getElementById('backToModesBtn'),
+      setupPlayerNameInput: document.getElementById('setupPlayerNameInput'),
+      setupRoomCodeInput: document.getElementById('setupRoomCodeInput'),
+      setupCreateRoomBtn: document.getElementById('setupCreateRoomBtn'),
+      setupJoinRoomBtn: document.getElementById('setupJoinRoomBtn'),
+      setupRulesCard: document.getElementById('setupRulesCard'),
+      setupMercyLimit: document.getElementById('setupMercyLimit'),
 
       // Lobby
       lobbySection: document.getElementById('lobbySection'),
@@ -51,6 +68,7 @@ class UnoArenaApp {
       lobbyCodeText: document.getElementById('lobbyCodeText'),
       copyInviteBtn: document.getElementById('copyInviteBtn'),
       modeSelectorGrid: document.getElementById('modeSelectorGrid'),
+      lobbyRulesPanel: document.getElementById('lobbyRulesPanel'),
       lobbyPlayersList: document.getElementById('lobbyPlayersList'),
       readyBtn: document.getElementById('readyBtn'),
       startGameBtn: document.getElementById('startGameBtn'),
@@ -100,16 +118,69 @@ class UnoArenaApp {
     // How to Play modal
     this.el.howToPlayBtn.addEventListener('click', () => this.openRulesModal());
     this.el.rulesModalClose.addEventListener('click', () => this.closeRulesModal());
+    this.el.backToModesBtn.addEventListener('click', () => this.showModePicker());
+    this.el.setupMercyLimit.value = String(this.mercyKnockoutLimit);
+    this.el.setupMercyLimit.addEventListener('change', () => {
+      this.mercyKnockoutLimit = Number(this.el.setupMercyLimit.value) || 25;
+      localStorage.setItem('uno_arena_mercy_limit', String(this.mercyKnockoutLimit));
+    });
+    this.el.setupCreateRoomBtn.addEventListener('click', () => {
+      const name = this.el.setupPlayerNameInput.value.trim() || this.playerName || 'Player 1';
+      this.playerName = name;
+      localStorage.setItem('uno_arena_name', name);
+      this.createRoom(name, this.preferredMode, this.getSelectedHouseRules());
+    });
+    this.el.setupJoinRoomBtn.addEventListener('click', () => {
+      const name = this.el.setupPlayerNameInput.value.trim() || this.playerName || 'Guest';
+      const code = this.el.setupRoomCodeInput.value.trim().toUpperCase();
+      if (!code) {
+        this.showToast('Enter your friend’s room code');
+        this.el.setupRoomCodeInput.focus();
+        return;
+      }
+      this.playerName = name;
+      localStorage.setItem('uno_arena_name', name);
+      this.connectWebSocket(code, null, null, name);
+    });
+    this.el.setupRoomCodeInput.addEventListener('input', () => {
+      this.el.setupRoomCodeInput.value = this.el.setupRoomCodeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    });
 
     // Leave room
     this.el.leaveBtn.addEventListener('click', () => this.leaveRoom());
+    this.el.cancelLeaveBtn.addEventListener('click', () => this.closeLeaveConfirm());
+    this.el.closeLeaveConfirmBtn.addEventListener('click', () => this.closeLeaveConfirm());
+    this.el.confirmLeaveBtn.addEventListener('click', () => this.confirmLeaveRoom());
+    this.el.leaveConfirmModal.addEventListener('click', (event) => {
+      if (event.target === this.el.leaveConfirmModal) this.closeLeaveConfirm();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && this.el.leaveConfirmModal.classList.contains('active')) {
+        this.closeLeaveConfirm();
+      }
+    });
+
+    // Choose a mode before creating a room. The lobby still lets the host change it.
+    document.querySelectorAll('[data-home-mode]').forEach((button) => {
+      const selected = button.dataset.homeMode === this.preferredMode;
+      button.classList.toggle('is-selected', selected);
+      button.setAttribute('aria-pressed', String(selected));
+      button.addEventListener('click', () => {
+        this.openModeSetup(button.dataset.homeMode);
+        document.querySelectorAll('[data-home-mode]').forEach((tile) => {
+          const isSelected = tile === button;
+          tile.classList.toggle('is-selected', isSelected);
+          tile.setAttribute('aria-pressed', String(isSelected));
+        });
+      });
+    });
 
     // Create room
     this.el.createRoomBtn.addEventListener('click', () => {
       const name = this.el.playerNameInput.value.trim() || 'Player 1';
       this.playerName = name;
       localStorage.setItem('uno_arena_name', name);
-      this.createRoom(name);
+      this.createRoom(name, this.preferredMode, this.getSelectedHouseRules());
     });
 
     // Join room
@@ -194,8 +265,15 @@ class UnoArenaApp {
     const params = new URLSearchParams(window.location.search);
     const roomParam = params.get('room');
     if (roomParam) {
-      this.el.roomCodeInput.value = roomParam.toUpperCase();
-      this.el.roomCodeInput.focus();
+      const roomId = roomParam.toUpperCase();
+      const playerId = localStorage.getItem(`player_${roomId}`);
+      const sessionToken = localStorage.getItem(`session_${roomId}`);
+      if (playerId && sessionToken) {
+        this.connectWebSocket(roomId, playerId, sessionToken, this.playerName || 'Player');
+      } else {
+        this.el.roomCodeInput.value = roomId;
+        this.el.roomCodeInput.focus();
+      }
     }
   }
 
@@ -212,12 +290,41 @@ class UnoArenaApp {
     }, 2800);
   }
 
-  async createRoom(hostName) {
+  openModeSetup(mode) {
+    const details = {
+      classic: ['Classic UNO', 'Play the familiar classic rules with your friends.'],
+      flip: ['UNO Flip', 'Two-sided cards. Flip the deck and change the whole table.'],
+      no_mercy: ["Show ’em No Mercy", 'Stack penalties, survive the knockout limit, and be the last player standing.'],
+    };
+    if (!details[mode]) return;
+    this.preferredMode = mode;
+    localStorage.setItem('uno_arena_mode', mode);
+    this.el.setupModeTitle.textContent = details[mode][0];
+    this.el.setupModeDescription.textContent = details[mode][1];
+    this.el.setupRulesCard.hidden = mode !== 'no_mercy';
+    this.el.setupMercyLimit.value = String(this.mercyKnockoutLimit);
+    this.el.setupPlayerNameInput.value = this.el.playerNameInput.value.trim() || this.playerName;
+    this.el.modeHomeScreen.hidden = true;
+    this.el.modeSetupSection.hidden = false;
+  }
+
+  showModePicker() {
+    this.el.modeSetupSection.hidden = true;
+    this.el.modeHomeScreen.hidden = false;
+  }
+
+  getSelectedHouseRules() {
+    return this.preferredMode === 'no_mercy'
+      ? { mercyKnockoutLimit: this.mercyKnockoutLimit }
+      : {};
+  }
+
+  async createRoom(hostName, mode = this.preferredMode, houseRules = {}) {
     try {
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hostName, mode: 'classic' }),
+        body: JSON.stringify({ hostName, mode, houseRules }),
       });
       const data = await res.json();
       if (data.success) {
@@ -262,6 +369,9 @@ class UnoArenaApp {
           this.sessionToken = msg.data.sessionToken;
           localStorage.setItem(`session_${this.roomId}`, this.sessionToken);
           localStorage.setItem(`player_${this.roomId}`, this.playerId);
+          const roomUrl = new URL(window.location.href);
+          roomUrl.searchParams.set('room', this.roomId);
+          window.history.replaceState({}, '', roomUrl);
         } else if (msg.type === 'room:state') {
           this.handleRoomState(msg.data);
         } else if (msg.type === 'error') {
@@ -321,8 +431,12 @@ class UnoArenaApp {
   }
 
   renderLobby() {
+    document.body.classList.add('in-room');
+    document.body.classList.remove('in-arena');
     this.el.entryView.style.display = 'block';
     this.el.arenaView.style.display = 'none';
+    this.el.modeSetupSection.hidden = true;
+    this.el.modeHomeScreen.hidden = true;
     this.el.lobbySection.style.display = 'block';
     document.getElementById('entryFormSection').style.display = 'none';
 
@@ -334,14 +448,17 @@ class UnoArenaApp {
 
     this.el.modeSelectorGrid.innerHTML = `
       <button class="mode-card-btn ${this.gameState.mode === 'classic' ? 'selected' : ''}" data-mode="classic" ${!isHost ? 'disabled' : ''}>
+        <span class="lobby-mode-art mode-art-classic" aria-hidden="true"><svg viewBox="0 0 80 100"><rect x="7" y="16" width="46" height="68" rx="8" fill="#f5b92f" stroke="#12372a" stroke-width="4" transform="rotate(-14 30 50)"/><rect x="21" y="9" width="48" height="72" rx="8" fill="#176cb0" stroke="#12372a" stroke-width="4" transform="rotate(9 45 45)"/><rect x="13" y="13" width="50" height="76" rx="9" fill="#d83227" stroke="#f8e9c9" stroke-width="4" transform="rotate(-5 38 50)"/><ellipse cx="38" cy="51" rx="13" ry="25" fill="none" stroke="#fff1d4" stroke-width="2" transform="rotate(-5 38 51)"/><text x="38" y="58" text-anchor="middle" fill="#fff1d4" stroke="#17362b" stroke-width="1.5" paint-order="stroke" font-family="Arial" font-size="12" font-weight="900" transform="rotate(-5 38 51)">UNO</text><text x="20" y="29" fill="white" font-family="Arial" font-size="10" font-weight="900" transform="rotate(-5 20 29)">1</text></svg></span>
         <strong>Classic</strong>
         <span style="font-size: 0.72rem; color: #94A3B8;">108 Cards • Standard UNO</span>
       </button>
       <button class="mode-card-btn ${this.gameState.mode === 'flip' ? 'selected' : ''}" data-mode="flip" ${!isHost ? 'disabled' : ''}>
+        <span class="lobby-mode-art mode-art-flip" aria-hidden="true"><svg viewBox="0 0 80 100"><rect x="12" y="8" width="54" height="82" rx="10" fill="#10191f" stroke="#f4d052" stroke-width="3" transform="rotate(-8 39 49)"/><rect x="20" y="16" width="38" height="66" rx="15" fill="#71318d" transform="rotate(-8 39 49)"/><path d="M28 44c3-12 19-15 26-5l4 5m0-9v10h-10M51 56c-4 11-19 14-26 4l-3-5m0 9V54h10" fill="none" stroke="#fff0ce" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><text x="38" y="28" text-anchor="middle" fill="#fff1d5" font-family="Arial" font-size="8" font-weight="900" transform="rotate(-8 38 28)">FLIP</text></svg></span>
         <strong>UNO Flip</strong>
         <span style="font-size: 0.72rem; color: #94A3B8;">Double-Sided • Dark Side</span>
       </button>
       <button class="mode-card-btn ${this.gameState.mode === 'no_mercy' ? 'selected' : ''}" data-mode="no_mercy" ${!isHost ? 'disabled' : ''}>
+        <span class="lobby-mode-art mode-art-mercy" aria-hidden="true"><svg viewBox="0 0 80 100"><rect x="11" y="8" width="56" height="84" rx="10" fill="#17191c" stroke="#e6d5b4" stroke-width="3" transform="rotate(-7 39 50)"/><ellipse cx="39" cy="49" rx="16" ry="28" fill="none" stroke="#bc2e26" stroke-width="3" transform="rotate(-7 39 49)"/><text x="38" y="35" text-anchor="middle" fill="#fff0cf" font-family="Arial" font-size="17" font-weight="900" transform="rotate(-7 38 35)">+10</text><path d="M43 42 29 63h11l-3 15 18-25H44z" fill="#f3b92d" stroke="#091f18" stroke-width="2" stroke-linejoin="round" transform="rotate(-7 40 60)"/></svg></span>
         <strong>No Mercy</strong>
         <span style="font-size: 0.72rem; color: #94A3B8;">168 Cards • Knockout</span>
       </button>
@@ -353,6 +470,19 @@ class UnoArenaApp {
           const mode = e.currentTarget.dataset.mode;
           this.send({ type: 'set_mode', data: { mode } });
         });
+      });
+    }
+
+    const mercyLimit = Number(this.gameState.houseRules?.mercyKnockoutLimit) || 25;
+    this.el.lobbyRulesPanel.hidden = this.gameState.mode !== 'no_mercy';
+    if (this.gameState.mode === 'no_mercy') {
+      this.el.lobbyRulesPanel.innerHTML = isHost
+        ? `<div class="lobby-rules-copy"><span>HOST RULES</span><strong>No Mercy knockout</strong><small>Eliminate a player when their hand reaches the chosen limit.</small></div>
+           <label class="lobby-rule-control"><span>Knockout at</span><select id="lobbyMercyLimit" class="lobby-rule-select" aria-label="No Mercy knockout card limit">${[25, 35, 45].map((limit) => `<option value="${limit}" ${limit === mercyLimit ? 'selected' : ''}>${limit} cards</option>`).join('')}</select></label>`
+        : `<div class="lobby-rules-copy"><span>HOST RULE</span><strong>No Mercy knockout: ${mercyLimit} cards</strong><small>The host can change this before the game starts.</small></div>`;
+      const mercySelect = document.getElementById('lobbyMercyLimit');
+      mercySelect?.addEventListener('change', () => {
+        this.send({ type: 'set_rules', data: { houseRules: { mercyKnockoutLimit: Number(mercySelect.value) } } });
       });
     }
 
@@ -394,6 +524,8 @@ class UnoArenaApp {
   }
 
   renderArena() {
+    document.body.classList.add('in-room');
+    document.body.classList.add('in-arena');
     this.el.entryView.style.display = 'none';
     this.el.arenaView.style.display = 'flex';
 
@@ -630,14 +762,22 @@ class UnoArenaApp {
   }
 
   leaveRoom() {
-    if (confirm('Are you sure you want to leave the room?')) {
-      this.send({ type: 'leave' });
-      this.roomId = null;
-      this.playerId = null;
-      this.sessionToken = null;
-      if (this.ws) this.ws.close();
-      window.location.search = '';
-    }
+    this.el.leaveConfirmModal.classList.add('active');
+    this.el.cancelLeaveBtn.focus();
+  }
+
+  closeLeaveConfirm() {
+    this.el.leaveConfirmModal.classList.remove('active');
+    this.el.leaveBtn.focus();
+  }
+
+  confirmLeaveRoom() {
+    this.send({ type: 'leave' });
+    this.roomId = null;
+    this.playerId = null;
+    this.sessionToken = null;
+    if (this.ws) this.ws.close();
+    window.location.search = '';
   }
 
   copyInviteLink() {

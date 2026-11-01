@@ -18,6 +18,7 @@ export function defaultHouseRules(mode) {
       drawUntilPlayable: true,
       sevenZeroSwap: true,
       mercyKnockout: true,
+      mercyKnockoutLimit: NO_MERCY_MAX_CARDS,
     };
   }
   return {
@@ -123,7 +124,11 @@ export class RoomManager {
       sessionToken,
     };
 
-    const rules = { ...defaultHouseRules(mode), ...(houseRulesInput || {}) };
+    const rules = { ...defaultHouseRules(mode) };
+    if (mode === 'no_mercy') {
+      const requestedLimit = Number(houseRulesInput?.mercyKnockoutLimit);
+      if ([25, 35, 45].includes(requestedLimit)) rules.mercyKnockoutLimit = requestedLimit;
+    }
 
     const room = {
       roomId,
@@ -262,7 +267,13 @@ export class RoomManager {
     if (!room || room.status !== 'lobby') return false;
     const player = room.players.find((p) => p.id === playerId);
     if (!player || !player.isHost) return false;
-    room.houseRules = { ...room.houseRules, ...rules };
+    if (room.mode === 'no_mercy') {
+      const requestedLimit = Number(rules?.mercyKnockoutLimit);
+      if ([25, 35, 45].includes(requestedLimit)) {
+        room.houseRules = { ...room.houseRules, mercyKnockoutLimit: requestedLimit };
+        this.addLog(room, `${player.name} set the Mercy knockout limit to ${requestedLimit} cards.`);
+      }
+    }
     this.persist(roomId);
     return true;
   }
@@ -408,13 +419,14 @@ export class RoomManager {
 
   checkKnockout(room, player) {
     const hand = room.playerHands[player.id] || [];
-    if (room.mode === 'no_mercy' && hand.length >= NO_MERCY_MAX_CARDS && !player.isEliminated) {
+    const knockoutLimit = Number(room.houseRules?.mercyKnockoutLimit) || NO_MERCY_MAX_CARDS;
+    if (room.mode === 'no_mercy' && hand.length >= knockoutLimit && !player.isEliminated) {
       player.isEliminated = true;
-      player.eliminatedReason = `Knocked out by Mercy rule (25 cards)!`;
+      player.eliminatedReason = `Knocked out by Mercy rule (${knockoutLimit} cards)!`;
       room.discardPile.push(...hand);
       room.playerHands[player.id] = [];
       player.cardCount = 0;
-      this.addLog(room, `💥 ${player.name} accumulated 25+ cards and was KNOCKED OUT!`, 'knockout');
+      this.addLog(room, `💥 ${player.name} accumulated ${knockoutLimit}+ cards and was KNOCKED OUT!`, 'knockout');
 
       const win = checkWinCondition(room.players, room.playerHands, room.mode);
       if (win.winnerId) {
@@ -629,7 +641,8 @@ export class RoomManager {
         if (dFace.color === chosenColor) {
           found = true;
         }
-        if (room.mode === 'no_mercy' && room.playerHands[targetPlayer.id].length + drawnCards.length >= NO_MERCY_MAX_CARDS) {
+        const knockoutLimit = Number(room.houseRules?.mercyKnockoutLimit) || NO_MERCY_MAX_CARDS;
+        if (room.mode === 'no_mercy' && room.playerHands[targetPlayer.id].length + drawnCards.length >= knockoutLimit) {
           break;
         }
       }

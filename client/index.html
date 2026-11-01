@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>UNO Arena - Online Multiplayer Card Game</title>
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./home.css">
+  <link rel="stylesheet" href="./lobby.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23EF4444'/><text x='50' y='65' font-size='42' font-weight='900' fill='white' text-anchor='middle'>A</text></svg>">
 </head>
 <body>
@@ -46,41 +48,64 @@
     <div id="entryView" class="lobby-card">
       
       <!-- New Game Form Section -->
-      <div id="entryFormSection">
-        <h2 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 6px; text-align: center;">Welcome to UNO Arena</h2>
-        <p style="color: #94A3B8; text-align: center; margin-bottom: 24px; font-size: 0.95rem;">
-          Real-time multiplayer featuring Classic, Flip, and Show 'em No Mercy.
-        </p>
-
-        <div style="display: flex; flex-direction: column; gap: 14px; max-width: 400px; margin: 0 auto;">
-          <div>
-            <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: #CBD5E1;">YOUR NAME</label>
-            <input id="playerNameInput" type="text" placeholder="Enter your player name" maxlength="15" 
-                   style="width: 100%; padding: 12px 16px; border-radius: 12px; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: white; font-size: 1rem; font-family: inherit; outline: none;">
+      <div id="entryFormSection" class="entry-form-wrapper">
+       <div id="homeLandingSection" class="home-screen">
+        <section class="home-hero" aria-labelledby="homeTitle">
+          <div class="home-copy">
+            <div class="home-kicker"><span></span> THE ULTIMATE FRIENDS TABLE</div>
+            <h1 id="homeTitle">THE TABLE<br>IS YOURS.</h1>
+            <p class="home-subtitle">Pick a mode. Gather your crew. Let the chaos begin.</p>
+            <div class="home-online"><span></span><strong>ROOMS OPEN</strong><small>Invite your friends to play</small></div>
           </div>
-
-          <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button id="createRoomBtn" class="action-btn" style="flex: 1; background: linear-gradient(135deg, #10B981, #059669); color: white; justify-content: center; padding: 14px;">
-              Create Room ✨
-            </button>
+            <div class="home-playbox">
+              <div class="home-create-row">
+                <label class="home-input-wrap"><span aria-hidden="true">♟</span><input id="playerNameInput" type="text" placeholder="PLAYER NAME" maxlength="15" autocomplete="nickname" aria-label="Player name"></label>
+                <button id="createRoomBtn" class="home-button home-create">CREATE A ROOM <span>→</span></button>
+              </div>
+              <div class="home-divider"><span></span><b>OR JOIN FRIENDS</b><span></span></div>
+              <div class="home-create-row">
+                <label class="home-input-wrap code-wrap"><span aria-hidden="true">#</span><input id="roomCodeInput" type="text" placeholder="6-CHARACTER CODE" maxlength="8" autocomplete="off" aria-label="Room code"></label>
+                <button id="joinRoomBtn" class="home-button home-join">JOIN ROOM <span>→</span></button>
+              </div>
+            </div>
+          <div class="home-art" aria-hidden="true">
+            <div class="art-leaf leaf-one">❧</div><div class="art-leaf leaf-two">❧</div>
+            <div class="art-spark spark-one">✳</div><div class="art-spark spark-two">✦</div>
+            <div class="art-mug"><i>♛</i></div>
+            <div class="art-big-card"><div class="art-card-inner"><span class="art-corner">↔</span><span class="art-arrows"><svg viewBox="0 0 300 240"><path d="M35 165 137 67l-25-25 78-24-24 78-20-20-89 86z" fill="#fff0d7" stroke="#09261e" stroke-width="12" stroke-linejoin="round"/><path d="m265 75-102 98 25 25-78 24 24-78 20 20 89-86z" fill="#fff0d7" stroke="#09261e" stroke-width="12" stroke-linejoin="round"/></svg></span><span class="art-corner bottom">↔</span></div></div>
+            <div class="art-deck"><div>UNO</div><span></span><span></span><span></span></div>
+            <div class="art-snacks">◉ ◌ ◉</div>
           </div>
-
-          <div style="display: flex; align-items: center; gap: 12px; margin: 10px 0;">
-            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
-            <span style="font-size: 0.8rem; color: #64748B; font-weight: 700;">OR JOIN ROOM</span>
-            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
-          </div>
-
-          <div style="display: flex; gap: 10px;">
-            <input id="roomCodeInput" type="text" placeholder="6-CHAR CODE" maxlength="8"
-                   style="flex: 1; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; letter-spacing: 2px; text-align: center; padding: 12px; border-radius: 12px; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: white; font-size: 1.1rem; outline: none;">
-            <button id="joinRoomBtn" class="action-btn" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: white; padding: 12px 20px;">
-              Join Room →
-            </button>
-          </div>
-        </div>
+        </section>
+        <section class="home-modes" aria-label="Choose a game mode">
+          <button class="home-mode mode-classic is-selected" type="button" data-home-mode="classic" aria-label="Classic UNO. Classic rules. Unpredictable fun."><img class="mode-reference-image" src="./assets/classic-reference.png" alt="" draggable="false"></button>
+            <button class="home-mode mode-flip" type="button" data-home-mode="flip" aria-label="Flip. Flip the deck. Flip the odds."><img class="mode-reference-image" src="./assets/flip-reference.png" alt="" draggable="false"></button>
+          <button class="home-mode mode-mercy" type="button" data-home-mode="no_mercy" aria-label="No Mercy. High stakes. Hold on tight."><img class="mode-reference-image" src="./assets/no-mercy-reference.png" alt="" draggable="false"></button>
+        </section>
       </div>
-
+      </div>
+      <section id="modeSetupSection" class="mode-setup-screen" hidden aria-labelledby="setupModeTitle">
+        <button id="backToModesBtn" class="setup-back-btn" type="button">← <span>All game modes</span></button>
+        <div class="mode-setup-heading">
+          <span class="setup-kicker">ROOM SETUP</span>
+          <h1 id="setupModeTitle">Classic UNO</h1>
+          <p id="setupModeDescription">Set up a table and invite your friends.</p>
+        </div>
+        <div class="mode-setup-layout">
+          <section class="setup-panel" aria-label="Create or join a room">
+            <label class="setup-field"><span>Your player name</span><input id="setupPlayerNameInput" type="text" maxlength="15" autocomplete="nickname" placeholder="Enter your name"></label>
+            <button id="setupCreateRoomBtn" class="setup-create-btn" type="button">Create room <span>→</span></button>
+            <div class="setup-or"><span></span>OR JOIN A FRIEND<span></span></div>
+            <label class="setup-field"><span>Room code</span><input id="setupRoomCodeInput" type="text" maxlength="8" autocomplete="off" placeholder="6-character code"></label>
+            <button id="setupJoinRoomBtn" class="setup-join-btn" type="button">Join room <span>→</span></button>
+          </section>
+          <aside id="setupRulesCard" class="setup-rules-card" hidden>
+            <div class="setup-rules-heading"><span>HOST RULES</span><strong>No Mercy</strong></div>
+            <label class="setup-rule-field" for="setupMercyLimit"><span>Knockout limit</span><select id="setupMercyLimit"><option value="25">25 cards</option><option value="35">35 cards</option><option value="45">45 cards</option></select></label>
+            <p>A player is eliminated as soon as their hand reaches this limit. You can also change it in the lobby.</p>
+          </aside>
+        </div>
+      </section>
       <!-- Active Lobby Section (When inside a room before start) -->
       <div id="lobbySection" style="display: none;">
         <div style="text-align: center; margin-bottom: 20px;">
@@ -99,6 +124,7 @@
         <div>
           <div style="font-size: 0.85rem; font-weight: 800; color: #CBD5E1; text-transform: uppercase;">Select Game Mode</div>
           <div id="modeSelectorGrid" class="mode-selector-grid"></div>
+          <div id="lobbyRulesPanel" class="lobby-rules-panel" hidden></div>
         </div>
 
         <div style="margin: 20px 0;">
@@ -287,13 +313,27 @@
             <li><strong>7 Hand-Swap:</strong> Play a 7 and swap your ENTIRE hand with any chosen player!</li>
             <li><strong>0 Hand-Pass:</strong> Play a 0 and ALL players pass their hands in the direction of play!</li>
             <li><strong>Discard All:</strong> Dump all cards of that color from your hand at once!</li>
-            <li><strong>25-Card Mercy Knockout:</strong> If at ANY point your hand hits 25 or more cards, you are immediately KNOCKED OUT (eliminated) of the game!</li>
+            <li><strong>Mercy Knockout (default 25 cards):</strong> The host sets the elimination limit in room setup. Reach that limit and you are knocked out.</li>
             <li><strong>Two Ways to Win:</strong> Empty your hand, OR be the last player standing after all opponents are knocked out!</li>
           </ul>
         </div>
 
       </div>
     </div>
+  </div>
+
+  <div id="leaveConfirmModal" class="modal-overlay leave-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="leaveConfirmTitle" aria-describedby="leaveConfirmDescription">
+    <section class="leave-confirm-card">
+      <div class="leave-confirm-emblem" aria-hidden="true"><span>↗</span></div>
+      <div class="leave-confirm-kicker">ROOM EXIT</div>
+      <h2 id="leaveConfirmTitle">Leave this table?</h2>
+      <p id="leaveConfirmDescription">Your friends can keep playing. You can rejoin with the room code.</p>
+      <div class="leave-confirm-actions">
+        <button id="cancelLeaveBtn" type="button" class="leave-stay-btn">Stay at the table</button>
+        <button id="confirmLeaveBtn" type="button" class="leave-now-btn">Leave room <span aria-hidden="true">→</span></button>
+      </div>
+      <button id="closeLeaveConfirmBtn" class="leave-confirm-close" type="button" aria-label="Close leave dialog">×</button>
+    </section>
   </div>
 
   <!-- Toast Notification -->

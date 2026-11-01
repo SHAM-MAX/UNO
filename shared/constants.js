@@ -95,7 +95,7 @@ export const MODE_TITLES = {
 export const MODE_DESCRIPTIONS = {
   classic: 'The beloved classic card game. Match colors & numbers, play Skips, Reverses, and Draw Twos. First to empty hand wins!',
   flip: 'Double-sided cards with Light and Dark sides! Flip cards flip every hand, the draw pile, and the discard pile with vicious dark penalties (+5, Skip Everyone, Draw Color).',
-  no_mercy: 'Extreme chaos! Stack draw penalties (+2, +4, +6, +10), draw until playable, 7-Swap, 0-Pass, and 25-card Mercy knockout!',
+  no_mercy: 'Extreme chaos! Stack draw penalties (+2, +4, +6, +10), draw until playable, 7-Swap, 0-Pass, and a host-configured Mercy knockout limit!',
 };
 
 export const NO_MERCY_MAX_CARDS = 25;

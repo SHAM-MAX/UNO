@@ -163,9 +163,10 @@ export function checkWinCondition(players = [], hands = {}, mode = 'classic') {
   return { winnerId: null, reason: null };
 }
 
-export function checkMercyKnockout(player, hand = [], mode = 'classic') {
+export function checkMercyKnockout(player, hand = [], mode = 'classic', houseRules = {}) {
   if (mode !== 'no_mercy') return false;
-  return hand.length >= NO_MERCY_MAX_CARDS;
+  const limit = Number(houseRules.mercyKnockoutLimit) || NO_MERCY_MAX_CARDS;
+  return hand.length >= limit;
 }
 
 export function calculateScore(hand = [], mode = 'classic', flipSide = 'light') {
