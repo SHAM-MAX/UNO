@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>UNO Arena - Online Multiplayer Card Game</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23EF4444'/><text x='50' y='65' font-size='42' font-weight='900' fill='white' text-anchor='middle'>A</text></svg>">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-nav">
+    <div class="brand-logo">
+      <span class="logo-badge">ARENA</span>
+      <span>UNO</span>
+    </div>
+
+    <div class="nav-controls">
+      <span id="navRoomCode" class="room-code-badge" style="display: none; font-size: 0.95rem; padding: 4px 10px;"></span>
+      <span id="navModeTag" class="mode-tag classic" style="display: none;">CLASSIC</span>
+      
+      <button id="soundToggleBtn" class="nav-btn" title="Toggle Sound">
+        <span id="soundIcon">🔊</span>
+      </button>
+
+      <button id="howToPlayBtn" class="nav-btn">
+        <span>📖 Rules</span>
+      </button>
+
+      <button id="leaveBtn" class="nav-btn" style="display: none; background: rgba(239, 68, 68, 0.2); color: #EF4444; border-color: rgba(239, 68, 68, 0.4);">
+        <span>Leave</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Reconnecting Alert Banner -->
+  <div id="connectionBanner" class="connection-banner">
+    ⚠️ Connection lost. Reconnecting to arena...
+  </div>
+
+  <!-- Main Game Content -->
+  <main class="main-content">
+
+    <!-- 1. ENTRY & LOBBY VIEW -->
+    <div id="entryView" class="lobby-card">
+      
+      <!-- New Game Form Section -->
+      <div id="entryFormSection">
+        <h2 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 6px; text-align: center;">Welcome to UNO Arena</h2>
+        <p style="color: #94A3B8; text-align: center; margin-bottom: 24px; font-size: 0.95rem;">
+          Real-time multiplayer featuring Classic, Flip, and Show 'em No Mercy.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; max-width: 400px; margin: 0 auto;">
+          <div>
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: #CBD5E1;">YOUR NAME</label>
+            <input id="playerNameInput" type="text" placeholder="Enter your player name" maxlength="15" 
+                   style="width: 100%; padding: 12px 16px; border-radius: 12px; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: white; font-size: 1rem; font-family: inherit; outline: none;">
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button id="createRoomBtn" class="action-btn" style="flex: 1; background: linear-gradient(135deg, #10B981, #059669); color: white; justify-content: center; padding: 14px;">
+              Create Room ✨
+            </button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 12px; margin: 10px 0;">
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+            <span style="font-size: 0.8rem; color: #64748B; font-weight: 700;">OR JOIN ROOM</span>
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <input id="roomCodeInput" type="text" placeholder="6-CHAR CODE" maxlength="8"
+                   style="flex: 1; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; letter-spacing: 2px; text-align: center; padding: 12px; border-radius: 12px; background: #0F172A; border: 1px solid rgba(255,255,255,0.15); color: white; font-size: 1.1rem; outline: none;">
+            <button id="joinRoomBtn" class="action-btn" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: white; padding: 12px 20px;">
+              Join Room →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Lobby Section (When inside a room before start) -->
+      <div id="lobbySection" style="display: none;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 0.8rem; color: #94A3B8; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">ROOM CODE</div>
+          <div id="lobbyCodeBadge" class="room-code-badge" title="Click to copy invite link">
+            <span id="lobbyCodeText">------</span>
+            <span style="font-size: 1.1rem;">📋</span>
+          </div>
+          <div style="margin-top: 8px;">
+            <button id="copyInviteBtn" class="nav-btn" style="margin: 0 auto; font-size: 0.8rem; padding: 4px 12px;">
+              Copy Shareable Invite Link
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 0.85rem; font-weight: 800; color: #CBD5E1; text-transform: uppercase;">Select Game Mode</div>
+          <div id="modeSelectorGrid" class="mode-selector-grid"></div>
+        </div>
+
+        <div style="margin: 20px 0;">
+          <div style="font-size: 0.85rem; font-weight: 800; color: #CBD5E1; text-transform: uppercase; margin-bottom: 8px;">Players in Lobby (2-6)</div>
+          <div id="lobbyPlayersList" class="lobby-players-list"></div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 24px;">
+          <button id="readyBtn" class="action-btn" style="background: #10B981; color: white; padding: 12px 24px;">
+            I AM READY ✓
+          </button>
+          <button id="startGameBtn" class="action-btn" style="background: linear-gradient(135deg, #F59E0B, #D97706); color: #1F2937; padding: 12px 28px; font-weight: 900; display: none;">
+            START GAME ▶
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 2. ARENA MULTIPLAYER TABLE VIEW -->
+    <div id="arenaView" class="arena-container" style="display: none;">
+      
+      <!-- Opponents Row -->
+      <div id="opponentsRow" class="opponents-row"></div>
+
+      <!-- Action Announcement Banner -->
+      <div id="actionBanner" class="action-banner">
+        Waiting for next move...
+      </div>
+
+      <!-- Central Arena Table Felt -->
+      <div class="center-table">
+        <div id="tableFelt" class="table-felt">
+          
+          <!-- Direction Wheel -->
+          <div class="direction-indicator">
+            <span id="directionArrow" class="direction-arrow">↻</span>
+            <span id="directionText">Clockwise</span>
+          </div>
+
+          <!-- Draw Pile -->
+          <div class="pile-container">
+            <button id="drawPileBtn" class="draw-pile-btn" title="Click to draw a card on your turn">
+              <div id="drawPile"></div>
+            </button>
+            <span id="drawCountBadge" class="pile-label">-- cards</span>
+          </div>
+
+          <!-- Discard Pile -->
+          <div class="pile-container">
+            <!-- Draw Penalty Tag -->
+            <div id="penaltyTag" class="penalty-tag" style="display: none;">+2 PENALTY</div>
+            <div id="discardPile"></div>
+            <span class="pile-label">Discard Pile</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Player Controls & Interactive Hand -->
+      <div class="player-bottom-area">
+        
+        <!-- Action Buttons Bar -->
+        <div class="player-action-bar">
+          <button id="btnDrawAction" class="action-btn btn-draw">
+            DRAW CARD
+          </button>
+
+          <button id="btnPassAction" class="action-btn btn-pass" style="display: none;">
+            PASS TURN →
+          </button>
+
+          <button id="btnUnoAction" class="action-btn btn-uno" disabled>
+            📢 CALL UNO!
+          </button>
+
+          <button id="btnCatchAction" class="action-btn btn-catch" style="display: none;">
+            🚨 CATCH MISSED UNO!
+          </button>
+        </div>
+
+        <!-- Fan-out Player Hand -->
+        <div class="hand-scroll-container">
+          <div id="playerHandCards" class="hand-cards"></div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ACTION MODAL: COLOR PICKER -->
+  <div id="colorPickerModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Choose Active Color</h3>
+      </div>
+      <p style="color: #94A3B8; font-size: 0.9rem; margin-bottom: 12px;">Select the color for the next player to match:</p>
+      <div id="colorOptionsContainer" class="color-picker-grid"></div>
+    </div>
+  </div>
+
+  <!-- ACTION MODAL: 7 HAND SWAP TARGET PICKER -->
+  <div id="swapPickerModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">7 Hand-Swap!</h3>
+      </div>
+      <p style="color: #94A3B8; font-size: 0.9rem; margin-bottom: 12px;">Choose a player to swap your entire hand with:</p>
+      <div id="swapOptionsContainer" class="player-picker-list"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: GAME OVER CELEBRATION -->
+  <div id="gameOverModal" class="modal-overlay">
+    <div class="modal-card" style="text-align: center;">
+      <div style="font-size: 3rem; margin-bottom: 8px;">🏆</div>
+      <h2 id="winnerNameText" class="modal-title" style="font-size: 1.8rem; color: #F59E0B; margin-bottom: 8px;"></h2>
+      <p id="winReasonText" style="color: #CBD5E1; font-size: 1rem; margin-bottom: 24px;"></p>
+      
+      <button id="rematchBtn" class="action-btn" style="margin: 0 auto; background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 12px 32px; font-size: 1.1rem; display: none;">
+        PLAY AGAIN (REMATCH) 🔄
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: HOW TO PLAY GUIDE -->
+  <div id="rulesModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 class="modal-title">How to Play UNO Arena</h3>
+        <button id="rulesModalClose" class="modal-close-btn">&times;</button>
+      </div>
+      
+      <div class="rule-tabs">
+        <button class="rule-tab-btn active" data-tab="classic">Classic UNO</button>
+        <button class="rule-tab-btn" data-tab="flip">UNO Flip</button>
+        <button class="rule-tab-btn" data-tab="no_mercy">Show 'em No Mercy</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Classic Tab -->
+        <div id="tab-classic" class="rule-content-block">
+          <h4>Objective</h4>
+          <p>Be the first player to get rid of all your cards.</p>
+
+          <h4>Card Types & Effects</h4>
+          <ul>
+            <li><strong>Number Cards (0-9):</strong> Match the active color or number on the discard pile.</li>
+            <li><strong>Skip:</strong> The next player in turn order loses their turn.</li>
+            <li><strong>Reverse:</strong> Changes the direction of play. (In a 2-player game, acts as a Skip!).</li>
+            <li><strong>Draw Two (+2):</strong> Next player must draw 2 cards and lose their turn.</li>
+            <li><strong>Wild:</strong> Can be played on any card. You declare the active color.</li>
+            <li><strong>Wild Draw Four (+4):</strong> Change the color; next player draws 4 cards and loses their turn.</li>
+          </ul>
+
+          <h4>The UNO Rule</h4>
+          <p>When you have only 1 card remaining in your hand, you MUST tap the <strong>CALL UNO</strong> button! If an opponent catches you before the next turn, you will be penalized with 2 draw cards.</p>
+        </div>
+
+        <!-- Flip Tab -->
+        <div id="tab-flip" class="rule-content-block" style="display: none;">
+          <h4>The Double-Sided Twist</h4>
+          <p>Cards are double-sided with a <strong>Light Side</strong> (Red, Yellow, Green, Blue) and a <strong>Dark Side</strong> (Teal, Orange, Pink, Purple). Playing a <strong>FLIP</strong> card turns EVERY hand, the draw pile, and the discard pile to the other side!</p>
+
+          <h4>Dark Side Special Cards</h4>
+          <ul>
+            <li><strong>Draw Five (+5):</strong> Next player draws 5 cards and is skipped!</li>
+            <li><strong>Skip Everyone:</strong> Skips all other players. You get another turn immediately!</li>
+            <li><strong>Wild Draw Color:</strong> Choose a color; next player draws until they get that color and loses their turn!</li>
+            <li><strong>Dark Reverse:</strong> Reverses play direction (acts as Skip in 2-player).</li>
+          </ul>
+        </div>
+
+        <!-- No Mercy Tab -->
+        <div id="tab-no_mercy" class="rule-content-block" style="display: none;">
+          <h4>Extreme Show 'em No Mercy Rules</h4>
+          <p>The most brutal and chaotic card game mode with a massive 168-card deck!</p>
+
+          <h4>Core Mechanics</h4>
+          <ul>
+            <li><strong>Draw Stacking (Always ON):</strong> When faced with a draw card (+2, +4, +6, +10), you can counter with an equal or higher draw card to pass the penalty to the next player! The unlucky player who cannot counter must draw the accumulated total!</li>
+            <li><strong>Draw Until Playable:</strong> When you have to draw cards, you keep drawing until you find a card you can play!</li>
+            <li><strong>7 Hand-Swap:</strong> Play a 7 and swap your ENTIRE hand with any chosen player!</li>
+            <li><strong>0 Hand-Pass:</strong> Play a 0 and ALL players pass their hands in the direction of play!</li>
+            <li><strong>Discard All:</strong> Dump all cards of that color from your hand at once!</li>
+            <li><strong>25-Card Mercy Knockout:</strong> If at ANY point your hand hits 25 or more cards, you are immediately KNOCKED OUT (eliminated) of the game!</li>
+            <li><strong>Two Ways to Win:</strong> Empty your hand, OR be the last player standing after all opponents are knocked out!</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast-msg"></div>
+
+  <!-- JavaScript ES Modules -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
