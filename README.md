@@ -55,7 +55,7 @@
 
 - **Server-Authoritative**: All card draws, plays, turn orders, and penalties are validated strictly on the server.
 - **Zero Information Leakage**: The server **never** sends opponent hands to a client. Clients receive only their own private cards, along with public state (opponent card counts, discard pile, active color, turn indicators).
-- **Persistent Room Storage**: Backed by **SQLite with WAL (Write-Ahead Logging)** mode. Server restarts or network interruptions do not destroy active rooms or player hands.
+- **Room Storage**: SQLite with WAL stores rooms and sessions. This survives process restarts while the data directory survives. Render's Free service has ephemeral storage, so a spin-down or redeploy can clear rooms; use `render-persistent.yaml` and its disk for persistence across restarts.
 - **Session Tokens**: Players store a unique session token in `localStorage` allowing automatic seat re-attachment if their socket disconnects.
 
 ---
@@ -138,9 +138,9 @@ A turnkey Render Blueprint is included in [`render.yaml`](./render.yaml).
   - 512 MB RAM, 0.1 CPU, 750 free instance hours per month.
   - Automatic HTTPS & WebSocket support.
   - *Note*: Free instances spin down after 15 minutes of inactivity and do not support persistent disks. (On the free tier, rooms persist in SQLite during active games, but disk resets if the free container spins down after inactivity).
-- **Persistent Storage Upgrade (Optional)**:
-  - To enable persistent disks across cold-starts on Render, upgrade to the **Starter Plan** (\$7/mo) with a **Persistent Disk** (\$0.25/GB/mo).
-  - Alternatively, connect an external free Redis/PostgreSQL instance.
+- **Persistent Storage Option**:
+  - The separate [`render-persistent.yaml`](./render-persistent.yaml) Blueprint uses the **Starter Plan** with a 1 GB persistent disk. Select that file as the Blueprint path in Render.
+  - Check Render's current pricing before creating paid resources. The default `render.yaml` stays on the Free plan and does not promise that rooms survive a spin-down or redeploy.
 
 ### Deployment Steps
 1. Push this repository to GitHub or GitLab:
@@ -168,3 +168,4 @@ A turnkey Render Blueprint is included in [`render.yaml`](./render.yaml).
 - `POST /api/rooms/join`: Validates room code and joins as guest or resumes session.
 - `GET /api/rooms/:roomId`: Returns public room metadata (mode, status, player count).
 - `WS /ws`: Real-time WebSocket connection endpoint.
+

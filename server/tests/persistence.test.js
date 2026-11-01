@@ -39,3 +39,4 @@ test('Persistence: State survives room manager recreation', () => {
     fs.rmSync(testDir, { recursive: true, force: true });
   } catch (e) {}
 });
+

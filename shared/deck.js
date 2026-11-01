@@ -225,3 +225,4 @@ export function createDeckForMode(mode = 'classic') {
       return createClassicDeck();
   }
 }
+

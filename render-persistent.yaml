@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: uno-arena
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: uno-arena-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 24.0.0
+      - key: DATA_DIR
+        value: /var/data

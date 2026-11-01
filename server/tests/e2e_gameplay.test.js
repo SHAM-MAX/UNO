@@ -3,7 +3,7 @@ process.env.NODE_ENV = 'test';
 import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
-import { server, roomManager } from '../src/index.js';
+const { server, roomManager } = await import('../src/index.js');
 
 function createClient(port) {
   const ws = new WebSocket(`ws://localhost:${port}/ws`);
@@ -99,6 +99,20 @@ test('E2E Multiplayer Flow: Full 2-player game in Classic, Flip, and No Mercy', 
     client2.send('join', { roomId: testRoomId, playerName: 'Bob' });
     const joined2 = await client2.waitFor((m) => m.type === 'joined');
     const p2Id = joined2.data.playerId;
+
+    // A player ID supplied in a message cannot elevate a guest to host.
+    client2.send('start_game', { playerId: p1Id });
+    const spoofAttempt = await client2.waitFor((m) => m.type === 'error');
+    assert.match(spoofAttempt.message, /host/i);
+
+    // Creating a room with an occupied code must never replace its current state.
+    const intruder = createClient(port);
+    await intruder.waitForOpen;
+    intruder.send('create', { roomId: testRoomId, playerName: 'Intruder', data: { mode: 'no_mercy' } });
+    const duplicateRoomAttempt = await intruder.waitFor((m) => m.type === 'error');
+    assert.match(duplicateRoomAttempt.message, /already in use/i);
+    assert.equal(roomManager.getRoom(testRoomId).players.length, 2);
+    intruder.close();
 
     client1.send('ready', { data: { isReady: true } });
     client2.send('ready', { data: { isReady: true } });

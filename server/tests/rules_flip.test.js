@@ -110,3 +110,4 @@ test('Flip Rules: Dark Side Skip Everyone gives player another turn', () => {
   // P1 takes another turn immediately
   assert.equal(room.currentTurn, 0, 'Skip Everyone gives the player another turn immediately');
 });
+

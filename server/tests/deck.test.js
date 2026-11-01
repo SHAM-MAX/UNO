@@ -82,3 +82,4 @@ test('No Mercy Deck: Composition must be exactly 168 cards with all extreme acti
   assert.equal(types.wild_color_roulette, 8, '8 Wild Color Roulette cards');
   assert.equal(types.wild, 8, '8 Regular Wild cards');
 });
+

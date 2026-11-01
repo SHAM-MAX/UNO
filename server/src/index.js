@@ -67,14 +67,18 @@ app.get(['/health', '/api/health'], (req, res) => {
 
 // Create Room REST endpoint
 app.post('/api/rooms', (req, res) => {
-  const { hostName, mode, houseRules, roomCode } = req.body;
-  const result = roomManager.createRoom(hostName, mode, houseRules, roomCode);
-  res.json({
-    success: true,
-    roomId: result.roomId,
-    playerId: result.playerId,
-    sessionToken: result.sessionToken,
-  });
+  const { hostName, mode, houseRules } = req.body;
+  try {
+    const result = roomManager.createRoom(hostName, mode, houseRules);
+    res.status(201).json({
+      success: true,
+      roomId: result.roomId,
+      playerId: result.playerId,
+      sessionToken: result.sessionToken,
+    });
+  } catch (err) {
+    res.status(409).json({ success: false, error: err.message });
+  }
 });
 
 // Join Room REST endpoint
@@ -129,68 +133,87 @@ wss.on('connection', (ws, req) => {
   ws.on('message', (message) => {
     try {
       const payload = JSON.parse(message.toString());
-      const { type, roomId, playerId, sessionToken, playerName, data } = payload;
+      const { type, roomId: requestedRoomId, sessionToken, playerName, data } = payload;
+      let cleanRoomId = (requestedRoomId || '').trim().toUpperCase();
+      let playerId = null;
 
-      const cleanRoomId = (roomId || '').trim().toUpperCase();
+      if (type === 'ping') {
+        ws.send(JSON.stringify({ type: 'pong' }));
+        return;
+      }
+
+      if (type === 'create') {
+        if (clientSockets.has(ws)) {
+          sendError(ws, 'This connection has already joined a room.');
+          return;
+        }
+        if (cleanRoomId && !/^[A-Z0-9]{3,12}$/.test(cleanRoomId)) {
+          sendError(ws, 'Enter a valid room code.');
+          return;
+        }
+        try {
+          const created = roomManager.createRoom(playerName || 'Host', data?.mode || 'classic', data?.houseRules, cleanRoomId || undefined);
+          playerId = created.playerId;
+          roomManager.attachSocket(created.roomId, playerId, ws);
+          clientSockets.set(ws, { roomId: created.roomId, playerId });
+          ws.send(JSON.stringify({ type: 'joined', data: created }));
+          broadcastRoomState(created.roomId);
+        } catch (err) {
+          sendError(ws, err.message || 'Could not create room.');
+        }
+        return;
+      }
+
+      if (type === 'join') {
+        if (clientSockets.has(ws)) {
+          sendError(ws, 'This connection has already joined a room.');
+          return;
+        }
+        if (!/^[A-Z0-9]{3,12}$/.test(cleanRoomId)) {
+          sendError(ws, 'Enter a valid room code.');
+          return;
+        }
+        const joined = roomManager.joinRoom(cleanRoomId, playerName, sessionToken);
+        if (!joined.success) {
+          sendError(ws, joined.error);
+          return;
+        }
+        playerId = joined.playerId;
+        const existingPlayer = roomManager.getRoom(cleanRoomId)?.players.find((p) => p.id === playerId);
+        if (existingPlayer?.socket && existingPlayer.socket !== ws) {
+          clientSockets.delete(existingPlayer.socket);
+          existingPlayer.socket.close(4001, 'Player reconnected elsewhere');
+        }
+        if (!roomManager.attachSocket(cleanRoomId, playerId, ws)) {
+          sendError(ws, 'Could not attach player to room');
+          return;
+        }
+        clientSockets.set(ws, { roomId: cleanRoomId, playerId });
+        ws.send(JSON.stringify({ type: 'joined', data: { roomId: cleanRoomId, playerId, sessionToken: joined.sessionToken } }));
+        broadcastRoomState(cleanRoomId);
+        return;
+      }
+
+      const authenticated = clientSockets.get(ws);
+      if (!authenticated) {
+        sendError(ws, 'Join a room with your session before sending game actions.');
+        return;
+      }
+      if (cleanRoomId && cleanRoomId !== authenticated.roomId) {
+        sendError(ws, 'This connection is authenticated for a different room.');
+        return;
+      }
+      cleanRoomId = authenticated.roomId;
+      playerId = authenticated.playerId;
 
       switch (type) {
         case 'create': {
-          const createResult = roomManager.createRoom(
-            playerName || 'Host',
-            data?.mode || 'classic',
-            data?.houseRules,
-            cleanRoomId || undefined
-          );
-          roomManager.attachSocket(createResult.roomId, createResult.playerId, ws);
-          clientSockets.set(ws, { roomId: createResult.roomId, playerId: createResult.playerId });
-          ws.send(
-            JSON.stringify({
-              type: 'joined',
-              data: createResult,
-            })
-          );
-          broadcastRoomState(createResult.roomId);
+          sendError(ws, 'This connection has already joined a room.');
           break;
         }
 
         case 'join': {
-          let pId = playerId;
-          let sToken = sessionToken;
-
-          // Attempt to join or reconnect
-          let joinResult = roomManager.joinRoom(cleanRoomId, playerName, sToken);
-          if (!joinResult.success && !pId) {
-            // If room doesn't exist, create it with this room code as host
-            const createRes = roomManager.createRoom(playerName || 'Host', 'classic', {}, cleanRoomId);
-            pId = createRes.playerId;
-            sToken = createRes.sessionToken;
-            joinResult = { success: true, playerId: pId, sessionToken: sToken };
-          }
-
-          pId = pId || joinResult.playerId;
-          sToken = sToken || joinResult.sessionToken;
-
-          const attached = roomManager.attachSocket(cleanRoomId, pId, ws);
-          if (!attached) {
-            sendError(ws, 'Could not attach player to room');
-            return;
-          }
-
-          clientSockets.set(ws, { roomId: cleanRoomId, playerId: pId });
-
-          // Send confirmation with player credentials for localStorage persistence
-          ws.send(
-            JSON.stringify({
-              type: 'joined',
-              data: {
-                roomId: cleanRoomId,
-                playerId: pId,
-                sessionToken: sToken,
-              },
-            })
-          );
-
-          broadcastRoomState(cleanRoomId);
+          sendError(ws, 'This connection has already joined a room.');
           break;
         }
 
@@ -286,11 +309,6 @@ wss.on('connection', (ws, req) => {
           roomManager.leaveRoom(cleanRoomId, playerId);
           clientSockets.delete(ws);
           broadcastRoomState(cleanRoomId);
-          break;
-        }
-
-        case 'ping': {
-          ws.send(JSON.stringify({ type: 'pong' }));
           break;
         }
 

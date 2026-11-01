@@ -180,3 +180,4 @@ export function calculateScore(hand = [], mode = 'classic', flipSide = 'light') 
     return total + 20; // Action cards
   }, 0);
 }
+

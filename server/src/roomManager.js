@@ -1,3 +1,4 @@
+import { randomBytes, randomUUID } from 'node:crypto';
 import { CLASSIC_COLORS, FLIP_DARK_COLORS, NO_MERCY_MAX_CARDS } from '../../shared/constants.js';
 import { createDeckForMode, getActiveFace, shuffleDeck } from '../../shared/deck.js';
 import {
@@ -103,12 +104,14 @@ export class RoomManager {
 
   createRoom(hostName, mode = 'classic', houseRulesInput = {}, providedCode = null) {
     const roomId = (providedCode || this.generateRoomCode()).toUpperCase();
-    const playerId = `p-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-    const sessionToken = `sess-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    if (this.rooms.has(roomId)) throw new Error('Room code is already in use. Choose another code.');
+    mode = ['classic', 'flip', 'no_mercy'].includes(mode) ? mode : 'classic';
+    const playerId = `p-${randomUUID()}`;
+    const sessionToken = randomBytes(32).toString('base64url');
 
     const hostPlayer = {
       id: playerId,
-      name: (hostName || '').trim() || 'Host',
+      name: String(hostName || '').trim().slice(0, 18) || 'Host',
       isHost: true,
       isReady: true,
       isConnected: true,
@@ -171,6 +174,7 @@ export class RoomManager {
         this.persist(cleanCode);
         return { success: true, playerId: existing.id, sessionToken };
       }
+      return { success: false, error: 'Invalid player session. Rejoin with a valid invite or create a new room.' };
     }
 
     if (room.status !== 'lobby') {
@@ -181,12 +185,12 @@ export class RoomManager {
       return { success: false, error: 'Room is full (maximum 6 players).' };
     }
 
-    const playerId = `p-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-    const newSessionToken = `sess-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const playerId = `p-${randomUUID()}`;
+    const newSessionToken = randomBytes(32).toString('base64url');
 
     const player = {
       id: playerId,
-      name: (playerName || '').trim() || `Player ${room.players.length + 1}`,
+      name: String(playerName || '').trim().slice(0, 18) || `Player ${room.players.length + 1}`,
       isHost: false,
       isReady: false,
       isConnected: true,
@@ -243,6 +247,7 @@ export class RoomManager {
   setMode(roomId, playerId, mode) {
     const room = this.rooms.get(roomId);
     if (!room || room.status !== 'lobby') return false;
+    if (!['classic', 'flip', 'no_mercy'].includes(mode)) return false;
     const player = room.players.find((p) => p.id === playerId);
     if (!player || !player.isHost) return false;
     room.mode = mode;
@@ -940,3 +945,4 @@ export class RoomManager {
     return this.rooms.size;
   }
 }
+

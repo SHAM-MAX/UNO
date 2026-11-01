@@ -5,6 +5,7 @@
   "type": "module",
   "description": "UNO Arena - Real-time multiplayer card game featuring Classic, Flip, and Show 'em No Mercy",
   "main": "server/src/index.js",
+  "engines": { "node": ">=24.0.0" },
   "scripts": {
     "start": "node server/src/index.js",
     "test": "node --test --test-concurrency=1 server/tests/*.test.js"

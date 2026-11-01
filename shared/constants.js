@@ -99,3 +99,4 @@ export const MODE_DESCRIPTIONS = {
 };
 
 export const NO_MERCY_MAX_CARDS = 25;
+

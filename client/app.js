@@ -2,6 +2,12 @@ import { CLASSIC_COLORS, FLIP_DARK_COLORS, COLOR_METADATA } from '../shared/cons
 import { sounds } from './audio.js';
 import { renderCardHTML, renderCardBackHTML } from './cardGraphics.js';
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[char]);
+}
+
 class UnoArenaApp {
   constructor() {
     this.ws = null;
@@ -357,7 +363,7 @@ class UnoArenaApp {
         <div class="lobby-player-row">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span>${p.isHost ? '👑' : '👤'}</span>
-            <strong>${p.name}</strong>
+            <strong>${escapeHtml(p.name)}</strong>
             ${p.id === this.playerId ? '<span style="font-size: 0.75rem; color: #F59E0B;">(You)</span>' : ''}
           </div>
           <div>
@@ -416,11 +422,11 @@ class UnoArenaApp {
         return `
           <div class="opponent-card-badge ${isCurrent ? 'active-turn' : ''} ${p.isEliminated ? 'eliminated' : ''}">
             <div class="opponent-avatar">
-              ${p.name.charAt(0).toUpperCase()}
+              ${escapeHtml(p.name.charAt(0).toUpperCase())}
             </div>
             <div class="opponent-info">
               <div class="opponent-name">
-                ${p.isHost ? '👑 ' : ''}${p.name}
+                ${p.isHost ? '👑 ' : ''}${escapeHtml(p.name)}
                 ${isCurrent ? '⭐' : ''}
               </div>
               <div class="opponent-cards-count">
@@ -577,7 +583,7 @@ class UnoArenaApp {
       .map(
         (p) => `
         <button class="player-target-btn" data-player-id="${p.id}">
-          <span>👤 ${p.name}</span>
+          <span>👤 ${escapeHtml(p.name)}</span>
           <span style="font-size: 0.85rem; opacity: 0.8;">${p.cardCount} cards</span>
         </button>
       `
@@ -646,3 +652,4 @@ class UnoArenaApp {
 window.addEventListener('DOMContentLoaded', () => {
   window.app = new UnoArenaApp();
 });
+
