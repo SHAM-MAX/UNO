@@ -895,10 +895,10 @@ class UnoArenaApp {
 
   populateHandRow(rowEl, rowCards, startIndex, canPlayIds, mode, flipSide, isMobile) {
     const rowCount = rowCards.length;
-    const maxCardW = isMobile ? Math.min(56, Math.max(48, Math.round(window.innerWidth * 0.135))) : 76;
+    const maxCardW = isMobile ? Math.min(54, Math.max(46, Math.round(window.innerWidth * 0.125))) : 86;
     const parentContainer = this.el.playerHandCards.parentElement;
     const containerW = (parentContainer && parentContainer.clientWidth) || this.el.playerHandCards.clientWidth || (isMobile ? window.innerWidth - 24 : window.innerWidth);
-    const availableW = Math.max(160, Math.min(containerW - 14, isMobile ? (window.innerWidth - 32) : 860));
+    const availableW = Math.max(160, Math.min(containerW - (isMobile ? 26 : 14), isMobile ? (window.innerWidth - 36) : 860));
 
     const naturalTotal = rowCount * maxCardW;
     const needsOverlap = naturalTotal > availableW && rowCount > 1;

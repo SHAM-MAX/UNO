@@ -598,9 +598,10 @@ body.in-arena::after {
 /* Card Piles Size & 3D Stack Thickness */
 .in-arena .draw-pile-btn .game-card,
 .in-arena #discardPile .game-card {
-  width: clamp(86px, 7.5vw, 104px) !important;
-  height: clamp(126px, 11vw, 154px) !important;
-  border-radius: 12px !important;
+  width: 86px !important;
+  height: 128px !important;
+  aspect-ratio: 86 / 128 !important;
+  border-radius: 11px !important;
   box-shadow:
     0 1px 0 #ffffff,
     0 2px 0 #d1d5db,
@@ -609,6 +610,21 @@ body.in-arena::after {
     0 5px 0 #ffffff,
     0 6px 0 #9ca3af,
     0 16px 32px rgba(0, 0, 0, 0.65) !important;
+}
+
+.in-arena .hand-cards .game-card {
+  width: 86px;
+  height: 128px;
+  aspect-ratio: 86 / 128;
+}
+
+.in-arena .classic-face-image,
+.in-arena .classic-back-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  display: block;
 }
 
 .in-arena #drawCountBadge,
@@ -1060,23 +1076,32 @@ body.in-arena::after {
     font-size: 0.88rem !important;
   }
 
-  /* 4. Central Playing Table */
+  /* 4. Central Playing Table: Proper Horizontal Oval (Requirement 2) */
   .in-arena .center-table {
+    flex: 1 1 auto !important;
     min-height: 0 !important;
-    height: clamp(140px, 24vh, 185px) !important;
-    margin: 2px auto 8px !important;
+    height: auto !important;
+    margin: 4px auto 8px !important;
     width: 100% !important;
     max-width: 390px !important;
-    flex-shrink: 0;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .in-arena .table-felt {
-    width: 98% !important;
-    height: 100% !important;
-    border-radius: clamp(70px, 12vh, 95px) !important;
-    border-width: 8px !important;
-    outline-offset: -8px !important;
-    gap: 16px !important;
+    width: min(94vw, 360px) !important;
+    height: 188px !important;
+    max-height: 188px !important;
+    aspect-ratio: 1.9 / 1 !important;
+    border-radius: 94px !important;
+    border-width: 9px !important;
+    outline-offset: -9px !important;
+    gap: 18px !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    flex: 0 0 auto !important;
+    box-sizing: border-box !important;
   }
 
   .in-arena .orbital-path-line {
@@ -1084,16 +1109,16 @@ body.in-arena::after {
   }
 
   .in-arena .orbit-arrow {
-    width: 18px !important;
-    height: 18px !important;
-    font-size: 0.82rem !important;
-    offset-path: rect(3px calc(100% - 3px) calc(100% - 3px) 3px round clamp(65px, 11vh, 88px)) !important;
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 0.78rem !important;
+    offset-path: rect(3px calc(100% - 3px) calc(100% - 3px) 3px round 90px) !important;
   }
 
   .in-arena .direction-indicator {
-    top: 4px !important;
-    font-size: 0.62rem !important;
-    padding: 2px 7px !important;
+    top: 7px !important;
+    font-size: 0.64rem !important;
+    padding: 2px 8px !important;
     border-radius: 10px !important;
   }
 
@@ -1107,8 +1132,9 @@ body.in-arena::after {
 
   .in-arena .draw-pile-btn .game-card,
   .in-arena #discardPile .game-card {
-    width: clamp(52px, 14vw, 68px) !important;
-    height: clamp(78px, 21vw, 102px) !important;
+    width: 60px !important;
+    height: 90px !important;
+    aspect-ratio: 86 / 128 !important;
     border-radius: 8px !important;
   }
 
@@ -1121,15 +1147,16 @@ body.in-arena::after {
 
   /* 5. Draw Card and Call UNO Buttons */
   .in-arena .table-action-bar {
-    bottom: -16px !important;
+    bottom: -18px !important;
     gap: 8px !important;
-    width: 96% !important;
+    width: 92% !important;
     justify-content: center !important;
+    z-index: 25 !important;
   }
 
   .in-arena .action-btn {
-    padding: 5px 12px !important;
-    font-size: 0.74rem !important;
+    padding: 6px 14px !important;
+    font-size: 0.76rem !important;
     min-height: 34px !important;
     border-radius: 10px !important;
     gap: 5px !important;
@@ -1137,7 +1164,7 @@ body.in-arena::after {
 
   /* 6. Player's Complete Hand (Never Scroll Horizontally) */
   .in-arena .player-bottom-area {
-    margin-top: auto !important;
+    margin-top: 0 !important;
     width: 100% !important;
     flex-shrink: 0;
   }
@@ -1163,12 +1190,12 @@ body.in-arena::after {
   }
 
   .in-arena .hand-cards {
-    min-height: 98px !important;
+    min-height: 96px !important;
     padding: 0 2px !important;
   }
 
   .in-arena .hand-cards.two-rows {
-    min-height: 124px !important;
+    min-height: 126px !important;
   }
 
   .in-arena .hand-row-top {
@@ -1176,8 +1203,9 @@ body.in-arena::after {
   }
 
   .in-arena .game-card {
-    width: clamp(48px, 13.5vw, 62px) !important;
-    height: clamp(72px, 20vw, 92px) !important;
+    width: clamp(46px, 12.5vw, 54px) !important;
+    height: calc(clamp(46px, 12.5vw, 54px) * 128 / 86) !important;
+    aspect-ratio: 86 / 128 !important;
     border-radius: 7px !important;
   }
 

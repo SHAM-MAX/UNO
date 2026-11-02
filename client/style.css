@@ -621,6 +621,7 @@ body::before {
   border: 0;
   background: transparent;
   box-shadow: 0 6px 16px rgba(0, 0, 0, .38);
+  aspect-ratio: 86 / 128;
 }
 
 .classic-face-image,
@@ -628,8 +629,8 @@ body::before {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: fill;
-  image-rendering: auto;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
   user-select: none;
   -webkit-user-drag: none;
 }

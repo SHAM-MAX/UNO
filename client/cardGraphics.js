@@ -83,7 +83,7 @@ export function renderCardHTML(card, options = {}) {
     const sprite = classicSheetFace(card, face);
     if (sprite && sprite.row >= 0 && sprite.row < 9 && sprite.col >= 0 && sprite.col < 12) {
       const description = `${getCardLabel(face)}${isWild ? '' : `, ${metadata.name}`}`;
-      return `<div class="game-card classic-image-card ${mini ? 'mini' : ''}" role="img" aria-label="${description}" title="${description}"><img class="classic-face-image" src="/assets/classic-cards/r${sprite.row}-c${sprite.col}.svg" alt="" draggable="false"></div>`;
+      return `<div class="game-card classic-image-card ${mini ? 'mini' : ''}" role="img" aria-label="${description}" title="${description}"><img class="classic-face-image" src="/assets/classic-cards/r${sprite.row}-c${sprite.col}.png" alt="" draggable="false"></div>`;
     }
   }
   const modeClass = mode === 'flip' ? `flip-${flipSide}` : mode;
