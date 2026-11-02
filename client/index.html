@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="./home.css">
   <link rel="stylesheet" href="./lobby.css">
+  <link rel="stylesheet" href="./arena.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23EF4444'/><text x='50' y='65' font-size='42' font-weight='900' fill='white' text-anchor='middle'>A</text></svg>">
 </head>
 <body>
@@ -144,9 +145,17 @@
 
     </div>
 
-    <!-- 2. ARENA MULTIPLAYER TABLE VIEW -->
+    <!-- 2. ARENA MULTIPLAYER TABLE VIEW (Realistic Tabletop UI) -->
     <div id="arenaView" class="arena-container" style="display: none;">
       
+      <!-- Decorative Tabletop Items (Screenshot 2 Environment) -->
+      <div class="arena-decorations" aria-hidden="true">
+        <img src="./assets/deco-plant-left.png" class="deco-item deco-plant-left" alt="" draggable="false">
+        <img src="./assets/deco-plant-right.png" class="deco-item deco-plant-right" alt="" draggable="false">
+        <img src="./assets/deco-cards-tray.png" class="deco-item deco-cards-tray" alt="" draggable="false">
+        <img src="./assets/deco-coffee-mug.png" class="deco-item deco-coffee-mug" alt="" draggable="false">
+      </div>
+
       <!-- Opponents Row -->
       <div id="opponentsRow" class="opponents-row"></div>
 
@@ -162,7 +171,7 @@
           <!-- Direction Wheel -->
           <div class="direction-indicator">
             <span id="directionArrow" class="direction-arrow">↻</span>
-            <span id="directionText">Clockwise</span>
+            <span id="directionText">CLOCKWISE</span>
           </div>
 
           <!-- Draw Pile -->
@@ -170,7 +179,7 @@
             <button id="drawPileBtn" class="draw-pile-btn" title="Click to draw a card on your turn">
               <div id="drawPile"></div>
             </button>
-            <span id="drawCountBadge" class="pile-label">-- cards</span>
+            <span id="drawCountBadge" class="pile-label">-- CARDS</span>
           </div>
 
           <!-- Discard Pile -->
@@ -178,39 +187,41 @@
             <!-- Draw Penalty Tag -->
             <div id="penaltyTag" class="penalty-tag" style="display: none;">+2 PENALTY</div>
             <div id="discardPile"></div>
-            <span class="pile-label">Discard Pile</span>
+            <span class="pile-label">DISCARD PILE</span>
+          </div>
+
+          <!-- Action Buttons Bar inside Table (Screenshot 2 Placement) -->
+          <div class="table-action-bar">
+            <button id="btnDrawAction" class="action-btn btn-draw">
+              <span class="btn-icon">🂠</span> DRAW CARD
+            </button>
+
+            <button id="btnPassAction" class="action-btn btn-pass" style="display: none;">
+              PASS TURN →
+            </button>
+
+            <button id="btnUnoAction" class="action-btn btn-uno" disabled>
+              <span class="btn-icon">📢</span> CALL UNO!
+            </button>
+
+            <button id="btnCatchAction" class="action-btn btn-catch" style="display: none;">
+              🚨 CATCH MISSED UNO!
+            </button>
           </div>
 
         </div>
       </div>
 
-      <!-- Player Controls & Interactive Hand -->
+      <!-- Player Controls & Interactive Hand with Wooden Stand -->
       <div class="player-bottom-area">
-        
-        <!-- Action Buttons Bar -->
-        <div class="player-action-bar">
-          <button id="btnDrawAction" class="action-btn btn-draw">
-            DRAW CARD
-          </button>
-
-          <button id="btnPassAction" class="action-btn btn-pass" style="display: none;">
-            PASS TURN →
-          </button>
-
-          <button id="btnUnoAction" class="action-btn btn-uno" disabled>
-            📢 CALL UNO!
-          </button>
-
-          <button id="btnCatchAction" class="action-btn btn-catch" style="display: none;">
-            🚨 CATCH MISSED UNO!
-          </button>
+        <div class="card-rack-container">
+          <div class="card-rack-groove">
+            <div class="hand-scroll-container">
+              <div id="playerHandCards" class="hand-cards"></div>
+            </div>
+          </div>
+          <div class="card-rack-lip"></div>
         </div>
-
-        <!-- Fan-out Player Hand -->
-        <div class="hand-scroll-container">
-          <div id="playerHandCards" class="hand-cards"></div>
-        </div>
-
       </div>
 
     </div>

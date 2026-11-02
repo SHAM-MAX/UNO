@@ -468,7 +468,13 @@ class UnoArenaApp {
   }
 
   connectWebSocket(roomId, playerId, sessionToken, playerName) {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
     if (this.ws) {
+      this.ws.onclose = null;
+      this.ws.onerror = null;
       this.ws.close();
     }
 
@@ -479,6 +485,18 @@ class UnoArenaApp {
 
     this.ws.onopen = () => {
       this.el.banner.classList.remove('visible');
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = null;
+      }
+      // Keep alive heartbeat ping every 20s to prevent reverse proxy/mobile timeout
+      if (this.pingInterval) clearInterval(this.pingInterval);
+      this.pingInterval = setInterval(() => {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+          this.ws.send(JSON.stringify({ type: 'ping' }));
+        }
+      }, 20000);
+
       // Send join message
       this.send({
         type: 'join',
@@ -499,6 +517,10 @@ class UnoArenaApp {
     this.ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
+        if (msg.type === 'pong') {
+          // Heartbeat acknowledged
+          return;
+        }
         if (msg.type === 'joined') {
           this.roomId = msg.data.roomId;
           this.playerId = msg.data.playerId;
@@ -519,9 +541,14 @@ class UnoArenaApp {
     };
 
     this.ws.onclose = () => {
+      if (this.pingInterval) {
+        clearInterval(this.pingInterval);
+        this.pingInterval = null;
+      }
       this.el.banner.classList.add('visible');
       // Auto-reconnect after 2 seconds
-      setTimeout(() => {
+      if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = setTimeout(() => {
         if (this.roomId) {
           const sToken = localStorage.getItem(`session_${this.roomId}`);
           const pId = localStorage.getItem(`player_${this.roomId}`);
@@ -691,25 +718,52 @@ class UnoArenaApp {
 
     // Opponents
     const opponents = gameState.players.filter((p) => p.id !== this.playerId);
+    const avatarPalettes = ['#1e3a8a', '#065f46', '#78350f', '#831843', '#4c1d95'];
     this.el.opponentsRow.innerHTML = opponents
       .map((p, idx) => {
         const isCurrent = gameState.players[gameState.currentTurn]?.id === p.id;
         const unoActive = p.cardCount === 1;
+        const avatarColor = avatarPalettes[idx % avatarPalettes.length];
+
+        // Realistic fan of actual UNO card backs underneath the badge (Screenshot 2)
+        let fanHtml = '';
+        if (!p.isEliminated && p.cardCount > 0) {
+          const fanCardsCount = Math.min(Math.max(p.cardCount, 1), 10);
+          fanHtml = '<div class="opponent-cards-fan" aria-hidden="true">';
+          const spread = fanCardsCount > 1 ? Math.min(30 / (fanCardsCount - 1), 5.5) : 0;
+          const startAngle = -((fanCardsCount - 1) * spread) / 2;
+          const backSrc = (gameState.mode === 'flip' && gameState.flipSide === 'dark')
+            ? './assets/flip-dark-back.png'
+            : './assets/uno-classic-back.png';
+
+          for (let c = 0; c < fanCardsCount; c++) {
+            const rot = startAngle + c * spread;
+            const xOffset = (c - (fanCardsCount - 1) / 2) * 17;
+            fanHtml += `<div class="opponent-fan-card" style="transform: translateX(${xOffset.toFixed(1)}px) rotate(${rot.toFixed(1)}deg); z-index: ${c + 1};">
+              <img src="${backSrc}" alt="" class="fan-card-img" draggable="false">
+            </div>`;
+          }
+          fanHtml += '</div>';
+        }
+
         return `
-          <div class="opponent-card-badge ${isCurrent ? 'active-turn' : ''} ${p.isEliminated ? 'eliminated' : ''}">
-            <div class="opponent-avatar">
-              ${escapeHtml(p.name.charAt(0).toUpperCase())}
-            </div>
-            <div class="opponent-info">
-              <div class="opponent-name">
-                ${p.isHost ? '👑 ' : ''}${escapeHtml(p.name)}
-                ${isCurrent ? '⭐' : ''}
+          <div class="opponent-wrapper">
+            <div class="opponent-card-badge ${isCurrent ? 'active-turn' : ''} ${p.isEliminated ? 'eliminated' : ''}">
+              <div class="opponent-avatar" style="background: ${isCurrent ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : avatarColor};">
+                ${escapeHtml(p.name.charAt(0).toUpperCase())}
               </div>
-              <div class="opponent-cards-count">
-                🂠 ${p.isEliminated ? 'KNOCKED OUT' : `${p.cardCount} cards`}
+              <div class="opponent-info">
+                <div class="opponent-name">
+                  ${p.isHost ? '👑 ' : ''}${escapeHtml(p.name)}
+                  ${isCurrent ? '⭐' : ''}
+                </div>
+                <div class="opponent-cards-count">
+                  🂠 ${p.isEliminated ? 'KNOCKED OUT' : `${p.cardCount} cards`}
+                </div>
               </div>
+              ${unoActive && !p.isEliminated ? '<span class="uno-alert-badge">UNO!</span>' : ''}
             </div>
-            ${unoActive && !p.isEliminated ? '<span class="uno-alert-badge">UNO!</span>' : ''}
+            ${fanHtml}
           </div>
         `;
       })
@@ -731,7 +785,7 @@ class UnoArenaApp {
       false,
       gameState.mode,
     );
-    this.el.drawCountBadge.textContent = `${gameState.deckRemainingCount} cards`;
+    this.el.drawCountBadge.textContent = `${gameState.deckRemainingCount} CARDS`;
     this.el.drawPileBtn.disabled = !isMyTurn;
 
     // Stacking draw penalty tag
@@ -745,9 +799,9 @@ class UnoArenaApp {
     // Buttons
     this.el.btnDrawAction.disabled = !canDraw;
     if (gameState.pendingDrawPenalty > 0) {
-      this.el.btnDrawAction.textContent = `TAKE +${gameState.pendingDrawPenalty} CARDS`;
+      this.el.btnDrawAction.innerHTML = `<span class="btn-icon">🂠</span> TAKE +${gameState.pendingDrawPenalty} CARDS`;
     } else {
-      this.el.btnDrawAction.textContent = 'DRAW CARD';
+      this.el.btnDrawAction.innerHTML = '<span class="btn-icon">🂠</span> DRAW CARD';
     }
 
     // Pass button (visible if drawn this turn)
@@ -759,6 +813,7 @@ class UnoArenaApp {
 
     // UNO and Catch buttons
     this.el.btnUnoAction.disabled = !canCallUno;
+    this.el.btnUnoAction.innerHTML = '<span class="btn-icon">📢</span> CALL UNO!';
     if (canCatchUno) {
       const caughtPlayer = gameState.players.find((p) => p.id === canCatchUno);
       this.el.btnCatchAction.style.display = 'inline-flex';
@@ -779,6 +834,11 @@ class UnoArenaApp {
   renderPlayerHand(hand, canPlayIds, mode, flipSide) {
     this.el.playerHandCards.innerHTML = '';
 
+    const count = hand.length;
+    const maxAngle = Math.min(count * 1.5, 12);
+    const startAngle = count > 1 ? -maxAngle / 2 : 0;
+    const angleStep = count > 1 ? maxAngle / (count - 1) : 0;
+
     hand.forEach((card, idx) => {
       const isPlayable = canPlayIds.includes(card.id);
       const wrapper = document.createElement('div');
@@ -789,6 +849,10 @@ class UnoArenaApp {
       const cardTitle = card.type === 'number' ? `${card.color || ''} ${card.value}` : `${card.color || ''} ${card.type}`;
       wrapper.setAttribute('aria-label', isPlayable ? `Play card: ${cardTitle}` : `Card: ${cardTitle}`);
       wrapper.innerHTML = renderCardHTML(card, { mode, flipSide });
+
+      const rot = count > 1 ? (startAngle + idx * angleStep).toFixed(1) : '0';
+      wrapper.style.setProperty('--card-rot', `${rot}deg`);
+      wrapper.style.transform = `rotate(${rot}deg)`;
 
       if (isPlayable) {
         wrapper.addEventListener('click', () => this.handleCardClick(card, wrapper));
@@ -966,7 +1030,19 @@ class UnoArenaApp {
     this.roomId = null;
     this.playerId = null;
     this.sessionToken = null;
-    if (this.ws) this.ws.close();
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    if (this.ws) {
+      this.ws.onclose = null;
+      this.ws.onerror = null;
+      this.ws.close();
+    }
     window.location.search = '';
   }
 

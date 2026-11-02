@@ -1,0 +1,830 @@
+/* ==========================================================================
+   UNO ARENA - GAMEPLAY ENVIRONMENT REDESIGN (EXACT SCREENSHOT 2 TARGET)
+   Strictly scoped to body.in-arena to preserve Home, Mode Setup, & Lobby pages.
+   ========================================================================== */
+
+/* 1. Global Tabletop Wood Gaming Environment */
+body.in-arena {
+  background: #2b180d url('./assets/tabletop-wood.jpg') center center / cover no-repeat fixed !important;
+  color: #f8fafc;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+body.in-arena::before,
+body.in-arena::after {
+  content: none !important;
+}
+
+/* 2. Top Navigation Bar (Screenshot 2 Theme) */
+.in-arena .top-nav {
+  position: relative;
+  z-index: 50;
+  width: 96%;
+  max-width: 1400px;
+  height: 62px;
+  min-height: 0;
+  margin: 10px auto 4px;
+  padding: 6px 24px;
+  border: 2px solid #d4b982;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fdfbf7 0%, #f4ede0 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Logo: Red UNO on left, Dark Green ARENA on right */
+.in-arena .brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 900;
+  font-size: 1.65rem;
+  letter-spacing: -0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  user-select: none;
+}
+
+/* Place 'UNO' first */
+.in-arena .brand-logo > span:last-child {
+  order: 1;
+  color: #dc2626 !important;
+  font-weight: 900;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+
+/* Place 'ARENA' second */
+.in-arena .logo-badge {
+  order: 2;
+  background: none !important;
+  color: #0f472a !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  transform: none !important;
+  font-size: 1.65rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+
+/* Nav Controls */
+.in-arena .nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.in-arena #navRoomCode {
+  color: #1e293b !important;
+  background: #faf6ed !important;
+  border: 1.5px solid #d4b982 !important;
+  border-radius: 12px !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  padding: 8px 16px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.85) !important;
+}
+
+.in-arena #navModeTag {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #d4b982 !important;
+  border-radius: 12px !important;
+  font-size: 0.85rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  padding: 8px 18px !important;
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.35) !important;
+}
+
+.in-arena .nav-btn {
+  background: #faf6ed;
+  color: #1e293b;
+  border: 1.5px solid #d4b982;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+  cursor: pointer;
+}
+
+.in-arena .nav-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.in-arena .nav-btn:active {
+  transform: translateY(1px);
+  filter: brightness(0.97);
+}
+
+.in-arena #leaveBtn {
+  background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #d4b982 !important;
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.35) !important;
+}
+
+/* 3. Arena Main Content Layout */
+.in-arena .main-content {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+}
+
+.in-arena .arena-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 4px 16px 12px;
+}
+
+/* 4. Decorative Tabletop Corner Items (Screenshot 2 Environment) */
+.in-arena .arena-decorations {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.in-arena .deco-item {
+  position: absolute;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(4px 10px 20px rgba(0, 0, 0, 0.65));
+}
+
+.in-arena .deco-plant-left {
+  top: -10px;
+  left: -10px;
+  width: 195px;
+  height: auto;
+}
+
+.in-arena .deco-plant-right {
+  top: -10px;
+  right: -10px;
+  width: 210px;
+  height: auto;
+}
+
+.in-arena .deco-cards-tray {
+  bottom: 16px;
+  left: 10px;
+  width: 160px;
+  height: auto;
+}
+
+.in-arena .deco-coffee-mug {
+  bottom: 16px;
+  right: 10px;
+  width: 175px;
+  height: auto;
+}
+
+@media (max-width: 1180px) {
+  .in-arena .deco-plant-left { width: 140px; left: -25px; }
+  .in-arena .deco-plant-right { width: 150px; right: -25px; }
+  .in-arena .deco-cards-tray { width: 125px; left: -15px; }
+  .in-arena .deco-coffee-mug { width: 130px; right: -15px; }
+}
+
+@media (max-width: 900px) {
+  .in-arena .arena-decorations {
+    display: none !important;
+  }
+}
+
+/* 5. Opponents Row & Realistic Fans of Actual UNO Cards */
+.in-arena .opponents-row {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 36px;
+  flex-wrap: wrap;
+  padding: 4px 10px 4px;
+  min-height: 120px;
+}
+
+.in-arena .opponent-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.in-arena .opponent-card-badge {
+  background: linear-gradient(180deg, #fdfbf7 0%, #f4ede0 100%);
+  border: 1.5px solid #d4b982;
+  border-radius: 14px;
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  z-index: 12;
+}
+
+/* Active turn indicator: dark slate panel with bright golden glow */
+.in-arena .opponent-card-badge.active-turn {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+  border: 2px solid #f59e0b !important;
+  box-shadow: 0 0 22px rgba(245, 158, 11, 0.7), 0 8px 24px rgba(0, 0, 0, 0.55) !important;
+  transform: scale(1.04);
+}
+
+.in-arena .opponent-card-badge.active-turn .opponent-name {
+  color: #f8fafc !important;
+}
+
+.in-arena .opponent-card-badge.active-turn .opponent-cards-count {
+  color: #cbd5e1 !important;
+}
+
+.in-arena .opponent-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.05rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.in-arena .opponent-card-badge.active-turn .opponent-avatar {
+  border-color: #f59e0b;
+}
+
+.in-arena .opponent-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.in-arena .opponent-name {
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.in-arena .opponent-cards-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Realistic Fan of Actual UNO Cards Underneath Opponent Badge */
+.in-arena .opponent-cards-fan {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 65px;
+  margin-top: -6px;
+  position: relative;
+  z-index: 10;
+  width: 200px;
+}
+
+.in-arena .opponent-fan-card {
+  position: absolute;
+  width: 46px;
+  height: 68px;
+  border-radius: 5px;
+  transform-origin: 50% 120%;
+  box-shadow: 2px 6px 14px rgba(0, 0, 0, 0.55);
+  transition: transform 0.2s ease;
+  user-select: none;
+}
+
+.in-arena .opponent-fan-card .fan-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 5px;
+  display: block;
+}
+
+/* Action Message Banner */
+.in-arena .action-banner {
+  position: relative;
+  z-index: 15;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f8fafc;
+  padding: 5px 18px;
+  background: rgba(15, 23, 42, 0.82);
+  border: 1.5px solid #d4b982;
+  border-radius: 20px;
+  max-width: 520px;
+  margin: 2px auto 8px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+/* 6. Central Playing Table (Large Oval Table with Wooden Rail & Golden Trim) */
+.in-arena .center-table {
+  position: relative;
+  z-index: 15;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(270px, 35vh, 370px);
+  margin: 4px 0 16px;
+}
+
+.in-arena .table-felt {
+  width: min(84%, 1120px);
+  height: clamp(270px, 35vh, 370px);
+  border-radius: clamp(135px, 17.5vh, 185px);
+  background: radial-gradient(ellipse at 50% 45%, #0e6c45 0%, #094d31 55%, #042e1d 100%);
+  border: 14px solid #54331a;
+  outline: 2.5px solid #d4af37;
+  outline-offset: -14px;
+  box-shadow:
+    0 26px 65px rgba(0, 0, 0, 0.8),
+    0 8px 18px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px #f3d17a,
+    inset 0 10px 36px rgba(0, 0, 0, 0.7);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(36px, 5vw, 60px);
+}
+
+/* Direction Indicator at Top-Center of Felt */
+.in-arena .direction-indicator {
+  position: absolute;
+  top: 14px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1.5px solid #d4af37;
+  color: #f8fafc;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 5px 16px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 20;
+}
+
+.in-arena .direction-arrow {
+  color: #d4af37;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+/* 7. Draw & Discard 3D Card Piles */
+.in-arena .pile-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 20;
+}
+
+/* Card Piles Size & 3D Stack Thickness */
+.in-arena .draw-pile-btn .game-card,
+.in-arena #discardPile .game-card {
+  width: clamp(86px, 7.5vw, 104px) !important;
+  height: clamp(126px, 11vw, 154px) !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 1px 0 #ffffff,
+    0 2px 0 #d1d5db,
+    0 3px 0 #ffffff,
+    0 4px 0 #d1d5db,
+    0 5px 0 #ffffff,
+    0 6px 0 #9ca3af,
+    0 16px 32px rgba(0, 0, 0, 0.65) !important;
+}
+
+.in-arena #drawCountBadge,
+.in-arena .pile-label {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  color: #ffffff;
+  padding: 5px 16px;
+  border-radius: 14px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Penalty tag */
+.in-arena .penalty-tag {
+  top: -18px;
+  font-size: 0.88rem;
+  padding: 4px 14px;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.8);
+}
+
+/* 8. Action Buttons Inside Table Felt (Screenshot 2 Placement) */
+.in-arena .table-action-bar {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  z-index: 28;
+  width: max-content;
+}
+
+.in-arena .action-btn {
+  padding: 12px 28px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 0.96rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 2px solid #d4af37 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.in-arena .btn-draw {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+}
+
+.in-arena .btn-uno {
+  background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: #ffffff !important;
+}
+
+.in-arena .btn-pass {
+  background: linear-gradient(180deg, #475569 0%, #334155 100%) !important;
+  color: #ffffff !important;
+}
+
+.in-arena .btn-catch {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #1e293b !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .in-arena .action-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+  }
+}
+
+.in-arena .action-btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.97);
+  filter: brightness(0.95);
+}
+
+/* Keep buttons looking rich and vibrant even when not active */
+.in-arena .action-btn:disabled {
+  opacity: 0.82;
+  cursor: not-allowed;
+}
+
+/* 9. Player Hand & Realistic Wooden Card Rack Stand */
+.in-arena .player-bottom-area {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.in-arena .card-rack-container {
+  width: 92%;
+  max-width: 1180px;
+  position: relative;
+  margin: 0 auto;
+}
+
+/* Wooden Tray Backing with Gold Inset Trim */
+.in-arena .card-rack-groove {
+  background: linear-gradient(180deg, #44240e 0%, #361b0a 35%, #2a1507 70%, #1e0d04 100%);
+  border: 3px solid #7c441c;
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  box-shadow:
+    0 -10px 30px rgba(0, 0, 0, 0.75),
+    inset 0 4px 12px rgba(0, 0, 0, 0.8),
+    inset 0 0 0 1.5px #d4af37;
+  padding: 14px 20px 26px;
+  position: relative;
+}
+
+/* Beveled Front Wooden Lip */
+.in-arena .card-rack-lip {
+  position: absolute;
+  bottom: 0;
+  left: -8px;
+  right: -8px;
+  height: 24px;
+  background: linear-gradient(180deg, #7c441c 0%, #5c3012 50%, #3a1c09 100%);
+  border: 2px solid #9e5a26;
+  border-bottom: 4px solid #1a0a03;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75), inset 0 2px 2px rgba(255, 255, 255, 0.25);
+  z-index: 35;
+  pointer-events: none;
+}
+
+/* Hand Cards Strip */
+.in-arena .hand-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 14px 10px 8px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.4) transparent;
+}
+
+.in-arena .hand-cards {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin: 0 auto;
+  position: relative;
+  min-height: 155px;
+  width: max-content;
+  padding: 0 16px;
+}
+
+/* Hand Card Placement & Natural Rotation */
+.in-arena .hand-cards .card-wrapper {
+  margin-left: -14px; /* Realistic card overlap matching Screenshot 2 */
+  transform: rotate(var(--card-rot, 0deg));
+  transform-origin: 50% 120%;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.2s ease, margin 0.2s ease;
+  position: relative;
+  cursor: pointer;
+  border-radius: 11px;
+}
+
+.in-arena .hand-cards .card-wrapper:first-child {
+  margin-left: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .in-arena .hand-cards .card-wrapper:hover {
+    transform: translateY(-28px) rotate(0deg) scale(1.08) !important;
+    z-index: 60 !important;
+    filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.95)) !important;
+  }
+}
+
+.in-arena .hand-cards .card-wrapper:focus-visible {
+  outline: 3px solid #d4af37;
+  outline-offset: 3px;
+  transform: translateY(-24px) rotate(0deg) scale(1.06) !important;
+  z-index: 60 !important;
+}
+
+.in-arena .hand-cards .card-wrapper.playable:active {
+  transform: translateY(-14px) rotate(0deg) scale(1.03) !important;
+  filter: drop-shadow(0 0 24px rgba(245, 158, 11, 1)) !important;
+}
+
+.in-arena .hand-cards .card-wrapper.playing {
+  transform: translateY(-48px) scale(0.9) !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.in-arena .hand-cards .card-wrapper.unplayable {
+  opacity: 0.65;
+  filter: brightness(0.85);
+  cursor: not-allowed;
+}
+
+/* 10. Responsive Adjustments for Laptop Screens (≤ 820px height) */
+@media (max-height: 820px) {
+  .in-arena .top-nav {
+    height: 52px;
+    margin: 4px auto 2px;
+    padding: 4px 18px;
+  }
+  .in-arena .brand-logo {
+    font-size: 1.4rem;
+  }
+  .in-arena .brand-logo > span:last-child,
+  .in-arena .logo-badge {
+    font-size: 1.4rem !important;
+  }
+  .in-arena .opponents-row {
+    min-height: 105px;
+    padding: 2px 10px 2px;
+    gap: 24px;
+  }
+  .in-arena .opponent-card-badge {
+    padding: 4px 12px;
+  }
+  .in-arena .opponent-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  .in-arena .opponent-cards-fan {
+    height: 50px;
+    width: 170px;
+  }
+  .in-arena .opponent-fan-card {
+    width: 38px;
+    height: 56px;
+  }
+  .in-arena .action-banner {
+    margin: 1px auto 4px;
+    padding: 3px 14px;
+    font-size: 0.8rem;
+  }
+  .in-arena .center-table {
+    min-height: 250px;
+    margin: 2px 0 10px;
+  }
+  .in-arena .table-felt {
+    height: 250px;
+    border-radius: 125px;
+    gap: 36px;
+  }
+  .in-arena .draw-pile-btn .game-card,
+  .in-arena #discardPile .game-card {
+    width: 86px !important;
+    height: 128px !important;
+  }
+  .in-arena .table-action-bar {
+    bottom: -20px;
+    gap: 16px;
+  }
+  .in-arena .action-btn {
+    padding: 9px 20px;
+    font-size: 0.86rem;
+  }
+  .in-arena .card-rack-groove {
+    padding: 10px 16px 20px;
+  }
+  .in-arena .hand-scroll-container {
+    padding: 8px 10px 6px;
+  }
+  .in-arena .hand-cards {
+    min-height: 135px;
+  }
+  .in-arena .game-card {
+    width: 82px;
+    height: 122px;
+  }
+}
+
+/* 11. Responsive Adjustments for Mobile Viewports */
+@media (max-width: 600px) {
+  .in-arena .arena-container {
+    padding: 4px 8px 8px;
+  }
+  .in-arena .top-nav {
+    height: auto;
+    padding: 8px 12px;
+    border-radius: 14px;
+    gap: 6px;
+  }
+  .in-arena .brand-logo {
+    font-size: 1.25rem;
+  }
+  .in-arena .nav-controls {
+    gap: 6px;
+  }
+  .in-arena .nav-btn,
+  .in-arena #leaveBtn,
+  .in-arena #navModeTag {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+  .in-arena .opponents-row {
+    gap: 12px;
+    min-height: 90px;
+  }
+  .in-arena .opponent-card-badge {
+    padding: 4px 10px;
+  }
+  .in-arena .opponent-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  .in-arena .opponent-cards-fan {
+    width: 130px;
+    height: 42px;
+  }
+  .in-arena .opponent-fan-card {
+    width: 30px;
+    height: 44px;
+  }
+  .in-arena .center-table {
+    min-height: 190px;
+    margin: 4px 0 14px;
+  }
+  .in-arena .table-felt {
+    width: 98%;
+    height: 190px;
+    border-radius: 95px;
+    gap: 16px;
+    border-width: 8px;
+    outline-offset: -8px;
+  }
+  .in-arena .direction-indicator {
+    top: 6px;
+    font-size: 0.68rem;
+    padding: 2px 8px;
+  }
+  .in-arena .pile-container {
+    gap: 4px;
+  }
+  .in-arena .draw-pile-btn .game-card,
+  .in-arena #discardPile .game-card {
+    width: 68px !important;
+    height: 100px !important;
+  }
+  .in-arena #drawCountBadge,
+  .in-arena .pile-label {
+    font-size: 0.62rem;
+    padding: 2px 7px;
+  }
+  .in-arena .table-action-bar {
+    bottom: -16px;
+    gap: 8px;
+  }
+  .in-arena .action-btn {
+    padding: 6px 12px;
+    font-size: 0.76rem;
+  }
+  .in-arena .card-rack-container {
+    width: 100%;
+  }
+  .in-arena .card-rack-groove {
+    padding: 8px 10px 18px;
+    border-radius: 14px 14px 0 0;
+  }
+  .in-arena .card-rack-lip {
+    height: 18px;
+  }
+  .in-arena .hand-scroll-container {
+    padding: 6px 6px 4px;
+    justify-content: flex-start;
+  }
+  .in-arena .hand-cards {
+    min-height: 110px;
+  }
+  .in-arena .hand-cards .card-wrapper {
+    margin-left: -20px;
+  }
+  .in-arena .game-card {
+    width: 70px;
+    height: 104px;
+  }
+}
