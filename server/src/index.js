@@ -18,6 +18,7 @@ app.use(express.json());
 
 const store = new PersistentRoomStore();
 const roomManager = new RoomManager(store);
+roomManager.onStateChange = (roomId) => broadcastRoomState(roomId);
 
 // Map WebSocket to client metadata: { ws, roomId, playerId }
 const clientSockets = new Map();

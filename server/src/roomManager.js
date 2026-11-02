@@ -33,6 +33,8 @@ export class RoomManager {
   constructor(store) {
     this.rooms = new Map();
     this.store = store;
+    this.turnTimers = new Map();
+    this.onStateChange = null;
     this.loadFromStorage();
   }
 
@@ -362,7 +364,8 @@ export class RoomManager {
         face.type !== 'wild_reverse_draw4' &&
         face.type !== 'wild_draw6' &&
         face.type !== 'wild_draw10' &&
-        face.type !== 'wild_color_roulette'
+        face.type !== 'wild_color_roulette' &&
+        !(room.mode === 'flip' && face.type === 'flip')
       ) {
         break;
       }
@@ -404,6 +407,7 @@ export class RoomManager {
       this.addLog(room, `Game started! ${room.players[0].name}'s turn.`);
     }
 
+    this.resetTurnTimer(room);
     this.persist(roomId);
     return { success: true };
   }
@@ -438,6 +442,71 @@ export class RoomManager {
       return true;
     }
     return false;
+  }
+
+  resetTurnTimer(room) {
+    if (!room) return;
+    if (this.turnTimers.has(room.roomId)) {
+      clearTimeout(this.turnTimers.get(room.roomId));
+      this.turnTimers.delete(room.roomId);
+    }
+
+    if (room.status !== 'playing') {
+      room.turnDeadline = null;
+      return;
+    }
+
+    const DURATION = 20000; // 20 seconds
+    room.turnDeadline = Date.now() + DURATION;
+
+    const currentTurnAtSchedule = room.currentTurn;
+    const timer = setTimeout(() => {
+      this.handleTurnTimeout(room.roomId, currentTurnAtSchedule);
+    }, DURATION + 150);
+    if (timer.unref) timer.unref();
+
+    this.turnTimers.set(room.roomId, timer);
+  }
+
+  handleTurnTimeout(roomId, expectedTurn) {
+    const room = this.rooms.get(roomId);
+    if (!room || room.status !== 'playing') return;
+    // Guard against race conditions where turn already advanced
+    if (room.currentTurn !== expectedTurn) return;
+
+    const currentPlayer = room.players[room.currentTurn];
+    if (!currentPlayer || currentPlayer.isEliminated) return;
+
+    if (room.turnDrawnCard) {
+      // Player already drew, so pass their turn
+      this.passTurn(roomId, currentPlayer.id);
+      this.addLog(room, `⏱️ ${currentPlayer.name}'s turn timed out (20s). Turn passed.`);
+      room.lastActionMessage = `⏱️ ${currentPlayer.name}'s turn timed out (20s).`;
+    } else {
+      // Player took no action: automatically apply penalty/draw and pass
+      if (room.pendingDrawPenalty > 0) {
+        this.drawCard(roomId, currentPlayer.id);
+        this.addLog(room, `⏱️ ${currentPlayer.name}'s turn timed out! Draw penalty applied.`);
+        room.lastActionMessage = `⏱️ ${currentPlayer.name}'s turn timed out! Penalty applied.`;
+      } else {
+        this.drawCard(roomId, currentPlayer.id);
+        if (room.turnDrawnCard) {
+          this.passTurn(roomId, currentPlayer.id);
+        }
+        this.addLog(room, `⏱️ ${currentPlayer.name}'s turn timed out (20s). Drew card & passed.`);
+        room.lastActionMessage = `⏱️ ${currentPlayer.name}'s turn timed out (20s). Drew card & passed.`;
+      }
+    }
+
+    this.persist(roomId);
+
+    if (room.status === 'playing') {
+      this.resetTurnTimer(room);
+    }
+
+    if (this.onStateChange) {
+      this.onStateChange(roomId);
+    }
   }
 
   playCard(roomId, playerId, payload) {
@@ -688,6 +757,7 @@ export class RoomManager {
       room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players, step);
     }
 
+    this.resetTurnTimer(room);
     this.persist(roomId);
     return { success: true };
   }
@@ -806,6 +876,7 @@ export class RoomManager {
     room.turnDrawnCard = false;
     room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players, 1);
     this.addLog(room, `${currentPlayer.name} passed.`);
+    this.resetTurnTimer(room);
     this.persist(roomId);
     return { success: true };
   }
@@ -823,6 +894,7 @@ export class RoomManager {
     }
 
     this.addLog(room, `📢 ${player.name} called UNO!`, 'action');
+    this.resetTurnTimer(room);
     this.persist(roomId);
     return { success: true };
   }
@@ -935,6 +1007,8 @@ export class RoomManager {
       discardRemainingCount: room.discardPile.length,
       pendingAction: room.pendingAction,
       turnDrawnCard: room.turnDrawnCard,
+      turnDeadline: room.turnDeadline || null,
+      turnDurationMs: 20000,
       eventLogs: room.eventLogs.slice(0, 20),
     };
 

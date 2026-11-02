@@ -78,12 +78,16 @@ class UnoArenaApp {
       tableFelt: document.getElementById('tableFelt'),
       directionArrow: document.getElementById('directionArrow'),
       directionText: document.getElementById('directionText'),
+      orbitalDirectionTrack: document.getElementById('orbitalDirectionTrack'),
       discardPile: document.getElementById('discardPile'),
       drawPile: document.getElementById('drawPile'),
       drawPileBtn: document.getElementById('drawPileBtn'),
       drawCountBadge: document.getElementById('drawCountBadge'),
       penaltyTag: document.getElementById('penaltyTag'),
       actionBanner: document.getElementById('actionBanner'),
+      turnTimerContainer: document.getElementById('turnTimerContainer'),
+      timerRingProgress: document.getElementById('timerRingProgress'),
+      turnTimerSeconds: document.getElementById('turnTimerSeconds'),
 
       // Player Controls
       btnDrawAction: document.getElementById('btnDrawAction'),
@@ -118,6 +122,20 @@ class UnoArenaApp {
     // How to Play modal
     this.el.howToPlayBtn.addEventListener('click', () => this.openRulesModal());
     this.el.rulesModalClose.addEventListener('click', () => this.closeRulesModal());
+
+    // Window resize handler: seamlessly recalculate card fan and hand overlap
+    window.addEventListener('resize', () => {
+      if (this.gameState && this.gameState.status === 'playing' && this.clientView) {
+        const canPlayIds = this.clientView.canPlayCards || [];
+        this.renderPlayerHand(
+          this.clientView.myHand || [],
+          canPlayIds,
+          this.gameState.mode || 'classic',
+          this.gameState.flipSide || 'light'
+        );
+      }
+    });
+
     this.el.backToModesBtn.addEventListener('click', () => this.showModePicker());
     this.el.setupMercyLimit.value = String(this.mercyKnockoutLimit);
     this.el.setupMercyLimit.addEventListener('change', () => {
@@ -712,9 +730,18 @@ class UnoArenaApp {
       this.el.tableFelt.classList.remove('dark-side');
     }
 
-    // Direction
-    this.el.directionArrow.className = `direction-arrow ${gameState.direction === -1 ? 'counter-clockwise' : ''}`;
-    this.el.directionText.textContent = gameState.direction === 1 ? 'Clockwise' : 'Counter-Clockwise';
+    // Direction & Animated Orbital Indicator
+    const isClockwise = gameState.direction === 1;
+    if (this.el.tableFelt) {
+      this.el.tableFelt.classList.toggle('direction-clockwise', isClockwise);
+      this.el.tableFelt.classList.toggle('direction-counter-clockwise', !isClockwise);
+    }
+    this.el.directionArrow.className = `direction-arrow ${!isClockwise ? 'counter-clockwise' : ''}`;
+    this.el.directionArrow.textContent = isClockwise ? '↻' : '↺';
+    this.el.directionText.textContent = isClockwise ? 'CLOCKWISE' : 'COUNTER-CLOCKWISE';
+
+    // Synchronized 20-Second Turn Countdown Timer
+    this.updateTurnTimer(gameState.turnDeadline, isMyTurn, gameState.status);
 
     // Opponents
     const opponents = gameState.players.filter((p) => p.id !== this.playerId);
@@ -832,40 +859,175 @@ class UnoArenaApp {
   }
 
   renderPlayerHand(hand, canPlayIds, mode, flipSide) {
-    this.el.playerHandCards.innerHTML = '';
+    const container = this.el.playerHandCards;
+    container.innerHTML = '';
 
     const count = hand.length;
-    const maxAngle = Math.min(count * 1.5, 12);
-    const startAngle = count > 1 ? -maxAngle / 2 : 0;
-    const angleStep = count > 1 ? maxAngle / (count - 1) : 0;
+    if (count === 0) return;
 
-    hand.forEach((card, idx) => {
+    const isMobile = window.innerWidth <= 760;
+    // On mobile, if > 7 cards, use two compact rows. On desktop, if > 14 cards, use two rows.
+    const useTwoRows = isMobile ? count > 7 : count > 14;
+    container.classList.toggle('two-rows', useTwoRows);
+
+    if (useTwoRows) {
+      const row1Count = Math.ceil(count / 2);
+      const row1Cards = hand.slice(0, row1Count);
+      const row2Cards = hand.slice(row1Count);
+
+      const row1El = document.createElement('div');
+      row1El.className = 'hand-row hand-row-top';
+      const row2El = document.createElement('div');
+      row2El.className = 'hand-row hand-row-bottom';
+
+      this.populateHandRow(row1El, row1Cards, 0, canPlayIds, mode, flipSide, isMobile);
+      this.populateHandRow(row2El, row2Cards, row1Count, canPlayIds, mode, flipSide, isMobile);
+
+      container.appendChild(row1El);
+      container.appendChild(row2El);
+    } else {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'hand-row hand-row-single';
+      this.populateHandRow(rowEl, hand, 0, canPlayIds, mode, flipSide, isMobile);
+      container.appendChild(rowEl);
+    }
+  }
+
+  populateHandRow(rowEl, rowCards, startIndex, canPlayIds, mode, flipSide, isMobile) {
+    const rowCount = rowCards.length;
+    const maxCardW = isMobile ? Math.min(56, Math.max(48, Math.round(window.innerWidth * 0.135))) : 76;
+    const parentContainer = this.el.playerHandCards.parentElement;
+    const containerW = (parentContainer && parentContainer.clientWidth) || this.el.playerHandCards.clientWidth || (isMobile ? window.innerWidth - 24 : window.innerWidth);
+    const availableW = Math.max(160, Math.min(containerW - 14, isMobile ? (window.innerWidth - 32) : 860));
+
+    const naturalTotal = rowCount * maxCardW;
+    const needsOverlap = naturalTotal > availableW && rowCount > 1;
+    const overlapMargin = needsOverlap
+      ? -Math.min(maxCardW - 14, Math.ceil((naturalTotal - availableW) / (rowCount - 1)))
+      : (rowCount > 7 ? -8 : 4);
+
+    const maxAngle = Math.min(rowCount * 1.4, 9);
+    const startAngle = rowCount > 1 ? -maxAngle / 2 : 0;
+    const angleStep = rowCount > 1 ? maxAngle / (rowCount - 1) : 0;
+
+    rowCards.forEach((card, idx) => {
+      const globalIdx = startIndex + idx;
       const isPlayable = canPlayIds.includes(card.id);
+      const isSelected = this.selectedCardId === card.id;
+
       const wrapper = document.createElement('div');
-      wrapper.className = `card-wrapper ${isPlayable ? 'playable' : 'unplayable'}`;
-      wrapper.style.zIndex = idx + 1;
+      wrapper.className = `card-wrapper ${isPlayable ? 'playable' : 'unplayable'} ${isSelected ? 'is-selected' : ''}`;
+      wrapper.style.zIndex = isSelected ? 200 : (idx + 1);
+      if (idx > 0) {
+        wrapper.style.marginLeft = `${overlapMargin}px`;
+      }
       wrapper.setAttribute('role', isPlayable ? 'button' : 'img');
       wrapper.setAttribute('tabindex', isPlayable ? '0' : '-1');
+      wrapper.dataset.cardId = card.id;
+
       const cardTitle = card.type === 'number' ? `${card.color || ''} ${card.value}` : `${card.color || ''} ${card.type}`;
       wrapper.setAttribute('aria-label', isPlayable ? `Play card: ${cardTitle}` : `Card: ${cardTitle}`);
       wrapper.innerHTML = renderCardHTML(card, { mode, flipSide });
 
-      const rot = count > 1 ? (startAngle + idx * angleStep).toFixed(1) : '0';
+      const rot = rowCount > 1 ? (startAngle + idx * angleStep).toFixed(1) : '0';
       wrapper.style.setProperty('--card-rot', `${rot}deg`);
-      wrapper.style.transform = `rotate(${rot}deg)`;
-
-      if (isPlayable) {
-        wrapper.addEventListener('click', () => this.handleCardClick(card, wrapper));
-        wrapper.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            this.handleCardClick(card, wrapper);
-          }
-        });
+      if (!isSelected) {
+        wrapper.style.transform = `rotate(${rot}deg)`;
       }
 
-      this.el.playerHandCards.appendChild(wrapper);
+      wrapper.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.onCardInteraction(card, wrapper, isPlayable);
+      });
+      wrapper.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.onCardInteraction(card, wrapper, isPlayable);
+        }
+      });
+
+      rowEl.appendChild(wrapper);
     });
+  }
+
+  onCardInteraction(card, wrapperEl, isPlayable) {
+    if (this.selectedCardId === card.id) {
+      // Second tap on selected card -> play it!
+      if (isPlayable && !this.isMoveInFlight) {
+        this.handleCardClick(card, wrapperEl);
+      }
+    } else {
+      // First tap -> select it with golden highlight and raise it
+      this.selectedCardId = card.id;
+      document.querySelectorAll('#playerHandCards .card-wrapper.is-selected').forEach((el) => {
+        el.classList.remove('is-selected');
+        el.style.zIndex = '';
+        el.style.transform = `rotate(${el.style.getPropertyValue('--card-rot') || '0deg'})`;
+      });
+      wrapperEl.classList.add('is-selected');
+      wrapperEl.style.zIndex = '200';
+      wrapperEl.style.transform = 'translateY(-18px) scale(1.08)';
+
+      // On desktop fine pointer, allow single-click play if desired
+      if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && isPlayable && !this.isMoveInFlight) {
+        this.handleCardClick(card, wrapperEl);
+      }
+    }
+  }
+
+  updateTurnTimer(deadline, isMyTurn, status) {
+    if (this.turnTimerInterval) {
+      clearInterval(this.turnTimerInterval);
+      this.turnTimerInterval = null;
+    }
+
+    const container = this.el.turnTimerContainer;
+    const progressRing = this.el.timerRingProgress;
+    const secondsEl = this.el.turnTimerSeconds;
+
+    if (!container || !progressRing || !secondsEl) return;
+
+    if (status !== 'playing' || !deadline) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'flex';
+    container.classList.toggle('my-turn', Boolean(isMyTurn));
+
+    const totalSeconds = 20;
+    const circumference = 138.23; // 2 * Math.PI * 22
+
+    const tick = () => {
+      const now = Date.now();
+      const remainingMs = Math.max(0, deadline - now);
+      const remainingSec = Math.ceil(remainingMs / 1000);
+
+      secondsEl.textContent = String(remainingSec);
+
+      const fraction = Math.max(0, Math.min(1, remainingMs / (totalSeconds * 1000)));
+      const offset = circumference * (1 - fraction);
+      progressRing.style.strokeDashoffset = offset.toFixed(2);
+
+      container.classList.remove('timer-normal', 'timer-warning', 'timer-critical', 'timer-expired');
+      if (remainingSec > 10) {
+        container.classList.add('timer-normal');
+      } else if (remainingSec > 5) {
+        container.classList.add('timer-warning');
+      } else if (remainingSec > 0) {
+        container.classList.add('timer-critical');
+      } else {
+        container.classList.add('timer-expired');
+      }
+
+      if (remainingMs <= 0 && this.turnTimerInterval) {
+        clearInterval(this.turnTimerInterval);
+        this.turnTimerInterval = null;
+      }
+    };
+
+    tick();
+    this.turnTimerInterval = setInterval(tick, 250);
   }
 
   handleCardClick(card, wrapperEl) {
@@ -1030,6 +1192,10 @@ class UnoArenaApp {
     this.roomId = null;
     this.playerId = null;
     this.sessionToken = null;
+    if (this.turnTimerInterval) {
+      clearInterval(this.turnTimerInterval);
+      this.turnTimerInterval = null;
+    }
     if (this.pingInterval) {
       clearInterval(this.pingInterval);
       this.pingInterval = null;

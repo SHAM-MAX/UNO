@@ -159,14 +159,43 @@
       <!-- Opponents Row -->
       <div id="opponentsRow" class="opponents-row"></div>
 
-      <!-- Action Announcement Banner -->
-      <div id="actionBanner" class="action-banner">
-        Waiting for next move...
+      <!-- Turn Status & 20-Second Circular Countdown Timer -->
+      <div class="turn-status-row">
+        <div id="actionBanner" class="action-banner">
+          Waiting for next move...
+        </div>
+        <div id="turnTimerContainer" class="turn-timer-container" aria-label="Turn countdown timer">
+          <svg class="timer-ring-svg" viewBox="0 0 54 54">
+            <circle class="timer-ring-bg" cx="27" cy="27" r="22" />
+            <circle id="timerRingProgress" class="timer-ring-progress" cx="27" cy="27" r="22" stroke-dasharray="138.23" stroke-dashoffset="0" />
+          </svg>
+          <div class="timer-inner">
+            <span id="turnTimerSeconds" class="timer-seconds">20</span>
+          </div>
+        </div>
       </div>
 
       <!-- Central Arena Table Felt -->
       <div class="center-table">
-        <div id="tableFelt" class="table-felt">
+        <div id="tableFelt" class="table-felt direction-clockwise">
+          
+          <!-- Animated Orbital Direction Ring (Perimeter Arrow Indicator) -->
+          <div id="orbitalDirectionTrack" class="orbital-direction-track" aria-hidden="true">
+            <svg class="orbital-svg" viewBox="0 0 700 370" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="orbitalGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#f59e0b"/>
+                  <stop offset="50%" stop-color="#fde047"/>
+                  <stop offset="100%" stop-color="#b45309"/>
+                </linearGradient>
+              </defs>
+              <rect class="orbital-path-line" x="6" y="6" width="688" height="358" rx="179" />
+            </svg>
+            <div class="orbit-arrow orbit-arrow-1">➤</div>
+            <div class="orbit-arrow orbit-arrow-2">➤</div>
+            <div class="orbit-arrow orbit-arrow-3">➤</div>
+            <div class="orbit-arrow orbit-arrow-4">➤</div>
+          </div>
           
           <!-- Direction Wheel -->
           <div class="direction-indicator">
