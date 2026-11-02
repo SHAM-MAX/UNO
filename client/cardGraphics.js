@@ -11,6 +11,39 @@ const FACE_NAMES = {
   wild_color_roulette: 'Wild color roulette',
 };
 
+const CLASSIC_COLOR_INDEX = { red: 0, yellow: 1, green: 2, blue: 3 };
+const CLASSIC_ZERO_COLUMNS = { blue: 0, red: 1, yellow: 2, green: 3 };
+
+function classicSheetFace(card, face) {
+  const serial = Number(card.id?.match(/^c-(\d+)$/)?.[1]);
+  if (!Number.isInteger(serial) || serial < 1 || serial > 108) return null;
+
+  if (face.color === 'wild') {
+    const first = face.type === 'wild_draw4' ? 105 : 101;
+    if (face.type !== 'wild' && face.type !== 'wild_draw4') return null;
+    return { row: 8, col: (face.type === 'wild_draw4' ? 8 : 4) + ((serial - first) % 4) };
+  }
+
+  const colorIndex = CLASSIC_COLOR_INDEX[face.color];
+  if (colorIndex === undefined) return null;
+  const colorStart = colorIndex * 25;
+  const local = serial - 1 - colorStart;
+
+  if (face.type === 'number' && face.value === 0) {
+    const zeroCol = CLASSIC_ZERO_COLUMNS[face.color];
+    return zeroCol !== undefined ? { row: 8, col: zeroCol } : null;
+  }
+  if (face.type === 'number' && face.value >= 1 && face.value <= 9) {
+    const copy = local - (1 + (face.value - 1) * 2);
+    return { row: colorIndex + copy * 4, col: face.value - 1 };
+  }
+
+  const actionColumns = { skip: [19, 9], reverse: [21, 10], draw2: [23, 11] };
+  const action = actionColumns[face.type];
+  if (!action) return null;
+  return { row: colorIndex + (local - action[0]) * 4, col: action[1] };
+}
+
 export function getCardLabel(face) {
   return face.type === 'number' ? String(face.value) : (FACE_NAMES[face.type] || face.type);
 }
@@ -45,6 +78,14 @@ export function renderCardHTML(card, options = {}) {
   const metadata = COLOR_METADATA[face.color] || COLOR_METADATA.wild;
   const isWild = face.color === 'wild';
   const isNumber = face.type === 'number';
+
+  if (mode === 'classic') {
+    const sprite = classicSheetFace(card, face);
+    if (sprite && sprite.row >= 0 && sprite.row < 9 && sprite.col >= 0 && sprite.col < 12) {
+      const description = `${getCardLabel(face)}${isWild ? '' : `, ${metadata.name}`}`;
+      return `<div class="game-card classic-image-card ${mini ? 'mini' : ''}" role="img" aria-label="${description}" title="${description}"><img class="classic-face-image" src="/assets/classic-cards/r${sprite.row}-c${sprite.col}.png" alt="" draggable="false"></div>`;
+    }
+  }
   const modeClass = mode === 'flip' ? `flip-${flipSide}` : mode;
   const value = isNumber ? String(face.value) : wildMark(face.type);
   const action = isWild ? value : (isNumber ? value : actionGlyph(face.type, mode));
@@ -74,6 +115,9 @@ export function renderCardHTML(card, options = {}) {
   </div>`;
 }
 
-export function renderCardBackHTML(isDark = false, mini = false) {
+export function renderCardBackHTML(isDark = false, mini = false, mode = 'classic') {
+  if (mode === 'classic') {
+    return `<div class="game-card classic-image-card classic-image-back ${mini ? 'mini' : ''}" aria-label="UNO card back" role="img"><img class="classic-back-image" src="/assets/uno-classic-back.png" alt="" draggable="false"></div>`;
+  }
   return `<div class="game-card back-face ${isDark ? 'flip-back' : ''} ${mini ? 'mini' : ''}" aria-hidden="true"><div class="card-back-oval ${isDark ? 'dark-mode' : ''}"><span class="card-back-text">${isDark ? 'FLIP' : 'UNO'}</span></div></div>`;
 }
