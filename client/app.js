@@ -62,6 +62,24 @@ class UnoArenaApp {
       setupRulesCard: document.getElementById('setupRulesCard'),
       setupMercyLimit: document.getElementById('setupMercyLimit'),
 
+      // No Mercy Setup dedicated elements
+      noMercySetupContainer: document.getElementById('noMercySetupContainer'),
+      noMercyPlayerNameInput: document.getElementById('noMercyPlayerNameInput'),
+      noMercyCreateRoomBtn: document.getElementById('noMercyCreateRoomBtn'),
+      noMercyRoomCodeInput: document.getElementById('noMercyRoomCodeInput'),
+      noMercyJoinRoomBtn: document.getElementById('noMercyJoinRoomBtn'),
+      noMercyLimitSelect: document.getElementById('noMercyLimitSelect'),
+      noMercyBackBtn: document.getElementById('noMercyBackBtn'),
+      noMercySoundBtn: document.getElementById('noMercySoundBtn'),
+      noMercyRulesBtn: document.getElementById('noMercyRulesBtn'),
+      noMercyMobilePlayerNameInput: document.getElementById('noMercyMobilePlayerNameInput'),
+      noMercyMobileCreateRoomBtn: document.getElementById('noMercyMobileCreateRoomBtn'),
+      noMercyMobileRoomCodeInput: document.getElementById('noMercyMobileRoomCodeInput'),
+      noMercyMobileJoinRoomBtn: document.getElementById('noMercyMobileJoinRoomBtn'),
+      noMercyMobileLimitSelect: document.getElementById('noMercyMobileLimitSelect'),
+      noMercyMobileBackBtn: document.getElementById('noMercyMobileBackBtn'),
+      noMercyMobileRulesBtn: document.getElementById('noMercyMobileRulesBtn'),
+
       // Lobby
       lobbySection: document.getElementById('lobbySection'),
       lobbyCodeBadge: document.getElementById('lobbyCodeBadge'),
@@ -182,6 +200,115 @@ class UnoArenaApp {
     this.el.setupRoomCodeInput.addEventListener('input', () => {
       this.el.setupRoomCodeInput.value = this.el.setupRoomCodeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     });
+
+    // Dedicated No Mercy Setup Event Handlers
+    if (this.el.noMercyBackBtn) {
+      this.el.noMercyBackBtn.addEventListener('click', () => this.showModePicker());
+    }
+    if (this.el.noMercyMobileBackBtn) {
+      this.el.noMercyMobileBackBtn.addEventListener('click', () => this.showModePicker());
+    }
+
+    if (this.el.noMercySoundBtn) {
+      this.el.noMercySoundBtn.addEventListener('click', () => {
+        const next = sounds.toggle();
+        this.updateSoundIcon(next);
+      });
+    }
+
+    if (this.el.noMercyRulesBtn) {
+      this.el.noMercyRulesBtn.addEventListener('click', () => this.openRulesModal());
+    }
+    if (this.el.noMercyMobileRulesBtn) {
+      this.el.noMercyMobileRulesBtn.addEventListener('click', () => this.openRulesModal());
+    }
+
+    const syncMercyLimit = (val) => {
+      this.mercyKnockoutLimit = Number(val) || 25;
+      localStorage.setItem('uno_arena_mercy_limit', String(this.mercyKnockoutLimit));
+      if (this.el.noMercyLimitSelect) this.el.noMercyLimitSelect.value = String(this.mercyKnockoutLimit);
+      if (this.el.noMercyMobileLimitSelect) this.el.noMercyMobileLimitSelect.value = String(this.mercyKnockoutLimit);
+      if (this.el.setupMercyLimit) this.el.setupMercyLimit.value = String(this.mercyKnockoutLimit);
+    };
+    if (this.el.noMercyLimitSelect) {
+      this.el.noMercyLimitSelect.addEventListener('change', () => syncMercyLimit(this.el.noMercyLimitSelect.value));
+    }
+    if (this.el.noMercyMobileLimitSelect) {
+      this.el.noMercyMobileLimitSelect.addEventListener('change', () => syncMercyLimit(this.el.noMercyMobileLimitSelect.value));
+    }
+
+    const syncPlayerName = (val) => {
+      if (this.el.noMercyPlayerNameInput && this.el.noMercyPlayerNameInput !== document.activeElement) {
+        this.el.noMercyPlayerNameInput.value = val;
+      }
+      if (this.el.noMercyMobilePlayerNameInput && this.el.noMercyMobilePlayerNameInput !== document.activeElement) {
+        this.el.noMercyMobilePlayerNameInput.value = val;
+      }
+      if (this.el.setupPlayerNameInput) this.el.setupPlayerNameInput.value = val;
+      if (this.el.playerNameInput) this.el.playerNameInput.value = val;
+    };
+    if (this.el.noMercyPlayerNameInput) {
+      this.el.noMercyPlayerNameInput.addEventListener('input', () => syncPlayerName(this.el.noMercyPlayerNameInput.value));
+      this.el.noMercyPlayerNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.triggerNoMercyCreate();
+        }
+      });
+    }
+    if (this.el.noMercyMobilePlayerNameInput) {
+      this.el.noMercyMobilePlayerNameInput.addEventListener('input', () => syncPlayerName(this.el.noMercyMobilePlayerNameInput.value));
+      this.el.noMercyMobilePlayerNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.triggerNoMercyCreate();
+        }
+      });
+    }
+
+    const syncRoomCode = (inputEl) => {
+      inputEl.value = inputEl.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const val = inputEl.value;
+      if (this.el.noMercyRoomCodeInput && this.el.noMercyRoomCodeInput !== inputEl) {
+        this.el.noMercyRoomCodeInput.value = val;
+      }
+      if (this.el.noMercyMobileRoomCodeInput && this.el.noMercyMobileRoomCodeInput !== inputEl) {
+        this.el.noMercyMobileRoomCodeInput.value = val;
+      }
+      if (this.el.setupRoomCodeInput) this.el.setupRoomCodeInput.value = val;
+    };
+    if (this.el.noMercyRoomCodeInput) {
+      this.el.noMercyRoomCodeInput.addEventListener('input', () => syncRoomCode(this.el.noMercyRoomCodeInput));
+      this.el.noMercyRoomCodeInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.triggerNoMercyJoin();
+        }
+      });
+    }
+    if (this.el.noMercyMobileRoomCodeInput) {
+      this.el.noMercyMobileRoomCodeInput.addEventListener('input', () => syncRoomCode(this.el.noMercyMobileRoomCodeInput));
+      this.el.noMercyMobileRoomCodeInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.triggerNoMercyJoin();
+        }
+      });
+    }
+
+    if (this.el.noMercyCreateRoomBtn) {
+      this.el.noMercyCreateRoomBtn.addEventListener('click', () => this.triggerNoMercyCreate());
+    }
+    if (this.el.noMercyMobileCreateRoomBtn) {
+      this.el.noMercyMobileCreateRoomBtn.addEventListener('click', () => this.triggerNoMercyCreate());
+    }
+
+    if (this.el.noMercyJoinRoomBtn) {
+      this.el.noMercyJoinRoomBtn.addEventListener('click', () => this.triggerNoMercyJoin());
+    }
+    if (this.el.noMercyMobileJoinRoomBtn) {
+      this.el.noMercyMobileJoinRoomBtn.addEventListener('click', () => this.triggerNoMercyJoin());
+    }
 
     // Leave room
     this.el.leaveBtn.addEventListener('click', () => this.leaveRoom());
@@ -396,17 +523,74 @@ class UnoArenaApp {
     this.el.setupModeDescription.textContent = details[mode][1];
     this.el.setupRulesCard.hidden = mode !== 'no_mercy';
     this.el.setupMercyLimit.value = String(this.mercyKnockoutLimit);
-    this.el.setupPlayerNameInput.value = this.el.playerNameInput.value.trim() || this.playerName;
+    const currentName = this.el.playerNameInput.value.trim() || this.playerName || '';
+    this.el.setupPlayerNameInput.value = currentName;
+
+    const isNoMercy = mode === 'no_mercy';
+    this.el.modeSetupSection.classList.toggle('mode-no-mercy-setup', isNoMercy);
+    document.body.classList.toggle('in-no-mercy-setup', isNoMercy);
+
+    if (isNoMercy) {
+      if (this.el.noMercyPlayerNameInput) this.el.noMercyPlayerNameInput.value = currentName;
+      if (this.el.noMercyMobilePlayerNameInput) this.el.noMercyMobilePlayerNameInput.value = currentName;
+      if (this.el.noMercyLimitSelect) this.el.noMercyLimitSelect.value = String(this.mercyKnockoutLimit);
+      if (this.el.noMercyMobileLimitSelect) this.el.noMercyMobileLimitSelect.value = String(this.mercyKnockoutLimit);
+      if (this.el.noMercyRoomCodeInput) this.el.noMercyRoomCodeInput.value = '';
+      if (this.el.noMercyMobileRoomCodeInput) this.el.noMercyMobileRoomCodeInput.value = '';
+    }
+
     this.el.modeHomeScreen.hidden = true;
     this.el.modeSetupSection.hidden = false;
   }
 
   showModePicker() {
-    if (this.el.setupPlayerNameInput && this.el.setupPlayerNameInput.value.trim()) {
-      this.el.playerNameInput.value = this.el.setupPlayerNameInput.value.trim();
+    const enteredName = this.el.noMercyPlayerNameInput?.value?.trim() ||
+      this.el.noMercyMobilePlayerNameInput?.value?.trim() ||
+      this.el.setupPlayerNameInput?.value?.trim();
+    if (enteredName) {
+      this.playerName = enteredName;
+      this.el.playerNameInput.value = enteredName;
+      localStorage.setItem('uno_arena_name', enteredName);
     }
+    this.el.modeSetupSection.classList.remove('mode-no-mercy-setup');
+    document.body.classList.remove('in-no-mercy-setup');
     this.el.modeSetupSection.hidden = true;
     this.el.modeHomeScreen.hidden = false;
+  }
+
+  triggerNoMercyCreate() {
+    const inputVal = (this.el.noMercyPlayerNameInput?.value || this.el.noMercyMobilePlayerNameInput?.value || '').trim();
+    const name = inputVal || this.playerName || 'Player 1';
+    this.playerName = name;
+    localStorage.setItem('uno_arena_name', name);
+    this.createRoom(name, 'no_mercy', this.getSelectedHouseRules());
+  }
+
+  triggerNoMercyJoin() {
+    const nameInputVal = (this.el.noMercyPlayerNameInput?.value || this.el.noMercyMobilePlayerNameInput?.value || '').trim();
+    const name = nameInputVal || this.playerName || 'Guest';
+    const code = (this.el.noMercyRoomCodeInput?.value || this.el.noMercyMobileRoomCodeInput?.value || '').trim().toUpperCase();
+    if (!code) {
+      this.showToast('Enter your friend’s room code');
+      if (this.el.noMercyRoomCodeInput && this.el.noMercyRoomCodeInput.offsetParent) {
+        this.el.noMercyRoomCodeInput.focus();
+      } else if (this.el.noMercyMobileRoomCodeInput) {
+        this.el.noMercyMobileRoomCodeInput.focus();
+      }
+      return;
+    }
+    if (this.isJoiningRoom) return;
+    this.isJoiningRoom = true;
+    if (this.el.noMercyJoinRoomBtn) this.el.noMercyJoinRoomBtn.disabled = true;
+    if (this.el.noMercyMobileJoinRoomBtn) this.el.noMercyMobileJoinRoomBtn.disabled = true;
+    this.playerName = name;
+    localStorage.setItem('uno_arena_name', name);
+    this.connectWebSocket(code, null, null, name);
+    setTimeout(() => {
+      this.isJoiningRoom = false;
+      if (this.el.noMercyJoinRoomBtn) this.el.noMercyJoinRoomBtn.disabled = false;
+      if (this.el.noMercyMobileJoinRoomBtn) this.el.noMercyMobileJoinRoomBtn.disabled = false;
+    }, 2500);
   }
 
   getSelectedHouseRules() {
@@ -622,9 +806,11 @@ class UnoArenaApp {
   renderLobby() {
     document.body.classList.add('in-room');
     document.body.classList.remove('in-arena');
+    document.body.classList.remove('in-no-mercy-setup');
     this.el.entryView.style.display = 'block';
     this.el.arenaView.style.display = 'none';
     this.el.modeSetupSection.hidden = true;
+    this.el.modeSetupSection.classList.remove('mode-no-mercy-setup');
     this.el.modeHomeScreen.hidden = true;
     this.el.lobbySection.style.display = 'block';
     document.getElementById('entryFormSection').style.display = 'none';
