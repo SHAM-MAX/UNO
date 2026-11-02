@@ -130,6 +130,12 @@ class UnoArenaApp {
       localStorage.setItem('uno_arena_name', name);
       this.createRoom(name, this.preferredMode, this.getSelectedHouseRules());
     });
+    this.el.setupPlayerNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.el.setupCreateRoomBtn.click();
+      }
+    });
     this.el.setupJoinRoomBtn.addEventListener('click', () => {
       const name = this.el.setupPlayerNameInput.value.trim() || this.playerName || 'Guest';
       const code = this.el.setupRoomCodeInput.value.trim().toUpperCase();
@@ -138,9 +144,22 @@ class UnoArenaApp {
         this.el.setupRoomCodeInput.focus();
         return;
       }
+      if (this.isJoiningRoom) return;
+      this.isJoiningRoom = true;
+      this.el.setupJoinRoomBtn.disabled = true;
       this.playerName = name;
       localStorage.setItem('uno_arena_name', name);
       this.connectWebSocket(code, null, null, name);
+      setTimeout(() => {
+        this.isJoiningRoom = false;
+        if (this.el.setupJoinRoomBtn) this.el.setupJoinRoomBtn.disabled = false;
+      }, 2500);
+    });
+    this.el.setupRoomCodeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.el.setupJoinRoomBtn.click();
+      }
     });
     this.el.setupRoomCodeInput.addEventListener('input', () => {
       this.el.setupRoomCodeInput.value = this.el.setupRoomCodeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -157,6 +176,25 @@ class UnoArenaApp {
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && this.el.leaveConfirmModal.classList.contains('active')) {
         this.closeLeaveConfirm();
+      }
+    });
+
+    // Ensure connection immediately refreshes when tab regains visibility/focus
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && this.roomId) {
+        if (!this.ws || this.ws.readyState === WebSocket.CLOSED || this.ws.readyState === WebSocket.CLOSING) {
+          const sToken = localStorage.getItem(`session_${this.roomId}`);
+          const pId = localStorage.getItem(`player_${this.roomId}`);
+          this.connectWebSocket(this.roomId, pId, sToken, this.playerName);
+        }
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      if (this.roomId && (!this.ws || this.ws.readyState === WebSocket.CLOSED || this.ws.readyState === WebSocket.CLOSING)) {
+        const sToken = localStorage.getItem(`session_${this.roomId}`);
+        const pId = localStorage.getItem(`player_${this.roomId}`);
+        this.connectWebSocket(this.roomId, pId, sToken, this.playerName);
       }
     });
 
@@ -183,6 +221,13 @@ class UnoArenaApp {
       this.createRoom(name, this.preferredMode, this.getSelectedHouseRules());
     });
 
+    this.el.playerNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.el.createRoomBtn.click();
+      }
+    });
+
     // Join room
     this.el.joinRoomBtn.addEventListener('click', () => {
       const name = this.el.playerNameInput.value.trim() || 'Guest';
@@ -191,9 +236,23 @@ class UnoArenaApp {
         this.showToast('Please enter a room code');
         return;
       }
+      if (this.isJoiningRoom) return;
+      this.isJoiningRoom = true;
+      this.el.joinRoomBtn.disabled = true;
       this.playerName = name;
       localStorage.setItem('uno_arena_name', name);
       this.connectWebSocket(code, null, null, name);
+      setTimeout(() => {
+        this.isJoiningRoom = false;
+        if (this.el.joinRoomBtn) this.el.joinRoomBtn.disabled = false;
+      }, 2500);
+    });
+
+    this.el.roomCodeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.el.joinRoomBtn.click();
+      }
     });
 
     // Copy invite
@@ -204,23 +263,39 @@ class UnoArenaApp {
     // Ready & Start
     this.el.readyBtn.addEventListener('click', () => {
       if (!this.clientView) return;
+      const now = Date.now();
+      if (this.lastReadyClick && now - this.lastReadyClick < 350) return;
+      this.lastReadyClick = now;
       const me = this.clientView.gameState.players.find((p) => p.id === this.playerId);
       const nextReady = !me?.isReady;
       this.send({ type: 'ready', data: { isReady: nextReady } });
     });
 
     this.el.startGameBtn.addEventListener('click', () => {
+      if (this.isStartingGame) return;
+      this.isStartingGame = true;
+      this.el.startGameBtn.disabled = true;
       this.send({ type: 'start_game' });
+      setTimeout(() => {
+        this.isStartingGame = false;
+      }, 2000);
     });
 
     // In-game actions
     this.el.btnDrawAction.addEventListener('click', () => {
+      if (this.isMoveInFlight) return;
+      this.isMoveInFlight = true;
+      clearTimeout(this.moveFlightTimer);
+      this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
       sounds.playDraw();
       this.send({ type: 'draw_card' });
     });
 
     this.el.drawPileBtn.addEventListener('click', () => {
-      if (this.clientView?.isMyTurn) {
+      if (this.clientView?.isMyTurn && !this.isMoveInFlight) {
+        this.isMoveInFlight = true;
+        clearTimeout(this.moveFlightTimer);
+        this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
         sounds.playDraw();
         this.send({ type: 'draw_card' });
       }
@@ -309,6 +384,9 @@ class UnoArenaApp {
   }
 
   showModePicker() {
+    if (this.el.setupPlayerNameInput && this.el.setupPlayerNameInput.value.trim()) {
+      this.el.playerNameInput.value = this.el.setupPlayerNameInput.value.trim();
+    }
     this.el.modeSetupSection.hidden = true;
     this.el.modeHomeScreen.hidden = false;
   }
@@ -320,21 +398,72 @@ class UnoArenaApp {
   }
 
   async createRoom(hostName, mode = this.preferredMode, houseRules = {}) {
+    if (this.isCreatingRoom) return;
+    this.isCreatingRoom = true;
+    if (this.el.createRoomBtn) this.el.createRoomBtn.disabled = true;
+    if (this.el.setupCreateRoomBtn) this.el.setupCreateRoomBtn.disabled = true;
+
     try {
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hostName, mode, houseRules }),
       });
-      const data = await res.json();
-      if (data.success) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data && data.success) {
         this.roomId = data.roomId;
         this.playerId = data.playerId;
         this.sessionToken = data.sessionToken;
+        this.playerName = hostName;
+        localStorage.setItem(`session_${this.roomId}`, this.sessionToken);
+        localStorage.setItem(`player_${this.roomId}`, this.playerId);
+        localStorage.setItem('uno_arena_name', hostName);
+
+        // Update URL immediately so room link is accurate
+        const roomUrl = new URL(window.location.href);
+        roomUrl.searchParams.set('room', this.roomId);
+        window.history.replaceState({}, '', roomUrl);
+
+        // Immediate lobby transition: do not wait for WebSocket handshake roundtrip
+        const initialHost = {
+          id: this.playerId,
+          name: hostName,
+          isHost: true,
+          isReady: true,
+          isConnected: true,
+          cardCount: 0,
+          hasCalledUno: false,
+          isEliminated: false,
+          score: 0,
+        };
+        const initialGameState = {
+          roomId: this.roomId,
+          status: 'lobby',
+          mode: mode || 'classic',
+          houseRules: houseRules || {},
+          players: [initialHost],
+          hostId: this.playerId,
+        };
+        this.handleRoomState({
+          playerId: this.playerId,
+          gameState: initialGameState,
+          myHand: [],
+          canPlayCards: [],
+          isMyTurn: false,
+        });
+
+        // Connect WebSocket in background for real-time multiplayer synchronization
         this.connectWebSocket(data.roomId, data.playerId, data.sessionToken, hostName);
+      } else {
+        const errorMsg = data?.error || `Failed to create room (${res.status})`;
+        this.showToast(errorMsg);
       }
     } catch (e) {
-      this.showToast('Error creating room');
+      this.showToast('Network error creating room. Please try again.');
+    } finally {
+      this.isCreatingRoom = false;
+      if (this.el.createRoomBtn) this.el.createRoomBtn.disabled = false;
+      if (this.el.setupCreateRoomBtn) this.el.setupCreateRoomBtn.disabled = false;
     }
   }
 
@@ -358,6 +487,13 @@ class UnoArenaApp {
         sessionToken,
         playerName: playerName || this.playerName,
       });
+      // Flush any messages queued while connection was establishing
+      if (this.pendingMessages && this.pendingMessages.length > 0) {
+        while (this.pendingMessages.length > 0) {
+          const queued = this.pendingMessages.shift();
+          this.ws.send(JSON.stringify(queued));
+        }
+      }
     };
 
     this.ws.onmessage = (event) => {
@@ -400,20 +536,28 @@ class UnoArenaApp {
   }
 
   send(payload) {
+    const full = {
+      roomId: this.roomId,
+      playerId: this.playerId,
+      sessionToken: this.sessionToken,
+      ...payload,
+    };
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      const full = {
-        roomId: this.roomId,
-        playerId: this.playerId,
-        sessionToken: this.sessionToken,
-        ...payload,
-      };
       this.ws.send(JSON.stringify(full));
+    } else if (payload.type !== 'join') {
+      this.pendingMessages = this.pendingMessages || [];
+      this.pendingMessages.push(full);
     }
   }
 
   handleRoomState(view) {
     this.clientView = view;
     this.gameState = view.gameState;
+    this.isMoveInFlight = false;
+    this.isStartingGame = false;
+    this.isJoiningRoom = false;
+    if (this.el.joinRoomBtn) this.el.joinRoomBtn.disabled = false;
+    if (this.el.setupJoinRoomBtn) this.el.setupJoinRoomBtn.disabled = false;
 
     // Update Top Bar
     this.el.navRoomCode.textContent = `ROOM: ${this.gameState.roomId}`;
@@ -582,7 +726,11 @@ class UnoArenaApp {
     }
 
     // Draw Pile
-    this.el.drawPile.innerHTML = renderCardBackHTML(gameState.mode === 'flip' && gameState.flipSide === 'dark');
+    this.el.drawPile.innerHTML = renderCardBackHTML(
+      gameState.mode === 'flip' && gameState.flipSide === 'dark',
+      false,
+      gameState.mode,
+    );
     this.el.drawCountBadge.textContent = `${gameState.deckRemainingCount} cards`;
     this.el.drawPileBtn.disabled = !isMyTurn;
 
@@ -636,22 +784,35 @@ class UnoArenaApp {
       const wrapper = document.createElement('div');
       wrapper.className = `card-wrapper ${isPlayable ? 'playable' : 'unplayable'}`;
       wrapper.style.zIndex = idx + 1;
+      wrapper.setAttribute('role', isPlayable ? 'button' : 'img');
+      wrapper.setAttribute('tabindex', isPlayable ? '0' : '-1');
+      const cardTitle = card.type === 'number' ? `${card.color || ''} ${card.value}` : `${card.color || ''} ${card.type}`;
+      wrapper.setAttribute('aria-label', isPlayable ? `Play card: ${cardTitle}` : `Card: ${cardTitle}`);
       wrapper.innerHTML = renderCardHTML(card, { mode, flipSide });
 
       if (isPlayable) {
-        wrapper.addEventListener('click', () => this.handleCardClick(card));
+        wrapper.addEventListener('click', () => this.handleCardClick(card, wrapper));
+        wrapper.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.handleCardClick(card, wrapper);
+          }
+        });
       }
 
       this.el.playerHandCards.appendChild(wrapper);
     });
   }
 
-  handleCardClick(card) {
+  handleCardClick(card, wrapperEl) {
+    if (this.isMoveInFlight) return;
+
     const face = card.color ? card : (this.gameState.flipSide === 'dark' ? card.dark : card.light);
 
     // Wild Card -> Prompt Color Picker
     if (face.color === 'wild') {
       this.pendingPlayCard = card;
+      this.pendingPlayWrapper = wrapperEl;
       this.openColorPicker();
       return;
     }
@@ -659,11 +820,20 @@ class UnoArenaApp {
     // 7 in No Mercy -> Prompt Swap Picker
     if (this.gameState.mode === 'no_mercy' && face.type === 'number' && face.value === 7) {
       this.pendingPlayCard = card;
+      this.pendingPlayWrapper = wrapperEl;
       this.openSwapPicker();
       return;
     }
 
     // Regular Card Play
+    this.isMoveInFlight = true;
+    clearTimeout(this.moveFlightTimer);
+    this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
+
+    if (wrapperEl) {
+      wrapperEl.classList.add('playing');
+    }
+
     sounds.playSnap();
     this.send({
       type: 'play_card',
@@ -689,6 +859,15 @@ class UnoArenaApp {
 
     this.el.colorOptionsContainer.querySelectorAll('.color-option-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
+        if (this.isMoveInFlight) return;
+        this.isMoveInFlight = true;
+        clearTimeout(this.moveFlightTimer);
+        this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
+
+        if (this.pendingPlayWrapper) {
+          this.pendingPlayWrapper.classList.add('playing');
+        }
+
         const chosenColor = e.currentTarget.dataset.color;
         this.el.colorPickerModal.classList.remove('active');
         sounds.playSnap(520, 0.1);
@@ -700,6 +879,7 @@ class UnoArenaApp {
           },
         });
         this.pendingPlayCard = null;
+        this.pendingPlayWrapper = null;
       });
     });
 
@@ -724,6 +904,15 @@ class UnoArenaApp {
 
     this.el.swapOptionsContainer.querySelectorAll('.player-target-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
+        if (this.isMoveInFlight) return;
+        this.isMoveInFlight = true;
+        clearTimeout(this.moveFlightTimer);
+        this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
+
+        if (this.pendingPlayWrapper) {
+          this.pendingPlayWrapper.classList.add('playing');
+        }
+
         const targetPlayerId = e.currentTarget.dataset.playerId;
         this.el.swapPickerModal.classList.remove('active');
         sounds.playSnap(400, 0.1);
@@ -735,6 +924,7 @@ class UnoArenaApp {
           },
         });
         this.pendingPlayCard = null;
+        this.pendingPlayWrapper = null;
       });
     });
 
@@ -782,9 +972,19 @@ class UnoArenaApp {
 
   copyInviteLink() {
     const url = `${window.location.origin}/?room=${this.gameState?.roomId || this.roomId}`;
-    navigator.clipboard.writeText(url).then(() => {
-      this.showToast('Invite link copied to clipboard! 📋');
-    });
+    if (this.el.lobbyCodeBadge) {
+      this.el.lobbyCodeBadge.classList.add('copied');
+      setTimeout(() => this.el.lobbyCodeBadge.classList.remove('copied'), 1200);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        this.showToast('Invite link copied to clipboard! 📋');
+      }).catch(() => {
+        this.showToast('Invite link copied! 📋');
+      });
+    } else {
+      this.showToast('Invite link copied! 📋');
+    }
   }
 }
 

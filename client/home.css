@@ -396,16 +396,28 @@ body::before {
     line-height: 1;
   }
 
-  .home-button:hover,
-  .home-button:focus-visible {
+  .home-button:hover:not(:disabled) {
     transform: translateY(-1px);
     filter: brightness(1.07);
     box-shadow: 0 4px 12px rgba(12, 40, 28, .22);
-    outline: 0;
   }
 
-  .home-button:active {
-    transform: translateY(0);
+  .home-button:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  .home-button:active:not(:disabled) {
+    transform: translateY(1px) scale(0.985);
+  }
+
+  .home-button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none !important;
+    box-shadow: none !important;
+    filter: grayscale(0.2);
   }
 
   .home-create {
@@ -446,7 +458,11 @@ body::before {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     box-sizing: border-box;
-    transition: transform .2s, box-shadow .2s, border-color .2s;
+    transition: transform .15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .15s ease, border-color .15s ease;
+  }
+
+  .home-mode:active {
+    transform: translateY(1px) scale(0.985);
   }
 
   .mode-reference-image {
@@ -754,6 +770,23 @@ body::before {
   color: #174332;
   font: 800 .88rem 'Outfit', sans-serif;
   cursor: pointer;
+  transition: transform .12s ease, background-color .15s ease, border-color .15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.setup-back-btn:hover {
+  background: #fbf0d8;
+  transform: translateX(-2px);
+}
+
+.setup-back-btn:active {
+  transform: translateX(-1px) scale(0.97);
+}
+
+.setup-back-btn:focus-visible {
+  outline: 2px solid #174332;
+  outline-offset: 2px;
 }
 
 .mode-setup-heading {
@@ -845,6 +878,8 @@ body::before {
   cursor: pointer;
   touch-action: manipulation;
   box-shadow: 0 3px 0 #70261d;
+  transition: transform .12s cubic-bezier(0.16, 1, 0.3, 1), filter .15s ease, box-shadow .15s ease, opacity .15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .setup-create-btn {
@@ -861,10 +896,31 @@ body::before {
   font-size: 1.2rem;
 }
 
-.setup-create-btn:hover,
-.setup-join-btn:hover {
+.setup-create-btn:hover:not(:disabled),
+.setup-join-btn:hover:not(:disabled) {
   filter: brightness(1.07);
   transform: translateY(-1px);
+}
+
+.setup-create-btn:active:not(:disabled),
+.setup-join-btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 1px 0 #70261d;
+}
+
+.setup-create-btn:focus-visible,
+.setup-join-btn:focus-visible {
+  outline: 2px solid #e2b84b;
+  outline-offset: 2px;
+}
+
+.setup-create-btn:disabled,
+.setup-join-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .setup-or {
@@ -996,5 +1052,34 @@ body::before {
   .setup-rule-field {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+/* Screen Transitions */
+@keyframes homeViewFadeIn {
+  from {
+    opacity: 0.88;
+    transform: scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.home-screen:not([hidden]),
+.mode-setup-screen:not([hidden]) {
+  animation: homeViewFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Accessibility: Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
