@@ -187,7 +187,12 @@ body::before {
    ========================================================================== */
 @media (min-width: 641px) {
   :root {
-    --nav-height: clamp(44px, 5vh, 52px);
+    --nav-height: clamp(42px, 4.8vh, 50px);
+  }
+
+  body:not(.in-room) {
+    height: 100%;
+    overflow-y: hidden;
   }
 
   .home-screen {
@@ -197,27 +202,18 @@ body::before {
     justify-content: space-between;
     height: calc(100dvh - var(--nav-height));
     max-height: calc(100vh - var(--nav-height));
-    padding: clamp(6px, 1vh, 12px) 0 clamp(8px, 1.2vh, 16px);
+    padding: clamp(6px, 1vh, 10px) 0 clamp(8px, 1.2vh, 14px);
     margin: 0 auto;
-    /* Responsive width formula:
-       Hero ratio = 1672/611 (H_hero ≈ 0.3654*W)
-       Modes row (3 cards of 2170/725 with gaps) has H_modes ≈ 0.1114*W.
-       Combined height is ~0.4768*W.
-       Constraining W <= (availH - verticalSpacing) * 2.06 ensures the full composition
-       fits inside any desktop/laptop viewport without vertical overflow or clipping. */
-    width: min(
-      calc(100% - clamp(20px, 2.8vw, 48px)),
-      calc((100dvh - var(--nav-height) - 24px) * 2.06)
-    );
+    /* Outer gutters: about 20px to 28px on left and right, utilizing nearly full browser width */
+    width: calc(100% - clamp(40px, 3.2vw, 56px));
+    max-width: none;
   }
 
   .home-hero {
     position: relative;
-    flex: 0 0 auto;
-    width: 100%;
-    aspect-ratio: 1672 / 611;
-    height: auto;
+    flex: 1 1 auto;
     min-height: 0;
+    width: 100%;
     margin: 0 auto;
     padding: 0;
     background: url('./assets/hero-reference.png') center / 100% 100% no-repeat;
@@ -225,6 +221,7 @@ body::before {
     overflow: hidden;
     container-type: inline-size;
     box-sizing: border-box;
+    border-radius: clamp(12px, 1.2vw, 20px);
   }
 
   .home-hero::before,
@@ -421,12 +418,14 @@ body::before {
     box-shadow: inset 0 1px rgba(255, 255, 255, .18), 0 2px 0 #031e18;
   }
 
-  /* Mode selection cards row */
+  /* Mode selection cards row: managed independently to ensure full vertical viewport fit */
   .home-modes {
-    flex: 0 0 auto;
+    flex: 0 0 clamp(110px, 20.5vh, 185px);
+    height: clamp(110px, 20.5vh, 185px);
+    min-height: 0;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: clamp(8px, 1vw, 16px);
+    gap: clamp(10px, 1.1vw, 18px);
     width: 100%;
     margin: 0 auto;
     padding: 0;
@@ -434,7 +433,32 @@ body::before {
   }
 
   .home-mode {
-    border-radius: clamp(10px, 1.2vw, 18px);
+    position: relative;
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    border-radius: clamp(12px, 1.1vw, 18px);
+    border: 2px solid transparent;
+    cursor: pointer;
+    background: #f3b70d;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+  }
+
+  .mode-reference-image {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: inherit;
+    pointer-events: none;
   }
 }
 
