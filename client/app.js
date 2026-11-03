@@ -506,6 +506,7 @@ class UnoArenaApp {
 
   updateSoundIcon(enabled) {
     if (this.el.soundIcon) this.el.soundIcon.textContent = enabled ? '🔊' : '🔇';
+    if (this.el.noMercySoundBtn) this.el.noMercySoundBtn.textContent = enabled ? '🔊' : '🔇';
     if (this.el.noMercyMobileSoundBtn) this.el.noMercyMobileSoundBtn.textContent = enabled ? '🔊' : '🔇';
   }
 
