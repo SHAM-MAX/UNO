@@ -1100,6 +1100,48 @@ body::before {
 }
 
 /* ==========================================================================
+   UNO FLIP ROOM SETUP SCREEN (Card Collage Full-Page Background)
+   ========================================================================== */
+
+body.in-flip-setup {
+  background-color: #0c0806;
+}
+
+body.in-flip-setup::before {
+  background: url('./assets/uno-flip-setup-bg.jpg') no-repeat center center !important;
+  background-size: cover !important;
+}
+
+.mode-setup-screen.mode-flip-setup .mode-setup-heading {
+  background: rgba(255, 249, 235, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid #d8c8a6;
+  border-radius: 18px;
+  padding: 14px 22px 16px;
+  box-shadow: 0 9px 24px rgba(0, 0, 0, 0.25);
+  margin: 14px 0 18px 0;
+  max-width: fit-content;
+}
+
+.mode-setup-screen.mode-flip-setup .setup-back-btn {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.mode-setup-screen.mode-flip-setup .setup-panel {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 640px) {
+  .mode-setup-screen.mode-flip-setup .mode-setup-heading {
+    padding: 12px 16px 14px;
+    margin: 12px 0 14px 0;
+  }
+}
+
+/* ==========================================================================
    UNO NO MERCY DEDICATED ROOM SETUP SCREEN (Card Pattern Background + Centered Form)
    ========================================================================== */
 
@@ -1119,10 +1161,16 @@ body.in-no-mercy-setup .top-nav {
 
 .mode-setup-screen.mode-no-mercy-setup .no-mercy-setup-container {
   display: flex;
+  flex-direction: column;
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
+  box-sizing: border-box;
+  padding-top: 50px;
+  padding-bottom: 0;
+  padding-left: 16px;
+  padding-right: 16px;
   overflow-y: auto;
   overflow-x: hidden;
   align-items: center;
@@ -1130,7 +1178,6 @@ body.in-no-mercy-setup .top-nav {
   background: #0c0806 url('./assets/no-mercy-setup-bg.jpg') no-repeat center center;
   background-size: cover;
   z-index: 100;
-  padding: 68px 16px 28px;
 }
 
 .mode-setup-screen.mode-no-mercy-setup .standard-setup-layout {
@@ -1229,40 +1276,53 @@ body.in-no-mercy-setup .top-nav {
 /* THE AUTHENTIC RED UNO NO MERCY CARD CONTAINER */
 .nm-card-container {
   position: relative;
-  width: min(440px, 94vw);
+  width: min(392px, 92vw);
   background: #c3090b url('./assets/no-mercy-card-canvas.png') no-repeat center center;
   background-size: 100% 100%;
-  border: 4.5px solid #000000;
-  border-radius: 30px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 28px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
-  padding: 24px 28px 18px 28px;
+  padding: 0;
+  overflow: hidden;
   z-index: 10;
   margin: auto;
   pointer-events: auto;
+  box-sizing: border-box;
 }
 
 /* Header Area */
 .nm-card-header-wrap {
   width: 100%;
-  text-align: center;
-  margin-bottom: 16px;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+  flex-shrink: 0;
 }
 .nm-card-header-img {
   width: 100%;
-  max-width: 360px;
   height: auto;
   display: block;
-  margin: 0 auto;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
 }
 
 /* Form Area */
 .nm-card-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 38px 40px 38px;
+  box-sizing: border-box;
+  flex: 1;
+}
+
+/* Field Container (Groups Label + Input) */
+.nm-exact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   width: 100%;
 }
 
@@ -1270,28 +1330,28 @@ body.in-no-mercy-setup .top-nav {
 .nm-exact-label {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   color: #ffffff;
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
-  font-size: 1.05rem;
+  font-size: 0.96rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   user-select: none;
   cursor: pointer;
-  -webkit-text-stroke: 1.2px #000000;
+  -webkit-text-stroke: 1.1px #000000;
   paint-order: stroke fill;
   text-shadow:
-    -1.8px -1.8px 0 #000000,
-     1.8px -1.8px 0 #000000,
-    -1.8px  1.8px 0 #000000,
-     1.8px  1.8px 0 #000000,
-     0 3px 0 #000000;
+    -1.5px -1.5px 0 #000000,
+     1.5px -1.5px 0 #000000,
+    -1.5px  1.5px 0 #000000,
+     1.5px  1.5px 0 #000000,
+     0 2.5px 0 #000000;
 }
 
 .nm-exact-label-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   filter: drop-shadow(0 2px 0 #000000);
 }
@@ -1299,23 +1359,24 @@ body.in-no-mercy-setup .top-nav {
 /* 2. Inputs: White/Cream, Thick Black Border, Rounded Corners, Black Bottom Shadow */
 .nm-exact-input-wrap {
   width: 100%;
-  height: 52px;
+  height: 48px;
   background: #fdfcf9;
-  border: 4px solid #000000;
-  border-radius: 16px;
-  box-shadow: 0 4.5px 0 #000000;
+  border: 3.5px solid #000000;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 #000000;
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  gap: 12px;
+  padding: 0 14px;
+  gap: 10px;
+  box-sizing: border-box;
   transition: transform 0.08s ease, box-shadow 0.1s ease;
 }
 .nm-exact-input-wrap:focus-within {
-  box-shadow: 0 4.5px 0 #000000, 0 0 0 2.5px rgba(254, 208, 0, 0.9);
+  box-shadow: 0 4px 0 #000000, 0 0 0 2.5px rgba(254, 208, 0, 0.9);
 }
 .nm-exact-input-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   stroke: #000000;
   fill: none;
@@ -1323,13 +1384,15 @@ body.in-no-mercy-setup .top-nav {
 }
 .nm-exact-input {
   flex: 1;
+  width: 100%;
+  min-width: 0;
   height: 100%;
   background: transparent;
   border: none;
   outline: none;
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 1.12rem;
+  font-size: 1.05rem;
   color: #000000;
   letter-spacing: 0.02em;
 }
@@ -1342,26 +1405,33 @@ body.in-no-mercy-setup .top-nav {
   letter-spacing: 0.08em;
   font-weight: 900;
 }
+.nm-exact-input.code::placeholder {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-weight: 700;
+  color: #71717a;
+}
 
 /* 3. Create Room Button: Bright Yellow, Thick Black Border, User-Plus Icon, Arrow */
 .nm-exact-create-btn {
   width: 100%;
-  height: 54px;
+  height: 50px;
   background: #fed000;
-  border: 4px solid #000000;
-  border-radius: 16px;
-  box-shadow: 0 5px 0 #000000;
+  border: 3.5px solid #000000;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 #000000;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   color: #000000;
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   letter-spacing: 0.02em;
   cursor: pointer;
   user-select: none;
+  box-sizing: border-box;
   transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
 }
 .nm-exact-create-btn:hover:not(:disabled) {
@@ -1369,11 +1439,11 @@ body.in-no-mercy-setup .top-nav {
 }
 .nm-exact-create-btn:active:not(:disabled) {
   transform: translateY(2px);
-  box-shadow: 0 3px 0 #000000;
+  box-shadow: 0 2px 0 #000000;
 }
 .nm-exact-create-btn svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   stroke: #000000;
   fill: none;
   stroke-width: 3;
@@ -1386,53 +1456,56 @@ body.in-no-mercy-setup .top-nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
   user-select: none;
-  margin: 3px 0;
+  margin: 1px 0;
+  box-sizing: border-box;
 }
 .nm-exact-separator-line {
   flex: 1;
   height: 3px;
   background: #ffffff;
   border-radius: 2px;
-  box-shadow: 0 2px 0 #000000;
+  box-shadow: 0 1.5px 0 #000000;
 }
 .nm-exact-separator-text {
   color: #ffffff;
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
-  font-size: 0.92rem;
-  letter-spacing: 0.1em;
+  font-size: 0.88rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  -webkit-text-stroke: 1.2px #000000;
+  white-space: nowrap;
+  -webkit-text-stroke: 1.1px #000000;
   paint-order: stroke fill;
   text-shadow:
     -1.5px -1.5px 0 #000000,
      1.5px -1.5px 0 #000000,
     -1.5px  1.5px 0 #000000,
      1.5px  1.5px 0 #000000,
-     0 2.5px 0 #000000;
+     0 2px 0 #000000;
 }
 
 /* 5. Join Room Button: Vivid Green, Outer Black Border, White Inner Border */
 .nm-exact-join-btn {
   width: 100%;
-  height: 54px;
+  height: 50px;
   background: #01881f;
-  border: 4px solid #000000;
-  border-radius: 16px;
-  box-shadow: inset 0 0 0 2.5px #ffffff, 0 5px 0 #000000;
+  border: 3.5px solid #000000;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 2px #ffffff, 0 4px 0 #000000;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   color: #ffffff;
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   letter-spacing: 0.02em;
   cursor: pointer;
   user-select: none;
+  box-sizing: border-box;
   transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
 }
 .nm-exact-join-btn:hover:not(:disabled) {
@@ -1440,71 +1513,24 @@ body.in-no-mercy-setup .top-nav {
 }
 .nm-exact-join-btn:active:not(:disabled) {
   transform: translateY(2px);
-  box-shadow: inset 0 0 0 2.5px #ffffff, 0 3px 0 #000000;
+  box-shadow: inset 0 0 0 2px #ffffff, 0 2px 0 #000000;
 }
 .nm-exact-join-btn svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   stroke: #ffffff;
   fill: none;
   stroke-width: 2.8;
   flex-shrink: 0;
 }
 
-/* 6. Card Footer */
-.nm-card-footer {
-  text-align: center;
-  margin-top: 14px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
-  letter-spacing: 0.04em;
-  user-select: none;
-  text-shadow: 0 1.5px 2px rgba(0, 0, 0, 0.8);
-}
-
-/* 7. Knockout Pill Outside the Card */
-.nm-knockout-pill {
-  margin-top: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 16px;
-  background: rgba(16, 12, 10, 0.9);
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
-  pointer-events: auto;
-}
-.nm-knockout-pill label {
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  color: #fed000;
-  text-transform: uppercase;
-  user-select: none;
-}
-.nm-knockout-pill select {
-  border: 1.5px solid #000000;
-  background: #fdfcf9;
-  border-radius: 8px;
-  padding: 4px 10px;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 0.84rem;
-  color: #0b3425;
-  cursor: pointer;
-  outline: none;
-}
-.nm-knockout-pill select:focus {
-  border-color: #fed000;
-  box-shadow: 0 0 0 2px rgba(254, 208, 0, 0.8);
-}
-
 /* RESPONSIVE SCALING (< 640px) */
 @media (max-width: 640px) {
   .mode-setup-screen.mode-no-mercy-setup .no-mercy-setup-container {
-    padding: 56px 10px 24px;
+    padding-top: 48px;
+    padding-bottom: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
   .nm-top-nav {
@@ -1528,21 +1554,37 @@ body.in-no-mercy-setup .top-nav {
   }
 
   .nm-card-container {
-    padding: 18px 16px 14px 16px;
-    border-width: 3.5px;
+    width: min(350px, 92vw);
+    padding: 0;
+    border: none;
     border-radius: 24px;
+    overflow: hidden;
   }
 
   .nm-card-header-wrap {
-    margin-bottom: 12px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    line-height: 0;
+  }
+
+  .nm-card-header-img {
+    width: 100%;
+    max-width: none;
+    height: auto;
   }
 
   .nm-card-form {
-    gap: 11px;
+    padding: 4px 32px 34px 32px;
+    gap: 8px;
+  }
+
+  .nm-exact-field {
+    gap: 5px;
   }
 
   .nm-exact-label {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
   }
 
   .nm-exact-label-icon {
@@ -1551,35 +1593,35 @@ body.in-no-mercy-setup .top-nav {
   }
 
   .nm-exact-input-wrap {
-    height: 46px;
+    height: 44px;
     padding: 0 12px;
-    border-width: 3.5px;
-    border-radius: 14px;
+    border-width: 3px;
+    border-radius: 12px;
   }
 
   .nm-exact-input {
-    font-size: 1rem;
+    font-size: 0.98rem;
   }
 
   .nm-exact-create-btn,
   .nm-exact-join-btn {
-    height: 48px;
-    font-size: 1.1rem;
-    border-width: 3.5px;
-    border-radius: 14px;
+    height: 46px;
+    font-size: 1.05rem;
+    border-width: 3px;
+    border-radius: 12px;
   }
 
   .nm-exact-separator-text {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
+}
 
-  .nm-card-footer {
-    margin-top: 10px;
-    font-size: 0.72rem;
+@media (max-height: 600px) {
+  .mode-setup-screen.mode-no-mercy-setup .no-mercy-setup-container {
+    align-items: flex-start;
+    justify-content: flex-start;
   }
-
-  .nm-knockout-pill {
-    margin-top: 10px;
-    padding: 5px 12px;
+  .nm-card-container {
+    margin: 12px auto;
   }
 }

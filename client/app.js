@@ -536,8 +536,11 @@ class UnoArenaApp {
     this.el.setupPlayerNameInput.value = currentName;
 
     const isNoMercy = mode === 'no_mercy';
+    const isFlip = mode === 'flip';
     this.el.modeSetupSection.classList.toggle('mode-no-mercy-setup', isNoMercy);
     document.body.classList.toggle('in-no-mercy-setup', isNoMercy);
+    this.el.modeSetupSection.classList.toggle('mode-flip-setup', isFlip);
+    document.body.classList.toggle('in-flip-setup', isFlip);
 
     if (isNoMercy) {
       if (this.el.noMercyPlayerNameInput) this.el.noMercyPlayerNameInput.value = currentName;
@@ -563,6 +566,8 @@ class UnoArenaApp {
     }
     this.el.modeSetupSection.classList.remove('mode-no-mercy-setup');
     document.body.classList.remove('in-no-mercy-setup');
+    this.el.modeSetupSection.classList.remove('mode-flip-setup');
+    document.body.classList.remove('in-flip-setup');
     this.el.modeSetupSection.hidden = true;
     this.el.modeHomeScreen.hidden = false;
   }
@@ -816,10 +821,12 @@ class UnoArenaApp {
     document.body.classList.add('in-room');
     document.body.classList.remove('in-arena');
     document.body.classList.remove('in-no-mercy-setup');
+    document.body.classList.remove('in-flip-setup');
     this.el.entryView.style.display = 'block';
     this.el.arenaView.style.display = 'none';
     this.el.modeSetupSection.hidden = true;
     this.el.modeSetupSection.classList.remove('mode-no-mercy-setup');
+    this.el.modeSetupSection.classList.remove('mode-flip-setup');
     this.el.modeHomeScreen.hidden = true;
     this.el.lobbySection.style.display = 'block';
     document.getElementById('entryFormSection').style.display = 'none';
