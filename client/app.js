@@ -78,6 +78,7 @@ class UnoArenaApp {
       noMercyMobileJoinRoomBtn: document.getElementById('noMercyMobileJoinRoomBtn'),
       noMercyMobileLimitSelect: document.getElementById('noMercyMobileLimitSelect'),
       noMercyMobileBackBtn: document.getElementById('noMercyMobileBackBtn'),
+      noMercyMobileSoundBtn: document.getElementById('noMercyMobileSoundBtn'),
       noMercyMobileRulesBtn: document.getElementById('noMercyMobileRulesBtn'),
 
       // Lobby
@@ -211,6 +212,12 @@ class UnoArenaApp {
 
     if (this.el.noMercySoundBtn) {
       this.el.noMercySoundBtn.addEventListener('click', () => {
+        const next = sounds.toggle();
+        this.updateSoundIcon(next);
+      });
+    }
+    if (this.el.noMercyMobileSoundBtn) {
+      this.el.noMercyMobileSoundBtn.addEventListener('click', () => {
         const next = sounds.toggle();
         this.updateSoundIcon(next);
       });
@@ -498,7 +505,8 @@ class UnoArenaApp {
   }
 
   updateSoundIcon(enabled) {
-    this.el.soundIcon.textContent = enabled ? '🔊' : '🔇';
+    if (this.el.soundIcon) this.el.soundIcon.textContent = enabled ? '🔊' : '🔇';
+    if (this.el.noMercyMobileSoundBtn) this.el.noMercyMobileSoundBtn.textContent = enabled ? '🔊' : '🔇';
   }
 
   showToast(msg) {
