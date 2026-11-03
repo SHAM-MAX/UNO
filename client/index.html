@@ -109,84 +109,89 @@
             </div>
           </nav>
 
-          <!-- CENTERED NO MERCY FORM CARD -->
-          <div class="nm-exact-form-card">
-            <!-- Card Header: Title & Subtitle -->
-            <div class="nm-card-header">
-              <img src="/assets/no-mercy-logo-badge.png" alt="UNO Show 'Em No Mercy" class="nm-card-badge">
-              <p class="nm-card-subtitle">Stack penalties, survive the knockout limit, and be the last player standing.</p>
+          <!-- THE AUTHENTIC RED UNO NO MERCY CARD -->
+          <div class="nm-card-container">
+            <!-- Header Area -->
+            <div class="nm-card-header-wrap">
+              <img src="./assets/no-mercy-card-header.png" alt="UNO Show 'Em No Mercy" class="nm-card-header-img">
             </div>
 
-            <!-- 1. Player Name Label -->
-            <label class="nm-exact-label" for="noMercyPlayerNameInput">
-              <svg class="nm-exact-label-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="7" r="4.5" fill="#ffffff" stroke="#000000" stroke-width="2.5"/>
-                <path d="M4.5 21a7.5 7.5 0 0 1 15 0" fill="#ffffff" stroke="#000000" stroke-width="2.5"/>
-              </svg>
-              <span>YOUR PLAYER NAME</span>
-            </label>
+            <!-- Form Area -->
+            <div class="nm-card-form">
+              <!-- 1. Player Name Label -->
+              <label class="nm-exact-label" for="noMercyPlayerNameInput">
+                <svg class="nm-exact-label-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="7" r="4.5" fill="#ffffff" stroke="#000000" stroke-width="2.5"/>
+                  <path d="M4.5 21a7.5 7.5 0 0 1 15 0" fill="#ffffff" stroke="#000000" stroke-width="2.5"/>
+                </svg>
+                <span>YOUR PLAYER NAME</span>
+              </label>
 
-            <!-- 2. Player Name Input Wrap -->
-            <div class="nm-exact-input-wrap">
-              <svg class="nm-exact-input-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="7" r="4"/>
-                <path d="M5.5 21a6.5 6.5 0 0 1 13 0"/>
-              </svg>
-              <input id="noMercyPlayerNameInput" class="nm-exact-input" type="text" placeholder="Your player name" maxlength="15" autocomplete="nickname" aria-label="Player name">
+              <!-- 2. Player Name Input Wrap -->
+              <div class="nm-exact-input-wrap">
+                <svg class="nm-exact-input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="7" r="4" fill="none" stroke="#000" stroke-width="2.8"/>
+                  <path d="M5.5 21a6.5 6.5 0 0 1 13 0" fill="none" stroke="#000" stroke-width="2.8"/>
+                </svg>
+                <input id="noMercyPlayerNameInput" class="nm-exact-input" type="text" placeholder="" maxlength="15" autocomplete="nickname" aria-label="Player name">
+              </div>
+
+              <!-- 3. Create Room Button (Bright Yellow) -->
+              <button id="noMercyCreateRoomBtn" class="nm-exact-create-btn" type="button" title="Create room" aria-label="Create room">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" fill="none" stroke="#000" stroke-width="3"/>
+                  <circle cx="8.5" cy="7" r="4" fill="none" stroke="#000" stroke-width="3"/>
+                  <line x1="20" y1="8" x2="20" y2="14" stroke="#000" stroke-width="3"/>
+                  <line x1="23" y1="11" x2="17" y2="11" stroke="#000" stroke-width="3"/>
+                </svg>
+                <span>Create room →</span>
+              </button>
+
+              <!-- 4. Join Separator -->
+              <div class="nm-exact-separator-wrap" aria-hidden="true">
+                <div class="nm-exact-separator-line"></div>
+                <span class="nm-exact-separator-text">OR JOIN A FRIEND</span>
+                <div class="nm-exact-separator-line"></div>
+              </div>
+
+              <!-- 5. Room Code Label -->
+              <label class="nm-exact-label" for="noMercyRoomCodeInput">
+                <svg class="nm-exact-label-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="7.5" cy="15.5" r="4.5" fill="#ffffff" stroke="#000000" stroke-width="2.5"/>
+                  <path d="M11 12l9-9m-2 0l3 3m-5 1l2 2" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                <span>ROOM CODE</span>
+              </label>
+
+              <!-- 6. Room Code Input Wrap -->
+              <div class="nm-exact-input-wrap">
+                <input id="noMercyRoomCodeInput" class="nm-exact-input code" type="text" placeholder="6-character code" maxlength="8" autocomplete="off" aria-label="Room code">
+              </div>
+
+              <!-- 7. Join Room Button (Vivid Green with White Inner Border) -->
+              <button id="noMercyJoinRoomBtn" class="nm-exact-join-btn" type="button" title="Join room" aria-label="Join room">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" fill="none" stroke="#fff" stroke-width="2.8"/>
+                  <circle cx="9" cy="7" r="4" fill="none" stroke="#fff" stroke-width="2.8"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" fill="none" stroke="#fff" stroke-width="2.8"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" fill="none" stroke="#fff" stroke-width="2.8"/>
+                </svg>
+                <span>Join room →</span>
+              </button>
             </div>
 
-            <!-- 3. Create Room Button (Bright Yellow) -->
-            <button id="noMercyCreateRoomBtn" class="nm-exact-create-btn" type="button" title="Create room" aria-label="Create room">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <line x1="20" y1="8" x2="20" y2="14"/>
-                <line x1="23" y1="11" x2="17" y2="11"/>
-              </svg>
-              <span>Create room →</span>
-            </button>
+            <!-- Card Footer -->
+            <div class="nm-card-footer">©2023 Mattel.</div>
+          </div>
 
-            <!-- 4. Join Separator -->
-            <div class="nm-exact-separator-wrap" aria-hidden="true">
-              <div class="nm-exact-separator-line"></div>
-              <span class="nm-exact-separator-text">OR JOIN A FRIEND</span>
-              <div class="nm-exact-separator-line"></div>
-            </div>
-
-            <!-- 5. Room Code Label -->
-            <label class="nm-exact-label" for="noMercyRoomCodeInput">
-              <svg class="nm-exact-label-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="7.5" cy="15.5" r="4.5" fill="#ffffff" stroke="#000000" stroke-width="2.5"/>
-                <path d="M11 12l9-9m-2 0l3 3m-5 1l2 2" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
-              </svg>
-              <span>ROOM CODE</span>
-            </label>
-
-            <!-- 6. Room Code Input Wrap -->
-            <div class="nm-exact-input-wrap">
-              <input id="noMercyRoomCodeInput" class="nm-exact-input code" type="text" placeholder="6-character code" maxlength="8" autocomplete="off" aria-label="Room code">
-            </div>
-
-            <!-- 7. Join Room Button (Vivid Green with White Inner Border) -->
-            <button id="noMercyJoinRoomBtn" class="nm-exact-join-btn" type="button" title="Join room" aria-label="Join room">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-              <span>Join room →</span>
-            </button>
-
-            <!-- 8. Knockout Limit Selector -->
-            <div class="nm-knockout-row">
-              <label for="noMercyLimitSelect"><span>⚡ Knockout limit</span></label>
-              <select id="noMercyLimitSelect" aria-label="Knockout limit">
-                <option value="25" selected>25 cards</option>
-                <option value="35">35 cards</option>
-                <option value="45">45 cards</option>
-              </select>
-            </div>
+          <!-- Host Knockout Limit Control outside reference card layout -->
+          <div class="nm-knockout-pill">
+            <label for="noMercyLimitSelect"><span>⚡ HOST KNOCKOUT LIMIT</span></label>
+            <select id="noMercyLimitSelect" aria-label="Knockout limit">
+              <option value="25" selected>25 cards</option>
+              <option value="35">35 cards</option>
+              <option value="45">45 cards</option>
+            </select>
           </div>
         </div>
 

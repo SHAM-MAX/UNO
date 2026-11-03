@@ -1226,109 +1226,101 @@ body.in-no-mercy-setup .top-nav {
   font-weight: 900;
 }
 
-/* COMPACT, CENTERED FORM CARD */
-.nm-exact-form-card {
-  width: min(420px, 92vw);
-  background: rgba(16, 12, 10, 0.88);
-  border: 2px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border-radius: 22px;
+/* THE AUTHENTIC RED UNO NO MERCY CARD CONTAINER */
+.nm-card-container {
+  position: relative;
+  width: min(440px, 94vw);
+  background: #c3090b url('./assets/no-mercy-card-canvas.png') no-repeat center center;
+  background-size: 100% 100%;
+  border: 4.5px solid #000000;
+  border-radius: 30px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 22px 20px;
+  padding: 24px 28px 18px 28px;
   z-index: 10;
   margin: auto;
   pointer-events: auto;
 }
 
-/* Card Header */
-.nm-card-header {
+/* Header Area */
+.nm-card-header-wrap {
+  width: 100%;
   text-align: center;
-  margin-bottom: 2px;
+  margin-bottom: 16px;
+}
+.nm-card-header-img {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+/* Form Area */
+.nm-card-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-}
-
-.nm-card-badge {
-  height: 46px;
-  width: auto;
-  max-width: 220px;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
-}
-
-.nm-card-subtitle {
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: #e5ded3;
-  margin-top: 5px;
-  line-height: 1.35;
-  text-align: center;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  gap: 14px;
+  width: 100%;
 }
 
 /* 1. Labels: Bold White Uppercase with Heavy Black Outline & Shadow */
 .nm-exact-label {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   color: #ffffff;
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
-  font-size: 0.88rem;
-  letter-spacing: 0.06em;
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   user-select: none;
   cursor: pointer;
-  -webkit-text-stroke: 1px #000000;
+  -webkit-text-stroke: 1.2px #000000;
   paint-order: stroke fill;
   text-shadow:
-    -1.5px -1.5px 0 #000000,
-    1.5px -1.5px 0 #000000,
-    -1.5px 1.5px 0 #000000,
-    1.5px 1.5px 0 #000000,
-    0 2px 4px rgba(0, 0, 0, 0.7);
+    -1.8px -1.8px 0 #000000,
+     1.8px -1.8px 0 #000000,
+    -1.8px  1.8px 0 #000000,
+     1.8px  1.8px 0 #000000,
+     0 3px 0 #000000;
 }
 
 .nm-exact-label-icon {
-  width: 17px;
-  height: 17px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(0 2px 0 #000000);
 }
 
-/* 2. Input Fields: Warm Cream, Thick Black Border */
+/* 2. Inputs: White/Cream, Thick Black Border, Rounded Corners, Black Bottom Shadow */
 .nm-exact-input-wrap {
   width: 100%;
-  height: 46px;
-  background: #f7f4ef;
-  border: 3.5px solid #000000;
-  border-radius: 14px;
-  box-shadow: 0 4px 0 #000000;
+  height: 52px;
+  background: #fdfcf9;
+  border: 4px solid #000000;
+  border-radius: 16px;
+  box-shadow: 0 4.5px 0 #000000;
   display: flex;
   align-items: center;
-  padding: 0 14px;
-  gap: 10px;
+  padding: 0 16px;
+  gap: 12px;
   transition: transform 0.08s ease, box-shadow 0.1s ease;
 }
-
 .nm-exact-input-wrap:focus-within {
-  box-shadow: 0 4px 0 #000000, 0 0 0 2px rgba(254, 208, 0, 0.8);
+  box-shadow: 0 4.5px 0 #000000, 0 0 0 2.5px rgba(254, 208, 0, 0.9);
 }
-
 .nm-exact-input-icon {
-  width: 17px;
-  height: 17px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   stroke: #000000;
   fill: none;
-  stroke-width: 2.6;
+  stroke-width: 2.8;
 }
-
 .nm-exact-input {
   flex: 1;
   height: 100%;
@@ -1337,16 +1329,14 @@ body.in-no-mercy-setup .top-nav {
   outline: none;
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 1.12rem;
   color: #000000;
   letter-spacing: 0.02em;
 }
-
 .nm-exact-input::placeholder {
-  color: #666666;
+  color: #71717a;
   font-weight: 800;
 }
-
 .nm-exact-input.code {
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1356,40 +1346,37 @@ body.in-no-mercy-setup .top-nav {
 /* 3. Create Room Button: Bright Yellow, Thick Black Border, User-Plus Icon, Arrow */
 .nm-exact-create-btn {
   width: 100%;
-  height: 48px;
+  height: 54px;
   background: #fed000;
-  border: 3.5px solid #000000;
-  border-radius: 14px;
-  box-shadow: 0 4px 0 #000000;
+  border: 4px solid #000000;
+  border-radius: 16px;
+  box-shadow: 0 5px 0 #000000;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   color: #000000;
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
-  font-size: 1.08rem;
+  font-size: 1.25rem;
   letter-spacing: 0.02em;
   cursor: pointer;
   user-select: none;
   transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
 }
-
 .nm-exact-create-btn:hover:not(:disabled) {
-  filter: brightness(1.05);
+  filter: brightness(1.04);
 }
-
 .nm-exact-create-btn:active:not(:disabled) {
   transform: translateY(2px);
-  box-shadow: 0 2px 0 #000000;
+  box-shadow: 0 3px 0 #000000;
 }
-
 .nm-exact-create-btn svg {
-  width: 19px;
-  height: 19px;
+  width: 22px;
+  height: 22px;
   stroke: #000000;
   fill: none;
-  stroke-width: 2.8;
+  stroke-width: 3;
   flex-shrink: 0;
 }
 
@@ -1399,119 +1386,125 @@ body.in-no-mercy-setup .top-nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
   user-select: none;
-  margin: 1px 0;
+  margin: 3px 0;
 }
-
 .nm-exact-separator-line {
   flex: 1;
-  height: 2.5px;
+  height: 3px;
   background: #ffffff;
   border-radius: 2px;
-  box-shadow: 0 1.5px 0 #000000;
+  box-shadow: 0 2px 0 #000000;
 }
-
 .nm-exact-separator-text {
   color: #ffffff;
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
-  font-size: 0.78rem;
+  font-size: 0.92rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   -webkit-text-stroke: 1.2px #000000;
   paint-order: stroke fill;
   text-shadow:
     -1.5px -1.5px 0 #000000,
-    1.5px -1.5px 0 #000000,
-    -1.5px 1.5px 0 #000000,
-    1.5px 1.5px 0 #000000,
-    0 2px 4px rgba(0, 0, 0, 0.7);
+     1.5px -1.5px 0 #000000,
+    -1.5px  1.5px 0 #000000,
+     1.5px  1.5px 0 #000000,
+     0 2.5px 0 #000000;
 }
 
 /* 5. Join Room Button: Vivid Green, Outer Black Border, White Inner Border */
 .nm-exact-join-btn {
   width: 100%;
-  height: 48px;
+  height: 54px;
   background: #01881f;
-  border: 3.5px solid #000000;
-  border-radius: 14px;
-  box-shadow: inset 0 0 0 2px #ffffff, 0 4px 0 #000000;
+  border: 4px solid #000000;
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 2.5px #ffffff, 0 5px 0 #000000;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   color: #ffffff;
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
-  font-size: 1.08rem;
+  font-size: 1.25rem;
   letter-spacing: 0.02em;
   cursor: pointer;
   user-select: none;
   transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
 }
-
 .nm-exact-join-btn:hover:not(:disabled) {
   filter: brightness(1.08);
 }
-
 .nm-exact-join-btn:active:not(:disabled) {
   transform: translateY(2px);
-  box-shadow: inset 0 0 0 2px #ffffff, 0 2px 0 #000000;
+  box-shadow: inset 0 0 0 2.5px #ffffff, 0 3px 0 #000000;
 }
-
 .nm-exact-join-btn svg {
-  width: 19px;
-  height: 19px;
+  width: 22px;
+  height: 22px;
   stroke: #ffffff;
   fill: none;
-  stroke-width: 2.6;
+  stroke-width: 2.8;
   flex-shrink: 0;
 }
 
-/* 6. Knockout Limit Row */
-.nm-knockout-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  margin-top: 1px;
+/* 6. Card Footer */
+.nm-card-footer {
+  text-align: center;
+  margin-top: 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.04em;
+  user-select: none;
+  text-shadow: 0 1.5px 2px rgba(0, 0, 0, 0.8);
 }
 
-.nm-knockout-row label {
-  font-size: 0.75rem;
+/* 7. Knockout Pill Outside the Card */
+.nm-knockout-pill {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px;
+  background: rgba(16, 12, 10, 0.9);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+.nm-knockout-pill label {
+  font-size: 0.78rem;
   font-weight: 900;
   letter-spacing: 0.08em;
   color: #fed000;
   text-transform: uppercase;
   user-select: none;
 }
-
-.nm-knockout-row select {
+.nm-knockout-pill select {
   border: 1.5px solid #000000;
-  background: #f7f4ef;
+  background: #fdfcf9;
   border-radius: 8px;
   padding: 4px 10px;
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   color: #0b3425;
   cursor: pointer;
   outline: none;
 }
-
-.nm-knockout-row select:focus {
+.nm-knockout-pill select:focus {
   border-color: #fed000;
   box-shadow: 0 0 0 2px rgba(254, 208, 0, 0.8);
 }
 
-/* RESPONSIVE ADAPTATIONS */
+/* RESPONSIVE SCALING (< 640px) */
 @media (max-width: 640px) {
   .mode-setup-screen.mode-no-mercy-setup .no-mercy-setup-container {
-    padding: 56px 12px 20px;
+    padding: 56px 10px 24px;
   }
 
   .nm-top-nav {
@@ -1534,38 +1527,59 @@ body.in-no-mercy-setup .top-nav {
     display: none;
   }
 
-  .nm-exact-form-card {
-    padding: 18px 15px;
-    gap: 10px;
-    border-radius: 18px;
+  .nm-card-container {
+    padding: 18px 16px 14px 16px;
+    border-width: 3.5px;
+    border-radius: 24px;
   }
 
-  .nm-card-badge {
-    height: 40px;
+  .nm-card-header-wrap {
+    margin-bottom: 12px;
   }
 
-  .nm-card-subtitle {
-    font-size: 0.74rem;
+  .nm-card-form {
+    gap: 11px;
   }
 
   .nm-exact-label {
-    font-size: 0.8rem;
+    font-size: 0.92rem;
+  }
+
+  .nm-exact-label-icon {
+    width: 18px;
+    height: 18px;
   }
 
   .nm-exact-input-wrap {
-    height: 42px;
-    padding: 0 11px;
-    border-width: 3px;
+    height: 46px;
+    padding: 0 12px;
+    border-width: 3.5px;
+    border-radius: 14px;
   }
 
   .nm-exact-input {
-    font-size: 0.94rem;
+    font-size: 1rem;
   }
 
   .nm-exact-create-btn,
   .nm-exact-join-btn {
-    height: 44px;
-    font-size: 0.98rem;
-    border-width: 3px;
+    height: 48px;
+    font-size: 1.1rem;
+    border-width: 3.5px;
+    border-radius: 14px;
+  }
+
+  .nm-exact-separator-text {
+    font-size: 0.82rem;
+  }
+
+  .nm-card-footer {
+    margin-top: 10px;
+    font-size: 0.72rem;
+  }
+
+  .nm-knockout-pill {
+    margin-top: 10px;
+    padding: 5px 12px;
   }
 }
