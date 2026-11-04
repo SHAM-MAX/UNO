@@ -70,6 +70,18 @@ class UnoArenaApp {
       flipJoinRoomBtn: document.getElementById('flipJoinRoomBtn'),
       flipBackToModesBtn: document.getElementById('flipBackToModesBtn'),
 
+      // Dedicated Mobile Landing Elements
+      mobileLandingContainer: document.getElementById('mobileLandingContainer'),
+      mobileNavSoundBtn: document.getElementById('mobileNavSoundBtn'),
+      mobileNavRulesBtn: document.getElementById('mobileNavRulesBtn'),
+      mobilePlayerNameInput: document.getElementById('mobilePlayerNameInput'),
+      mobileCreateRoomBtn: document.getElementById('mobileCreateRoomBtn'),
+      mobileRoomCodeInput: document.getElementById('mobileRoomCodeInput'),
+      mobileJoinRoomBtn: document.getElementById('mobileJoinRoomBtn'),
+      mobileModeClassicBtn: document.getElementById('mobileModeClassicBtn'),
+      mobileModeFlipBtn: document.getElementById('mobileModeFlipBtn'),
+      mobileModeMercyBtn: document.getElementById('mobileModeMercyBtn'),
+
       // No Mercy Setup dedicated elements
       noMercySetupContainer: document.getElementById('noMercySetupContainer'),
       noMercyPlayerNameInput: document.getElementById('noMercyPlayerNameInput'),
@@ -452,6 +464,103 @@ class UnoArenaApp {
       }
     });
 
+    // Mobile Landing Controls Event Handlers
+    if (this.el.mobileNavSoundBtn) {
+      this.el.mobileNavSoundBtn.addEventListener('click', () => {
+        this.el.soundToggleBtn.click();
+      });
+    }
+
+    if (this.el.mobileNavRulesBtn) {
+      this.el.mobileNavRulesBtn.addEventListener('click', () => {
+        this.el.howToPlayBtn.click();
+      });
+    }
+
+    if (this.el.mobilePlayerNameInput) {
+      if (this.playerName) {
+        this.el.mobilePlayerNameInput.value = this.playerName;
+      }
+      this.el.mobilePlayerNameInput.addEventListener('input', () => {
+        const val = this.el.mobilePlayerNameInput.value;
+        this.el.playerNameInput.value = val;
+        this.playerName = val.trim();
+        if (this.playerName) {
+          localStorage.setItem('uno_arena_name', this.playerName);
+        }
+      });
+      this.el.mobilePlayerNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (this.el.mobileCreateRoomBtn) this.el.mobileCreateRoomBtn.click();
+        }
+      });
+      this.el.playerNameInput.addEventListener('input', () => {
+        if (this.el.mobilePlayerNameInput) {
+          this.el.mobilePlayerNameInput.value = this.el.playerNameInput.value;
+        }
+      });
+    }
+
+    if (this.el.mobileRoomCodeInput) {
+      this.el.mobileRoomCodeInput.addEventListener('input', () => {
+        const clean = this.el.mobileRoomCodeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        this.el.mobileRoomCodeInput.value = clean;
+        this.el.roomCodeInput.value = clean;
+      });
+      this.el.mobileRoomCodeInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (this.el.mobileJoinRoomBtn) this.el.mobileJoinRoomBtn.click();
+        }
+      });
+      this.el.roomCodeInput.addEventListener('input', () => {
+        if (this.el.mobileRoomCodeInput) {
+          this.el.mobileRoomCodeInput.value = this.el.roomCodeInput.value;
+        }
+      });
+    }
+
+    if (this.el.mobileCreateRoomBtn) {
+      this.el.mobileCreateRoomBtn.addEventListener('click', () => {
+        const name = (this.el.mobilePlayerNameInput?.value || '').trim() ||
+                     (this.el.playerNameInput?.value || '').trim() ||
+                     this.playerName || 'Player 1';
+        this.playerName = name;
+        this.el.playerNameInput.value = name;
+        if (this.el.mobilePlayerNameInput) this.el.mobilePlayerNameInput.value = name;
+        localStorage.setItem('uno_arena_name', name);
+        this.createRoom(name, this.preferredMode, this.getSelectedHouseRules());
+      });
+    }
+
+    if (this.el.mobileJoinRoomBtn) {
+      this.el.mobileJoinRoomBtn.addEventListener('click', () => {
+        const name = (this.el.mobilePlayerNameInput?.value || '').trim() ||
+                     (this.el.playerNameInput?.value || '').trim() ||
+                     this.playerName || 'Guest';
+        const code = (this.el.mobileRoomCodeInput?.value || '').trim().toUpperCase() ||
+                     (this.el.roomCodeInput?.value || '').trim().toUpperCase();
+        if (!code) {
+          this.showToast('Please enter a room code');
+          if (this.el.mobileRoomCodeInput) this.el.mobileRoomCodeInput.focus();
+          return;
+        }
+        if (this.isJoiningRoom) return;
+        this.isJoiningRoom = true;
+        this.el.mobileJoinRoomBtn.disabled = true;
+        if (this.el.joinRoomBtn) this.el.joinRoomBtn.disabled = true;
+        this.playerName = name;
+        localStorage.setItem('uno_arena_name', name);
+        this.connectWebSocket(code, null, null, name);
+        setTimeout(() => {
+          this.isJoiningRoom = false;
+          if (this.el.mobileJoinRoomBtn) this.el.mobileJoinRoomBtn.disabled = false;
+          if (this.el.joinRoomBtn) this.el.joinRoomBtn.disabled = false;
+        }, 2500);
+      });
+    }
+
     // Copy invite
     this.el.copyInviteBtn.addEventListener('click', () => this.copyInviteLink());
     this.el.lobbyCodeBadge.addEventListener('click', () => this.copyInviteLink());
@@ -577,8 +686,10 @@ class UnoArenaApp {
     this.el.setupModeDescription.textContent = details[mode][1];
     this.el.setupRulesCard.hidden = mode !== 'no_mercy';
     this.el.setupMercyLimit.value = String(this.mercyKnockoutLimit);
-    const currentName = this.el.playerNameInput.value.trim() || this.playerName || '';
+    const currentName = this.el.mobilePlayerNameInput?.value.trim() || this.el.playerNameInput.value.trim() || this.playerName || '';
     this.el.setupPlayerNameInput.value = currentName;
+    if (this.el.mobilePlayerNameInput) this.el.mobilePlayerNameInput.value = currentName;
+    this.el.playerNameInput.value = currentName;
 
     const isNoMercy = mode === 'no_mercy';
     const isFlip = mode === 'flip';
@@ -613,6 +724,7 @@ class UnoArenaApp {
     if (enteredName) {
       this.playerName = enteredName;
       this.el.playerNameInput.value = enteredName;
+      if (this.el.mobilePlayerNameInput) this.el.mobilePlayerNameInput.value = enteredName;
       localStorage.setItem('uno_arena_name', enteredName);
     }
     this.el.modeSetupSection.classList.remove('mode-no-mercy-setup');
@@ -697,6 +809,7 @@ class UnoArenaApp {
     if (this.isCreatingRoom) return;
     this.isCreatingRoom = true;
     if (this.el.createRoomBtn) this.el.createRoomBtn.disabled = true;
+    if (this.el.mobileCreateRoomBtn) this.el.mobileCreateRoomBtn.disabled = true;
     if (this.el.setupCreateRoomBtn) this.el.setupCreateRoomBtn.disabled = true;
     if (this.el.flipCreateRoomBtn) this.el.flipCreateRoomBtn.disabled = true;
 
@@ -760,6 +873,7 @@ class UnoArenaApp {
     } finally {
       this.isCreatingRoom = false;
       if (this.el.createRoomBtn) this.el.createRoomBtn.disabled = false;
+      if (this.el.mobileCreateRoomBtn) this.el.mobileCreateRoomBtn.disabled = false;
       if (this.el.setupCreateRoomBtn) this.el.setupCreateRoomBtn.disabled = false;
       if (this.el.flipCreateRoomBtn) this.el.flipCreateRoomBtn.disabled = false;
     }

@@ -486,6 +486,11 @@ body::before {
   }
 }
 
+/* Mobile Landing Container (Desktop Hidden) */
+.mobile-landing-container {
+  display: none;
+}
+
 /* ==========================================================================
    MOBILE LAYOUT (<= 640px)
    Dedicated Mobile Landing Page Matching Uploaded Reference
@@ -495,6 +500,8 @@ body::before {
     background-color: #fcf6eb;
     height: auto;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -503,6 +510,12 @@ body::before {
     display: none;
   }
 
+  /* When on mobile landing, hide the desktop top-nav because header is baked into artwork */
+  body:not(.in-room):not(.in-no-mercy-setup):not(.in-flip-setup) .top-nav {
+    display: none !important;
+  }
+
+  /* When on setup screens (Flip/No Mercy) or in-room, restore top-nav */
   .top-nav {
     height: 54px;
     padding: 0 16px;
@@ -584,278 +597,208 @@ body::before {
     font-size: 1.05rem;
   }
 
-  /* Screen and Hero */
+  /* Home screen container for mobile */
   .home-screen {
-    padding: 0 0 28px 0;
+    padding: 0;
     width: 100%;
-    max-width: 520px;
+    max-width: 576px;
     margin: 0 auto;
     height: auto;
-    min-height: calc(100vh - 54px);
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
   }
 
-  .home-hero {
-    position: relative;
-    width: 100%;
-    margin: 0 auto;
-    padding: 16px 0 0 0;
-    background: url('./assets/mobile-hero-tabletop.png') top center / 100% auto no-repeat;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border: none;
-    border-radius: 0;
-    overflow: visible;
-    box-sizing: border-box;
-  }
-
-  .home-hero::before,
-  .home-hero::after,
-  .home-art {
+  /* Hide desktop hero & mode tiles when on mobile landing */
+  .home-screen > .home-hero,
+  .home-screen > .home-modes {
     display: none !important;
   }
 
-  .home-copy {
-    position: static;
+  /* Dedicated Mobile Landing Page */
+  .mobile-landing-container {
+    display: block;
     width: 100%;
-    max-width: 440px;
+    max-width: 576px;
     margin: 0 auto;
-    padding: 0 16px;
-    text-align: center;
-    box-sizing: border-box;
-  }
-
-  .home-kicker,
-  .home-online {
-    display: none !important;
-  }
-
-  .home-copy h1,
-  #homeTitle {
-    position: static !important;
-    width: auto !important;
-    height: auto !important;
-    padding: 0 !important;
-    margin: 0 0 6px 0 !important;
-    overflow: visible !important;
-    clip: auto !important;
-    white-space: normal !important;
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(27px, 8.2vw, 36px);
-    font-weight: 900;
-    color: #072d22;
-    line-height: 0.92;
-    letter-spacing: -0.04em;
-    text-align: center;
-  }
-
-  .home-subtitle {
-    position: static !important;
-    width: auto !important;
-    height: auto !important;
-    padding: 0 !important;
-    margin: 0 auto !important;
-    overflow: visible !important;
-    clip: auto !important;
-    white-space: normal !important;
-    font-family: Georgia, serif;
-    font-size: clamp(11.5px, 3.3vw, 13.5px);
-    font-weight: 700;
-    color: #17392b;
-    line-height: 1.3;
-    text-align: center;
-    max-width: 320px;
-  }
-
-  /* Form Container */
-  .home-playbox {
-    position: relative;
-    z-index: 5;
-    left: auto;
-    top: auto;
-    width: calc(100% - 24px);
-    max-width: 440px;
-    height: auto;
-    margin: clamp(120px, 31vw, 155px) auto 18px;
-    padding: 14px 14px 16px;
-    background: #fbf6ea;
-    border: 1px solid rgba(135, 114, 82, 0.25);
-    border-radius: 20px;
-    box-shadow: 0 10px 28px rgba(45, 30, 10, 0.12);
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .home-create-row {
-    position: static;
-    width: 100%;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 0;
-  }
-
-  .home-input-wrap {
-    height: 48px;
-    min-height: 48px;
-    background: #efe5d3;
-    border: 1px solid #dfd1b8;
-    border-radius: 12px;
-    padding: 0 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-sizing: border-box;
-    box-shadow: none;
-    cursor: text;
-  }
-
-  .home-input-wrap .home-input-icon,
-  .home-input-wrap > span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #092a20;
-    font-size: 1.15rem;
-    font-weight: 900;
-    flex-shrink: 0;
-  }
-
-  .home-input-wrap .code-icon {
-    font-size: 1.25rem;
-    font-weight: 900;
-    color: #5d4a36;
-  }
-
-  .home-input-wrap input {
-    width: 100%;
-    height: 100%;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: #092a20;
-    font-family: 'Outfit', sans-serif;
-    font-weight: 800;
-    font-size: 15px;
-    letter-spacing: 0.02em;
     padding: 0;
-  }
-
-  .home-input-wrap input::placeholder {
-    color: #092a20;
-    opacity: 0.85;
-    font-weight: 800;
-  }
-
-  .home-button {
-    height: 48px;
-    min-height: 48px;
-    border: none;
-    border-radius: 12px;
-    color: #ffffff;
-    font-family: 'Outfit', sans-serif;
-    font-weight: 900;
-    font-size: 15px;
-    letter-spacing: 0.04em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    touch-action: manipulation;
-    user-select: none;
     box-sizing: border-box;
-    transition: transform 0.08s ease, box-shadow 0.08s ease;
+    overflow-x: hidden;
   }
 
-  .home-button.home-create {
-    background: linear-gradient(180deg, #d81e15 0%, #c4140d 100%);
-    box-shadow: 0 4px 0 #940e08;
-  }
-
-  .home-button.home-create:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #940e08;
-  }
-
-  .home-divider {
-    position: static;
-    width: 100%;
-    height: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin: 2px 0;
-    color: #17392b;
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: 0.12em;
-  }
-
-  .home-divider span {
-    height: 1px;
-    flex: 1;
-    background: #c7bba6;
-  }
-
-  .home-button.home-join {
-    background: linear-gradient(180deg, #074230 0%, #013424 100%);
-    box-shadow: 0 4px 0 #001d14;
-  }
-
-  .home-button.home-join:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #001d14;
-  }
-
-  /* Game Mode Tiles at Bottom */
-  .home-modes {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    width: calc(100% - 24px);
-    max-width: 440px;
-    margin: 0 auto;
-    padding: 0 0 24px 0;
-    box-sizing: border-box;
-  }
-
-  .home-mode {
+  .mobile-landing-art-wrap {
     position: relative;
     width: 100%;
-    aspect-ratio: 172 / 230;
-    padding: 0;
-    border: none;
-    background: transparent;
-    border-radius: 16px;
+    margin: 0 auto;
     overflow: hidden;
-    cursor: pointer;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
-    touch-action: manipulation;
+    box-sizing: border-box;
   }
 
-  .home-mode:active {
-    transform: scale(0.96);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  .mobile-landing-art-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    pointer-events: none;
+    user-select: none;
   }
 
-  .mode-reference-image {
+  .mobile-landing-overlay {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    display: block;
-    object-fit: cover;
-    border-radius: inherit;
     pointer-events: none;
+    box-sizing: border-box;
+  }
+
+  .mobile-overlay-control {
+    position: absolute;
+    pointer-events: auto;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    box-sizing: border-box;
+  }
+
+  /* 1. Sound Button (Top Nav) */
+  .mobile-nav-sound {
+    left: 63.89%;
+    top: 0.68%;
+    width: 9.03%;
+    height: 3.52%;
+    border-radius: 9px;
+  }
+  .mobile-nav-sound:active {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  /* 2. Rules Button (Top Nav) */
+  .mobile-nav-rules {
+    left: 75.00%;
+    top: 0.68%;
+    width: 21.18%;
+    height: 3.52%;
+    border-radius: 9px;
+  }
+  .mobile-nav-rules:active {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  /* 3. Player Name Input */
+  .mobile-input-name {
+    left: 8.85%;
+    top: 37.89%;
+    width: 82.29%;
+    height: 5.27%;
+    border-radius: 12px;
+    padding-left: 12%;
+    padding-right: 4%;
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(14px, 3.8vw, 17px);
+    font-weight: 800;
+    color: #082b20;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: 13px center;
+    background-size: 18px 18px;
+    outline: none;
+    cursor: text;
+  }
+  .mobile-input-name:focus,
+  .mobile-input-name:not(:placeholder-shown) {
+    background-color: #eee5d3;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23082b20'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E");
+  }
+
+  /* 4. Create Room Button */
+  .mobile-btn-create {
+    left: 8.85%;
+    top: 44.63%;
+    width: 82.29%;
+    height: 4.88%;
+    border-radius: 12px;
+  }
+  .mobile-btn-create:active {
+    transform: scale(0.985);
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  /* 5. Room Code Input */
+  .mobile-input-code {
+    left: 8.85%;
+    top: 51.95%;
+    width: 82.29%;
+    height: 5.27%;
+    border-radius: 12px;
+    padding-left: 12%;
+    padding-right: 4%;
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(14px, 3.8vw, 17px);
+    font-weight: 800;
+    color: #082b20;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: 14px center;
+    background-size: 18px 18px;
+    outline: none;
+    cursor: text;
+  }
+  .mobile-input-code:focus,
+  .mobile-input-code:not(:placeholder-shown) {
+    background-color: #eee5d3;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='4' y='18' font-size='19' font-weight='900' font-family='sans-serif' fill='%235d4a36'%3E%23%3C/text%3E%3C/svg%3E");
+  }
+
+  /* 6. Join Room Button */
+  .mobile-btn-join {
+    left: 8.85%;
+    top: 58.98%;
+    width: 82.29%;
+    height: 4.88%;
+    border-radius: 12px;
+  }
+  .mobile-btn-join:active {
+    transform: scale(0.985);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* 7, 8, 9. Mode Tiles */
+  .mobile-tile-classic {
+    left: 2.78%;
+    top: 66.99%;
+    width: 30.38%;
+    height: 17.77%;
+    border-radius: 16px;
+  }
+  .mobile-tile-classic:active {
+    transform: scale(0.96);
+  }
+
+  .mobile-tile-flip {
+    left: 34.72%;
+    top: 66.99%;
+    width: 30.56%;
+    height: 17.77%;
+    border-radius: 16px;
+  }
+  .mobile-tile-flip:active {
+    transform: scale(0.96);
+  }
+
+  .mobile-tile-mercy {
+    left: 66.84%;
+    top: 66.99%;
+    width: 30.38%;
+    height: 17.77%;
+    border-radius: 16px;
+  }
+  .mobile-tile-mercy:active {
+    transform: scale(0.96);
   }
 
   .in-room .lobby-card {

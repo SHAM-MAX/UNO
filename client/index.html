@@ -109,6 +109,35 @@
             </picture>
           </button>
         </section>
+
+        <!-- DEDICATED MOBILE-ONLY LANDING PAGE (Authentic reference artwork with interactive overlays) -->
+        <div id="mobileLandingContainer" class="mobile-landing-container" aria-label="UNO Arena Mobile Home">
+          <div class="mobile-landing-art-wrap">
+            <img src="./assets/uno-arena-mobile-landing.jpg" alt="UNO Arena" class="mobile-landing-art-img" draggable="false" />
+            <div class="mobile-landing-overlay">
+              <!-- Top Nav Interactive Overlays -->
+              <button id="mobileNavSoundBtn" class="mobile-overlay-control mobile-nav-sound" type="button" aria-label="Toggle Sound" title="Toggle Sound"></button>
+              <button id="mobileNavRulesBtn" class="mobile-overlay-control mobile-nav-rules" type="button" aria-label="Game Rules" title="Game Rules"></button>
+
+              <!-- Player Name Input Overlay -->
+              <input id="mobilePlayerNameInput" class="mobile-overlay-control mobile-input-name" type="text" placeholder="" maxlength="15" autocomplete="nickname" aria-label="Your player name" />
+
+              <!-- Create Room Button Overlay -->
+              <button id="mobileCreateRoomBtn" class="mobile-overlay-control mobile-btn-create" type="button" aria-label="Create a room" title="Create a room"></button>
+
+              <!-- Room Code Input Overlay -->
+              <input id="mobileRoomCodeInput" class="mobile-overlay-control mobile-input-code" type="text" placeholder="" maxlength="8" autocomplete="off" aria-label="Room code" />
+
+              <!-- Join Room Button Overlay -->
+              <button id="mobileJoinRoomBtn" class="mobile-overlay-control mobile-btn-join" type="button" aria-label="Join room" title="Join room"></button>
+
+              <!-- Bottom Mode Card Overlays -->
+              <button id="mobileModeClassicBtn" class="mobile-overlay-control mobile-tile-classic" type="button" data-home-mode="classic" aria-label="Classic UNO"></button>
+              <button id="mobileModeFlipBtn" class="mobile-overlay-control mobile-tile-flip" type="button" data-home-mode="flip" aria-label="UNO Flip"></button>
+              <button id="mobileModeMercyBtn" class="mobile-overlay-control mobile-tile-mercy" type="button" data-home-mode="no_mercy" aria-label="Show 'Em No Mercy"></button>
+            </div>
+          </div>
+        </div>
       </div>
       </div>
       <section id="modeSetupSection" class="mode-setup-screen" hidden aria-labelledby="setupModeTitle">
