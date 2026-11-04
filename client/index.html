@@ -14,6 +14,9 @@
 
   <!-- Top Navigation Bar -->
   <header class="top-nav">
+    <button id="flipBackToModesBtn" class="flip-nav-back-btn" type="button" aria-label="Game modes" title="Game modes">
+      <span class="flip-nav-back-arrow" aria-hidden="true">←</span>
+    </button>
     <div class="brand-logo">
       <span class="logo-badge">ARENA</span>
       <span>UNO</span>
@@ -60,12 +63,20 @@
           </div>
             <div class="home-playbox">
               <div class="home-create-row">
-                <label class="home-input-wrap"><span aria-hidden="true">♟</span><input id="playerNameInput" type="text" placeholder="PLAYER NAME" maxlength="15" autocomplete="nickname" aria-label="Player name"></label>
+                <label class="home-input-wrap">
+                  <span class="home-input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                  </span>
+                  <input id="playerNameInput" type="text" placeholder="Player 1" maxlength="15" autocomplete="nickname" aria-label="Player name">
+                </label>
                 <button id="createRoomBtn" class="home-button home-create">CREATE A ROOM <span>→</span></button>
               </div>
               <div class="home-divider"><span></span><b>OR JOIN FRIENDS</b><span></span></div>
               <div class="home-create-row">
-                <label class="home-input-wrap code-wrap"><span aria-hidden="true">#</span><input id="roomCodeInput" type="text" placeholder="6-CHARACTER CODE" maxlength="8" autocomplete="off" aria-label="Room code"></label>
+                <label class="home-input-wrap code-wrap">
+                  <span class="home-input-icon code-icon" aria-hidden="true">#</span>
+                  <input id="roomCodeInput" type="text" placeholder="6-CHARACTER CODE" maxlength="8" autocomplete="off" aria-label="Room code">
+                </label>
                 <button id="joinRoomBtn" class="home-button home-join">JOIN ROOM <span>→</span></button>
               </div>
             </div>
@@ -79,9 +90,24 @@
           </div>
         </section>
         <section class="home-modes" aria-label="Choose a game mode">
-          <button class="home-mode mode-classic is-selected" type="button" data-home-mode="classic" aria-label="Classic UNO. Classic rules. Unpredictable fun."><img class="mode-reference-image" src="./assets/classic-reference.png" alt="" draggable="false"></button>
-            <button class="home-mode mode-flip" type="button" data-home-mode="flip" aria-label="Flip. Flip the deck. Flip the odds."><img class="mode-reference-image" src="./assets/flip-reference.png" alt="" draggable="false"></button>
-          <button class="home-mode mode-mercy" type="button" data-home-mode="no_mercy" aria-label="No Mercy. High stakes. Hold on tight."><img class="mode-reference-image" src="./assets/no-mercy-reference.png" alt="" draggable="false"></button>
+          <button class="home-mode mode-classic is-selected" type="button" data-home-mode="classic" aria-label="Classic UNO. Classic rules. Unpredictable fun.">
+            <picture>
+              <source media="(max-width: 640px)" srcset="./assets/mode-tile-classic-mobile.png">
+              <img class="mode-reference-image" src="./assets/classic-reference.png" alt="" draggable="false">
+            </picture>
+          </button>
+          <button class="home-mode mode-flip" type="button" data-home-mode="flip" aria-label="Flip. Flip the deck. Flip the odds.">
+            <picture>
+              <source media="(max-width: 640px)" srcset="./assets/mode-tile-flip-mobile.png">
+              <img class="mode-reference-image" src="./assets/flip-reference.png" alt="" draggable="false">
+            </picture>
+          </button>
+          <button class="home-mode mode-mercy" type="button" data-home-mode="no_mercy" aria-label="No Mercy. High stakes. Hold on tight.">
+            <picture>
+              <source media="(max-width: 640px)" srcset="./assets/mode-tile-no-mercy-mobile.png">
+              <img class="mode-reference-image" src="./assets/no-mercy-reference.png" alt="" draggable="false">
+            </picture>
+          </button>
         </section>
       </div>
       </div>
@@ -178,6 +204,38 @@
                 <span>Join room →</span>
               </button>
             </div>
+          </div>
+        </div>
+
+        <!-- DEDICATED UNO FLIP IMAGE-BASED ROOM SETUP CONTAINER -->
+        <div id="flipSetupContainer" class="flip-setup-container" aria-label="UNO Flip room setup">
+          <div class="flip-card-wrapper" id="flipCardWrapper">
+            <img src="./assets/uno-flip-card-form.jpg" class="flip-card-bg-img" alt="UNO Flip Card Room Setup" />
+            <form class="flip-form-layer" onsubmit="return false;">
+              <!-- 1. Player Name -->
+              <label class="flip-name-label" for="flipPlayerNameInput" aria-label="Your player name"></label>
+              <input id="flipPlayerNameInput" class="flip-name-input" type="text" maxlength="15" autocomplete="nickname" placeholder="Enter your name" aria-label="Your player name" />
+
+              <!-- 2. Create Room -->
+              <button id="flipCreateRoomBtn" class="flip-create-btn" type="button" aria-label="Create room">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+                <span>Create room</span>
+                <span class="flip-arrow">➔</span>
+              </button>
+
+              <!-- 3. Separator -->
+              <div class="flip-separator" aria-hidden="true"></div>
+
+              <!-- 4. Room Code -->
+              <label class="flip-code-label" for="flipRoomCodeInput" aria-label="Room code"></label>
+              <input id="flipRoomCodeInput" class="flip-code-input" type="text" maxlength="8" autocomplete="off" placeholder="6-character code" aria-label="Room code" />
+
+              <!-- 5. Join Room -->
+              <button id="flipJoinRoomBtn" class="flip-join-btn" type="button" aria-label="Join room">
+                <span>Join room</span>
+                <span class="flip-arrow">➔</span>
+              </button>
+            </form>
           </div>
         </div>
 

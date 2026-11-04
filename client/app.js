@@ -62,6 +62,14 @@ class UnoArenaApp {
       setupRulesCard: document.getElementById('setupRulesCard'),
       setupMercyLimit: document.getElementById('setupMercyLimit'),
 
+      // UNO Flip Setup dedicated elements
+      flipSetupContainer: document.getElementById('flipSetupContainer'),
+      flipPlayerNameInput: document.getElementById('flipPlayerNameInput'),
+      flipRoomCodeInput: document.getElementById('flipRoomCodeInput'),
+      flipCreateRoomBtn: document.getElementById('flipCreateRoomBtn'),
+      flipJoinRoomBtn: document.getElementById('flipJoinRoomBtn'),
+      flipBackToModesBtn: document.getElementById('flipBackToModesBtn'),
+
       // No Mercy Setup dedicated elements
       noMercySetupContainer: document.getElementById('noMercySetupContainer'),
       noMercyPlayerNameInput: document.getElementById('noMercyPlayerNameInput'),
@@ -317,6 +325,43 @@ class UnoArenaApp {
       this.el.noMercyMobileJoinRoomBtn.addEventListener('click', () => this.triggerNoMercyJoin());
     }
 
+    // Dedicated UNO Flip Setup Event Handlers
+    if (this.el.flipBackToModesBtn) {
+      this.el.flipBackToModesBtn.addEventListener('click', () => this.showModePicker());
+    }
+    if (this.el.flipPlayerNameInput) {
+      this.el.flipPlayerNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.triggerFlipCreate();
+        }
+      });
+      this.el.flipPlayerNameInput.addEventListener('input', () => {
+        const val = this.el.flipPlayerNameInput.value.trim();
+        if (val) {
+          this.playerName = val;
+          localStorage.setItem('uno_arena_name', val);
+        }
+      });
+    }
+    if (this.el.flipRoomCodeInput) {
+      this.el.flipRoomCodeInput.addEventListener('input', () => {
+        this.el.flipRoomCodeInput.value = this.el.flipRoomCodeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      });
+      this.el.flipRoomCodeInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.triggerFlipJoin();
+        }
+      });
+    }
+    if (this.el.flipCreateRoomBtn) {
+      this.el.flipCreateRoomBtn.addEventListener('click', () => this.triggerFlipCreate());
+    }
+    if (this.el.flipJoinRoomBtn) {
+      this.el.flipJoinRoomBtn.addEventListener('click', () => this.triggerFlipJoin());
+    }
+
     // Leave room
     this.el.leaveBtn.addEventListener('click', () => this.leaveRoom());
     this.el.cancelLeaveBtn.addEventListener('click', () => this.closeLeaveConfirm());
@@ -551,6 +596,11 @@ class UnoArenaApp {
       if (this.el.noMercyMobileRoomCodeInput) this.el.noMercyMobileRoomCodeInput.value = '';
     }
 
+    if (isFlip) {
+      if (this.el.flipPlayerNameInput) this.el.flipPlayerNameInput.value = currentName;
+      if (this.el.flipRoomCodeInput) this.el.flipRoomCodeInput.value = '';
+    }
+
     this.el.modeHomeScreen.hidden = true;
     this.el.modeSetupSection.hidden = false;
   }
@@ -558,6 +608,7 @@ class UnoArenaApp {
   showModePicker() {
     const enteredName = this.el.noMercyPlayerNameInput?.value?.trim() ||
       this.el.noMercyMobilePlayerNameInput?.value?.trim() ||
+      this.el.flipPlayerNameInput?.value?.trim() ||
       this.el.setupPlayerNameInput?.value?.trim();
     if (enteredName) {
       this.playerName = enteredName;
@@ -570,6 +621,35 @@ class UnoArenaApp {
     document.body.classList.remove('in-flip-setup');
     this.el.modeSetupSection.hidden = true;
     this.el.modeHomeScreen.hidden = false;
+  }
+
+  triggerFlipCreate() {
+    const inputVal = (this.el.flipPlayerNameInput?.value || '').trim();
+    const name = inputVal || this.playerName || 'Player 1';
+    this.playerName = name;
+    localStorage.setItem('uno_arena_name', name);
+    this.createRoom(name, 'flip', this.getSelectedHouseRules());
+  }
+
+  triggerFlipJoin() {
+    const nameInputVal = (this.el.flipPlayerNameInput?.value || '').trim();
+    const name = nameInputVal || this.playerName || 'Guest';
+    const code = (this.el.flipRoomCodeInput?.value || '').trim().toUpperCase();
+    if (!code) {
+      this.showToast('Enter your friend’s room code');
+      if (this.el.flipRoomCodeInput) this.el.flipRoomCodeInput.focus();
+      return;
+    }
+    if (this.isJoiningRoom) return;
+    this.isJoiningRoom = true;
+    if (this.el.flipJoinRoomBtn) this.el.flipJoinRoomBtn.disabled = true;
+    this.playerName = name;
+    localStorage.setItem('uno_arena_name', name);
+    this.joinRoom(code, name);
+    setTimeout(() => {
+      this.isJoiningRoom = false;
+      if (this.el.flipJoinRoomBtn) this.el.flipJoinRoomBtn.disabled = false;
+    }, 1500);
   }
 
   triggerNoMercyCreate() {
@@ -618,6 +698,7 @@ class UnoArenaApp {
     this.isCreatingRoom = true;
     if (this.el.createRoomBtn) this.el.createRoomBtn.disabled = true;
     if (this.el.setupCreateRoomBtn) this.el.setupCreateRoomBtn.disabled = true;
+    if (this.el.flipCreateRoomBtn) this.el.flipCreateRoomBtn.disabled = true;
 
     try {
       const res = await fetch('/api/rooms', {
@@ -680,6 +761,7 @@ class UnoArenaApp {
       this.isCreatingRoom = false;
       if (this.el.createRoomBtn) this.el.createRoomBtn.disabled = false;
       if (this.el.setupCreateRoomBtn) this.el.setupCreateRoomBtn.disabled = false;
+      if (this.el.flipCreateRoomBtn) this.el.flipCreateRoomBtn.disabled = false;
     }
   }
 
@@ -801,6 +883,7 @@ class UnoArenaApp {
     this.isJoiningRoom = false;
     if (this.el.joinRoomBtn) this.el.joinRoomBtn.disabled = false;
     if (this.el.setupJoinRoomBtn) this.el.setupJoinRoomBtn.disabled = false;
+    if (this.el.flipJoinRoomBtn) this.el.flipJoinRoomBtn.disabled = false;
 
     // Update Top Bar
     this.el.navRoomCode.textContent = `ROOM: ${this.gameState.roomId}`;
