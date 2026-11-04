@@ -110,32 +110,57 @@
           </button>
         </section>
 
-        <!-- DEDICATED MOBILE-ONLY LANDING PAGE (Authentic reference artwork with interactive overlays) -->
+        <!-- DEDICATED MOBILE-ONLY LANDING PAGE (Authentic reference artwork with viewport-optimized sectional layout) -->
         <div id="mobileLandingContainer" class="mobile-landing-container" aria-label="UNO Arena Mobile Home">
-          <div class="mobile-landing-art-wrap">
-            <img src="./assets/uno-arena-mobile-landing.jpg" alt="UNO Arena" class="mobile-landing-art-img" draggable="false" />
-            <div class="mobile-landing-overlay">
-              <!-- Top Nav Interactive Overlays -->
-              <button id="mobileNavSoundBtn" class="mobile-overlay-control mobile-nav-sound" type="button" aria-label="Toggle Sound" title="Toggle Sound"></button>
-              <button id="mobileNavRulesBtn" class="mobile-overlay-control mobile-nav-rules" type="button" aria-label="Game Rules" title="Game Rules"></button>
-
-              <!-- Player Name Input Overlay -->
-              <input id="mobilePlayerNameInput" class="mobile-overlay-control mobile-input-name" type="text" placeholder="" maxlength="15" autocomplete="nickname" aria-label="Your player name" />
-
-              <!-- Create Room Button Overlay -->
-              <button id="mobileCreateRoomBtn" class="mobile-overlay-control mobile-btn-create" type="button" aria-label="Create a room" title="Create a room"></button>
-
-              <!-- Room Code Input Overlay -->
-              <input id="mobileRoomCodeInput" class="mobile-overlay-control mobile-input-code" type="text" placeholder="" maxlength="8" autocomplete="off" aria-label="Room code" />
-
-              <!-- Join Room Button Overlay -->
-              <button id="mobileJoinRoomBtn" class="mobile-overlay-control mobile-btn-join" type="button" aria-label="Join room" title="Join room"></button>
-
-              <!-- Bottom Mode Card Overlays -->
-              <button id="mobileModeClassicBtn" class="mobile-overlay-control mobile-tile-classic" type="button" data-home-mode="classic" aria-label="Classic UNO"></button>
-              <button id="mobileModeFlipBtn" class="mobile-overlay-control mobile-tile-flip" type="button" data-home-mode="flip" aria-label="UNO Flip"></button>
-              <button id="mobileModeMercyBtn" class="mobile-overlay-control mobile-tile-mercy" type="button" data-home-mode="no_mercy" aria-label="Show 'Em No Mercy"></button>
+          <!-- 1. Top Navigation Bar -->
+          <header class="mobile-nav-bar" aria-label="Mobile Navigation">
+            <div class="mobile-brand">
+              <span class="mobile-brand-uno">UNO</span>
+              <span class="mobile-brand-arena">ARENA</span>
             </div>
+            <div class="mobile-nav-actions">
+              <button id="mobileNavSoundBtn" class="mobile-nav-action-btn" type="button" aria-label="Toggle Sound" title="Toggle Sound">🔊</button>
+              <button id="mobileNavRulesBtn" class="mobile-nav-action-btn" type="button" aria-label="Game Rules" title="Game Rules">📖 RULES</button>
+            </div>
+          </header>
+
+          <div class="mobile-content-body">
+            <!-- 2. Hero Section (Heading + Tabletop Artwork) -->
+            <section class="mobile-hero-section" aria-label="Hero">
+              <img src="./assets/uno-arena-mobile-hero.png" alt="THE TABLE IS YOURS. Pick a mode. Gather your crew. Let the chaos begin." class="mobile-hero-art" draggable="false" />
+            </section>
+
+            <!-- 3. Player Name & Room Setup Form -->
+            <section class="mobile-form-section" aria-label="Room Setup">
+              <div class="mobile-form-wrap">
+                <img src="./assets/uno-arena-mobile-form.png" alt="" class="mobile-form-img" draggable="false" />
+                <div class="mobile-form-controls">
+                  <!-- Player Name Input Overlay -->
+                  <input id="mobilePlayerNameInput" class="mobile-control mobile-form-input-name" type="text" placeholder="" maxlength="15" autocomplete="nickname" aria-label="Your player name" />
+
+                  <!-- Create Room Button Overlay -->
+                  <button id="mobileCreateRoomBtn" class="mobile-control mobile-form-btn-create" type="button" aria-label="Create a room" title="Create a room"></button>
+
+                  <!-- Room Code Input Overlay -->
+                  <input id="mobileRoomCodeInput" class="mobile-control mobile-form-input-code" type="text" placeholder="" maxlength="8" autocomplete="off" aria-label="Room code" />
+
+                  <!-- Join Room Button Overlay -->
+                  <button id="mobileJoinRoomBtn" class="mobile-control mobile-form-btn-join" type="button" aria-label="Join room" title="Join room"></button>
+                </div>
+              </div>
+            </section>
+
+            <!-- 4. Three Game Mode Cards -->
+            <section class="mobile-modes-section" aria-label="Game Modes">
+              <div class="mobile-modes-wrap">
+                <img src="./assets/uno-arena-mobile-modes.png" alt="Classic UNO, UNO Flip, and Show 'Em No Mercy" class="mobile-modes-img" draggable="false" />
+                <div class="mobile-modes-controls">
+                  <button id="mobileModeClassicBtn" class="mobile-control mobile-mode-tile-classic" type="button" data-home-mode="classic" aria-label="Classic UNO"></button>
+                  <button id="mobileModeFlipBtn" class="mobile-control mobile-mode-tile-flip" type="button" data-home-mode="flip" aria-label="UNO Flip"></button>
+                  <button id="mobileModeMercyBtn" class="mobile-control mobile-mode-tile-mercy" type="button" data-home-mode="no_mercy" aria-label="Show 'Em No Mercy"></button>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </div>
