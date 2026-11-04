@@ -723,6 +723,17 @@ body::before {
     width: 100%;
     position: relative;
     overflow: hidden;
+    padding-bottom: 12%;
+    background: #fcf6eb;
+  }
+
+  .mobile-hero-section::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 30%;
+    background: linear-gradient(to bottom, #fcf6eb00 0%, #fcf6eb55 20%, #fcf6eb 45%, #fcf6eb 100%);
+    pointer-events: none;
   }
 
   .mobile-hero-art {
@@ -742,7 +753,7 @@ body::before {
     flex: 0 0 auto;
     width: 100%;
     position: relative;
-    margin: -1.4% auto 0;
+    margin: -14% auto 0;
     z-index: 2;
   }
 
@@ -792,12 +803,20 @@ body::before {
     margin: 0 auto;
   }
 
-  .mobile-modes-wrap { position: relative; width: 100%; }
-  .mobile-modes-img { display: block; width: 100%; height: auto; }
-  .mobile-modes-wrap .mobile-control { top: 15.5%; height: 82%; width: 30.4%; border-radius: 9px; }
-  .mobile-mode-tile-classic { left: 2.78%; }
-  .mobile-mode-tile-flip { left: 34.72%; }
-  .mobile-mode-tile-mercy { left: 66.84%; }
+  .mobile-modes-wrap {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2%;
+    padding: 0 2.8%;
+  }
+  .mobile-modes-wrap .mobile-control {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+    border-radius: clamp(12px, 3.5vw, 20px);
+    box-shadow: 0 5px 8px #60401c26;
+  }
+  .mobile-modes-wrap img { display: block; width: 100%; height: auto; }
 
   .mobile-mode-tile-classic:active,
   .mobile-mode-tile-flip:active,
@@ -808,19 +827,20 @@ body::before {
   /* Live form controls share the reference's cream panel and proportions. */
   .mobile-form-wrap {
     width: 89.6%;
-    padding: 1.5% 3.5% 2.5%;
+    padding: 2.8% 3.5% 2.5%;
     box-sizing: border-box;
     background: #fcf5e7;
     border-radius: 14px;
     overflow: visible;
-    box-shadow: 0 4px 6px #60401c26;
+    border: 1px solid #e9dcc6;
+    box-shadow: 0 6px 12px #60401c26, 0 2px 3px #60401c12;
   }
 
   .mobile-form-controls {
     position: static;
     display: grid;
     pointer-events: auto;
-    gap: 8px;
+    gap: clamp(8px, 2.2vw, 13px);
   }
 
   .mobile-form-controls .mobile-control {
@@ -859,7 +879,7 @@ body::before {
   .mobile-form-divider span { flex: 1; height: 1px; background: #a5977b; }
   .mobile-control:focus-visible { outline: 2px solid #b48526; outline-offset: 2px; }
   .mobile-control:disabled { opacity: .65; cursor: wait; }
-  .mobile-modes-section { margin-top: 2%; }
+  .mobile-modes-section { margin-top: 6%; }
 
   .in-room .lobby-card {
     padding: 19px 14px;
