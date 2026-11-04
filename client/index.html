@@ -133,19 +133,12 @@
             <!-- 3. Player Name & Room Setup Form -->
             <section class="mobile-form-section" aria-label="Room Setup">
               <div class="mobile-form-wrap">
-                <img src="./assets/uno-arena-mobile-form.png" alt="" class="mobile-form-img" draggable="false" />
                 <div class="mobile-form-controls">
-                  <!-- Player Name Input Overlay -->
-                  <input id="mobilePlayerNameInput" class="mobile-control mobile-form-input-name" type="text" placeholder="" maxlength="15" autocomplete="nickname" aria-label="Your player name" />
-
-                  <!-- Create Room Button Overlay -->
-                  <button id="mobileCreateRoomBtn" class="mobile-control mobile-form-btn-create" type="button" aria-label="Create a room" title="Create a room"></button>
-
-                  <!-- Room Code Input Overlay -->
-                  <input id="mobileRoomCodeInput" class="mobile-control mobile-form-input-code" type="text" placeholder="" maxlength="8" autocomplete="off" aria-label="Room code" />
-
-                  <!-- Join Room Button Overlay -->
-                  <button id="mobileJoinRoomBtn" class="mobile-control mobile-form-btn-join" type="button" aria-label="Join room" title="Join room"></button>
+                  <label class="mobile-name-field"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><input id="mobilePlayerNameInput" class="mobile-control mobile-form-input-name" type="text" placeholder="Guest" maxlength="15" autocomplete="nickname" aria-label="Your player name" /></label>
+                  <button id="mobileCreateRoomBtn" class="mobile-control mobile-form-btn-create" type="button">CREATE A ROOM <span aria-hidden="true">&#8594;</span></button>
+                  <div class="mobile-form-divider"><span></span><b>OR JOIN FRIENDS</b><span></span></div>
+                  <label class="mobile-code-field"><span aria-hidden="true">#</span><input id="mobileRoomCodeInput" class="mobile-control mobile-form-input-code" type="text" placeholder="6-CHARACTER CODE" maxlength="8" autocomplete="off" aria-label="Room code" /></label>
+                  <button id="mobileJoinRoomBtn" class="mobile-control mobile-form-btn-join" type="button">JOIN ROOM <span aria-hidden="true">&#8594;</span></button>
                 </div>
               </div>
             </section>
@@ -153,12 +146,10 @@
             <!-- 4. Three Game Mode Cards -->
             <section class="mobile-modes-section" aria-label="Game Modes">
               <div class="mobile-modes-wrap">
-                <img src="./assets/uno-arena-mobile-modes.png" alt="Classic UNO, UNO Flip, and Show 'Em No Mercy" class="mobile-modes-img" draggable="false" />
-                <div class="mobile-modes-controls">
-                  <button id="mobileModeClassicBtn" class="mobile-control mobile-mode-tile-classic" type="button" data-home-mode="classic" aria-label="Classic UNO"></button>
-                  <button id="mobileModeFlipBtn" class="mobile-control mobile-mode-tile-flip" type="button" data-home-mode="flip" aria-label="UNO Flip"></button>
-                  <button id="mobileModeMercyBtn" class="mobile-control mobile-mode-tile-mercy" type="button" data-home-mode="no_mercy" aria-label="Show 'Em No Mercy"></button>
-                </div>
+                <img src="./assets/uno-arena-mobile-modes.png" alt="Classic, Flip, and No Mercy" class="mobile-modes-img" draggable="false">
+                <button id="mobileModeClassicBtn" class="mobile-control mobile-mode-tile-classic" type="button" data-home-mode="classic" aria-label="Classic UNO"></button>
+                <button id="mobileModeFlipBtn" class="mobile-control mobile-mode-tile-flip" type="button" data-home-mode="flip" aria-label="UNO Flip"></button>
+                <button id="mobileModeMercyBtn" class="mobile-control mobile-mode-tile-mercy" type="button" data-home-mode="no_mercy" aria-label="Show Em No Mercy"></button>
               </div>
             </section>
           </div>
