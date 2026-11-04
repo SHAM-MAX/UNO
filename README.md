@@ -97,6 +97,19 @@ The project includes 22 automated test suites covering rules, deck compositions,
 npm test
 ```
 
+With the local server running (`npm start`), run the browser checks serially:
+
+```bash
+npm run test:browser
+npm run test:mobile
+```
+
+The mobile suite uses headless Chrome on Windows. It checks all three modes at
+phone, tablet, laptop, desktop, and landscape sizes, including touch navigation,
+room creation/joining, dialog focus, reduced keyboard viewport height, and desktop
+pixel comparisons. Screenshots are written to `scratch/mobile-final/` and are not
+committed. Physical keyboard and device safe-area behavior still need real-device QA.
+
 ### Test Coverage Breakdown:
 1. **Deck Composition**:
    - Classic Deck (108 cards exact: 25 per color + 8 wilds).

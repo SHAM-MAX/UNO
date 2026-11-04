@@ -1,0 +1,231 @@
+/* Mobile foundations. Desktop styles remain in the existing screen stylesheets. */
+@media (max-width: 800px), (orientation: landscape) and (max-width: 1024px) and (max-height: 520px) {
+  body {
+    --mobile-paper: #fcf6eb;
+    --mobile-ink: #103b2c;
+    --mobile-gap: 12px;
+    --mobile-radius: 16px;
+    height: auto;
+    min-height: 100svh;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  input, select, textarea {
+    font-size: 16px;
+    user-select: text;
+    -webkit-user-select: text;
+    scroll-margin-block: 80px;
+  }
+
+  button { touch-action: manipulation; }
+  button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 3px solid #bd8d24;
+    outline-offset: 3px;
+  }
+
+  .top-nav, .nm-top-nav {
+    padding-top: max(6px, env(safe-area-inset-top));
+    gap: 8px;
+  }
+  .brand-logo, .mobile-brand, .nm-nav-brand { white-space: nowrap; }
+  .nav-controls { min-width: 0; }
+
+  /* All dialog states use the same readable, scrollable cream surface. */
+  .modal-overlay {
+    padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    background: #082c22b8;
+    backdrop-filter: none;
+    z-index: 400;
+  }
+  .modal-card {
+    padding: 20px;
+    max-height: calc(100dvh - 32px);
+    min-height: 0;
+    border: 1px solid #ddcba8;
+    background: var(--mobile-paper);
+    color: var(--mobile-ink);
+    box-shadow: 0 12px 36px #102b2333;
+  }
+  .modal-header { gap: 8px; margin-bottom: 12px; flex-shrink: 0; }
+  .modal-title { font-size: 20px; line-height: 1.2; }
+  .modal-close-btn { min-width: 44px; min-height: 44px; color: #103b2c; flex-shrink: 0; }
+  .modal-body { min-height: 0; line-height: 1.65; overscroll-behavior: contain; color: #4e5947; }
+  .rule-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; flex-shrink: 0; }
+  .rule-tab-btn { min-height: 48px; padding: 6px; font-size: 12px; color: #4e5947; }
+  .rule-tab-btn.active { background: #0a4533; color: #fff5df; }
+  .rule-content-block h4 { color: #103b2c; }
+  .rule-content-block { color: #4e5947; }
+  #winReasonText { color: #59634f !important; }
+  #winnerNameText { color: #103b2c !important; }
+  .color-option-btn { min-height: 72px; height: auto; }
+  .player-target-btn { min-height: 48px; color: #103b2c; background: #f2e6cf; }
+  #colorPickerModal .modal-card > p, #swapPickerModal .modal-card > p { color: #59634f !important; }
+  .leave-confirm-card { max-height: calc(100dvh - 32px); overflow-y: auto; }
+  .toast-msg {
+    max-width: calc(100vw - 24px);
+    width: max-content;
+    white-space: normal;
+    text-align: center;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    z-index: 500;
+  }
+  .connection-banner { font-size: 13px; padding: 10px 16px; }
+
+  /* Room setup keeps the supplied themed artwork while allowing keyboard scrolling. */
+  body:has(#modeSetupSection:not([hidden])) { height: auto; max-height: none; overflow-y: auto; }
+  .mode-setup-screen { width: 100%; padding: 16px 16px max(24px, env(safe-area-inset-bottom)); }
+  .mode-setup-heading { margin: 20px 0; }
+  .mode-setup-heading h1 { font-size: clamp(32px, 8vw, 44px); line-height: 1.08; }
+  .setup-panel, .setup-rules-card { padding: 16px; border-radius: var(--mobile-radius); }
+  .setup-field { gap: 8px; margin-bottom: 16px; }
+  .setup-field input { min-height: 48px; }
+  .setup-create-btn, .setup-join-btn { min-height: 48px; }
+  .setup-back-btn { min-height: 44px; }
+  .mode-setup-screen.mode-flip-setup .flip-setup-container {
+    min-height: calc(100svh - 56px);
+    justify-content: flex-start;
+    padding: 20px 12px max(24px, env(safe-area-inset-bottom));
+    background: #0c0806 url('./assets/uno-flip-setup-bg.jpg') center / cover no-repeat;
+  }
+  body.in-flip-setup::before { display: none; }
+  .flip-card-wrapper { width: min(100%, 390px); margin: 0 auto; }
+  .flip-name-input, .flip-code-input { font-size: 16px; }
+  .flip-create-btn, .flip-join-btn { min-height: 44px; }
+  .mode-setup-screen.mode-no-mercy-setup .no-mercy-setup-container {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    min-height: 100svh;
+    overflow: visible;
+    justify-content: flex-start;
+    padding: calc(76px + env(safe-area-inset-top)) 12px max(24px, env(safe-area-inset-bottom));
+  }
+  .nm-top-nav { min-height: calc(56px + env(safe-area-inset-top)); height: auto; padding-inline: 12px; }
+  .nm-nav-btn { min-height: 44px; }
+  .nm-card-container { width: min(100%, 392px); flex-shrink: 0; margin: 0 auto; }
+  .nm-exact-input { font-size: 16px; }
+
+  /* Lobby actions must not inherit a 145px flex basis in a vertical stack. */
+  body.in-room:not(.in-arena) { background: var(--mobile-paper); color: var(--mobile-ink); }
+  body.in-room:not(.in-arena)::before, body.in-room:not(.in-arena)::after { display: none; }
+  .in-room:not(.in-arena) .top-nav {
+    top: 0; width: 100%; margin: 0; border: 0; border-radius: 0;
+    min-height: 56px; padding: 8px 12px; background: #0a3e2f;
+  }
+  .in-room:not(.in-arena) #entryView.lobby-card {
+    width: calc(100% - 24px); margin: 16px auto 24px; padding: 16px;
+    border: 1px solid #dfcda9; border-radius: 20px;
+    background: #fff9ed; box-shadow: 0 5px 16px #60401c1a;
+  }
+  .in-room:not(.in-arena) #entryView.lobby-card::before { display: none; }
+  .in-room .mode-selector-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .in-room .mode-card-btn { display: flex; flex-direction: column; justify-content: center; gap: 8px; min-height: 136px; padding: 10px 6px; text-align: center; box-shadow: none; }
+  .in-room .mode-card-btn strong { font-size: 13px; align-self: center; }
+  .in-room .mode-card-btn > span:not(.lobby-mode-art) { font-size: 10px !important; align-self: center; margin: 0 !important; }
+  .in-room .mode-card-btn.selected { border-width: 2px; box-shadow: 0 2px 0 #b98011; }
+  .in-room .lobby-mode-art { height: 48px; width: 38px; }
+  .in-room .lobby-players-list { max-height: none; overflow: visible; }
+  .in-room .lobby-player-row { min-height: 56px; gap: 8px; }
+  .in-room .lobby-player-row strong { overflow-wrap: anywhere; }
+  .in-room #lobbySection h3 { font-size: 16px; line-height: 1.4; }
+  .in-room #lobbySection > div:last-child { display: grid; grid-template-columns: 1fr; gap: 12px !important; }
+  .in-room #lobbySection > div:last-child > button {
+    flex: none !important; min-height: 48px; width: 100%; padding: 12px !important;
+  }
+  .in-room #soundToggleBtn { display: inline-flex !important; width: 36px; min-width: 36px; padding: 4px; }
+  .in-room:not(.in-arena) .brand-logo, .in-room:not(.in-arena) .logo-badge,
+  .in-room:not(.in-arena) .brand-logo > span:last-child { font-size: 16px; }
+  .in-room #navModeTag { font-size: 10px; padding: 5px; }
+  .in-room .nav-btn { padding: 6px; min-height: 36px; }
+}
+
+@media (max-width: 800px), (orientation: landscape) and (max-width: 1024px) and (max-height: 520px) {
+  /* Landing flows from its content; no viewport-height distribution or portrait wrappers. */
+  .home-screen, .mobile-landing-container { min-height: 0; height: auto; max-height: none; overflow: visible; }
+  .home-screen { padding-bottom: 0; }
+  .mobile-landing-container { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  .mobile-nav-bar {
+    position: relative;
+    height: auto;
+    min-height: calc(56px + env(safe-area-inset-top));
+    padding: max(6px, env(safe-area-inset-top)) 16px 6px;
+    gap: 12px;
+  }
+  .mobile-brand { font-size: 20px; gap: 5px; }
+  .mobile-nav-actions { gap: 8px; }
+  .mobile-nav-action-btn { height: 44px; min-width: 44px; padding: 0 8px; font-size: 12px; }
+  .mobile-hero-section { padding-bottom: 12%; }
+  .mobile-form-section { margin-top: -14%; }
+  .mobile-form-wrap { width: calc(100% - 32px); padding: 12px; border-radius: 18px; }
+  .mobile-form-controls { gap: 12px; }
+  .mobile-name-field, .mobile-code-field { height: 46px; border-radius: 11px; }
+  .mobile-form-controls input.mobile-control { font-size: 16px; color: #103b2c; }
+  .mobile-form-controls .mobile-form-input-code { font-size: 16px; }
+  .mobile-form-controls button.mobile-control { min-height: 46px; font-size: 15px; border-radius: 11px; }
+  .mobile-form-divider { font-size: 10px; letter-spacing: .08em; gap: 10px; }
+  .mobile-modes-section { margin-top: 24px; }
+  .mobile-modes-wrap { padding: 0 16px; gap: 10px; }
+  .mobile-modes-wrap .mobile-control { border-radius: 14px; background: transparent; box-shadow: 0 4px 8px #60401c26; }
+  .mobile-modes-wrap img { aspect-ratio: 1 !important; object-fit: contain; }
+}
+
+/* Keep the playing surface and the hand in normal flow on short screens. */
+@media (max-width: 800px), (orientation: landscape) and (max-width: 1024px) and (max-height: 520px) {
+  html:has(body.in-arena), body.in-arena {
+    height: auto !important; max-height: none !important; min-height: 100svh; overflow-y: auto !important;
+  }
+  .in-arena .top-nav { position: relative; top: 0; margin: 0 !important; min-height: 48px !important; height: auto !important; }
+  .in-arena .top-nav { width: 100%; padding: 4px 8px !important; }
+  .in-arena .brand-logo, .in-arena .logo-badge, .in-arena .brand-logo > span:last-child { font-size: 16px !important; }
+  .in-arena .brand-logo { gap: 4px; }
+  .in-arena .nav-controls { gap: 3px !important; }
+  .in-arena .nav-btn, .in-arena #leaveBtn, .in-arena #navModeTag { font-size: 10px !important; padding: 4px 6px !important; min-height: 36px !important; }
+  .in-arena #navRoomCode { display: none !important; }
+  .in-arena .main-content { min-height: 0; }
+  .in-arena .arena-container {
+    height: auto !important; max-height: none !important; min-height: calc(100svh - 48px);
+    overflow: visible !important; justify-content: flex-start !important;
+    gap: 16px; padding: 12px 8px max(16px, env(safe-area-inset-bottom)) !important;
+  }
+  .in-arena .opponents-row { max-height: none !important; min-height: 56px !important; flex-wrap: wrap; }
+  .in-arena .opponent-wrapper { min-width: 0; }
+  .in-arena .opponent-name { max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
+  .in-arena .opponents-row:has(.opponent-wrapper:nth-child(4)) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px !important; }
+  .in-arena .opponents-row:has(.opponent-wrapper:nth-child(4)) .opponent-cards-fan { display: none; }
+  .in-arena .turn-status-row { width: 100% !important; flex-shrink: 0; }
+  .in-arena .action-banner { white-space: normal !important; line-height: 1.4; min-height: 32px; }
+  .in-arena .penalty-tag { top: -24px; padding: 3px 7px; font-size: 10px; white-space: nowrap; border-radius: 8px; box-shadow: 0 2px 6px #0003; }
+  .in-arena .center-table { min-height: 240px !important; flex: 1 0 240px !important; margin: 0 auto !important; max-width: 520px !important; }
+  .in-arena .table-felt { width: min(94vw, 440px) !important; height: 205px !important; max-height: none !important; }
+  .in-arena .table-action-bar { flex-wrap: wrap; bottom: -22px !important; gap: 8px !important; }
+  .in-arena .action-btn { min-height: 44px !important; padding: 8px 12px !important; font-size: 12px !important; }
+  .in-arena .player-bottom-area { flex-shrink: 0; padding-top: 8px; }
+  .in-arena .hand-scroll-container { overflow: visible !important; padding-top: 16px !important; }
+  .in-arena .hand-cards { min-height: 110px !important; }
+  .in-arena .hand-cards.two-rows { min-height: 180px !important; }
+  .in-arena .hand-row-top { margin-bottom: -8px !important; }
+  .in-arena .game-card { width: clamp(46px, 12.5vw, 54px) !important; height: auto !important; aspect-ratio: 86 / 128 !important; }
+  .in-arena .draw-pile-btn .game-card, .in-arena #discardPile .game-card { width: 60px !important; height: 90px !important; }
+}
+
+@media (orientation: landscape) and (max-width: 1024px) and (max-height: 520px) {
+  .in-arena .arena-container {
+    display: grid !important;
+    grid-template-columns: minmax(160px, .8fr) minmax(340px, 1.2fr);
+    align-items: center;
+  }
+  .in-arena .opponents-row { grid-column: 1; grid-row: 1; }
+  .in-arena .turn-status-row { grid-column: 1; grid-row: 2; }
+  .in-arena .center-table { grid-column: 2; grid-row: 1 / 3; width: 100%; min-height: 230px !important; }
+  .in-arena .table-felt { width: min(100%, 440px) !important; }
+  .in-arena .player-bottom-area { grid-column: 1 / -1; grid-row: 3; }
+  .in-arena .opponent-cards-fan { height: 36px !important; margin: 0; }
+  .in-arena .opponent-fan-card { width: 24px; height: 36px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-landing-container *, .modal-overlay, .modal-card { transition: none; animation: none; }
+}

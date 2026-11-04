@@ -23,6 +23,7 @@ class UnoArenaApp {
 
     this.initElements();
     this.initEvents();
+    this.initDialogAccessibility();
     this.checkUrlForRoomCode();
   }
 
@@ -660,8 +661,58 @@ class UnoArenaApp {
 
   updateSoundIcon(enabled) {
     if (this.el.soundIcon) this.el.soundIcon.textContent = enabled ? '🔊' : '🔇';
-    if (this.el.noMercySoundBtn) this.el.noMercySoundBtn.textContent = enabled ? '🔊' : '🔇';
-    if (this.el.noMercyMobileSoundBtn) this.el.noMercyMobileSoundBtn.textContent = enabled ? '🔊' : '🔇';
+    for (const button of [this.el.mobileNavSoundBtn, this.el.noMercySoundBtn, this.el.noMercyMobileSoundBtn]) {
+      if (!button) continue;
+      button.textContent = enabled ? '🔊' : '🔇';
+      button.setAttribute('aria-pressed', String(enabled));
+      button.setAttribute('aria-label', enabled ? 'Mute sound' : 'Enable sound');
+    }
+  }
+
+  initDialogAccessibility() {
+    const focusTargets = (dialog) => [...dialog.querySelectorAll('button, input, select, [tabindex="0"]')]
+      .filter((element) => !element.disabled && element.getClientRects().length);
+    for (const dialog of document.querySelectorAll('.modal-overlay')) {
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('aria-modal', 'true');
+      dialog.tabIndex = -1;
+      const title = dialog.querySelector('h2, h3');
+      if (title) {
+        if (!title.id) title.id = `${dialog.id}Title`;
+        dialog.setAttribute('aria-labelledby', title.id);
+      }
+      let opened = false;
+      let previousFocus = null;
+      new MutationObserver(() => {
+        const active = dialog.classList.contains('active');
+        if (active === opened) return;
+        opened = active;
+        if (active) {
+          previousFocus = document.activeElement;
+          (focusTargets(dialog)[0] || dialog).focus({ preventScroll: true });
+        } else if (previousFocus?.isConnected && previousFocus.getClientRects().length) {
+          previousFocus.focus({ preventScroll: true });
+        }
+      }).observe(dialog, { attributes: true, attributeFilter: ['class'] });
+    }
+    document.addEventListener('keydown', (event) => {
+      const dialog = [...document.querySelectorAll('.modal-overlay.active')].at(-1);
+      if (!dialog) return;
+      if (event.key === 'Escape' && dialog === this.el.rulesModal) {
+        this.closeRulesModal();
+      } else if (event.key === 'Tab') {
+        const targets = focusTargets(dialog);
+        const first = targets[0] || dialog;
+        const last = targets.at(-1) || dialog;
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialog)) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    });
   }
 
   showToast(msg) {

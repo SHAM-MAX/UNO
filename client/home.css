@@ -492,10 +492,10 @@ body::before {
 }
 
 /* ==========================================================================
-   MOBILE LAYOUT (<= 640px)
+   MOBILE LAYOUT (phones, tablets, and short landscape screens)
    Dedicated Mobile Landing Page Matching Uploaded Reference
    ========================================================================== */
-@media (max-width: 640px) {
+@media (max-width: 800px), (orientation: landscape) and (max-width: 1024px) and (max-height: 520px) {
   body:not(.in-room):not(.in-no-mercy-setup):not(.in-flip-setup) {
     background-color: #fcf6eb;
     height: auto;
