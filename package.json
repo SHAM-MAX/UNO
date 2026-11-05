@@ -10,7 +10,7 @@
     "start": "node server/src/index.js",
     "test": "node --test --test-concurrency=1 server/tests/*.test.js",
     "test:browser": "node scripts/verify_browsers.js",
-    "test:mobile": "node scripts/verify_mobile_ui.mjs"
+    "test:mobile": "node scripts/verify_mobile_ui.mjs && node scripts/verify_responsive_landing.mjs"
   },
   "dependencies": {
     "cors": "^2.8.5",

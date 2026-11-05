@@ -23,14 +23,14 @@ body {
   overflow-x: hidden;
 }
 
-@media (min-width: 641px) {
+@media (min-width: 641px) and (hover: hover) and (pointer: fine) {
   body:not(.in-room) {
     height: 100%;
     overflow-y: hidden;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 640px), (hover: none) and (pointer: coarse) and (max-width: 1024px) {
   body:not(.in-room) {
     min-height: 100%;
     overflow-y: auto;
@@ -189,7 +189,7 @@ body::before {
    DESKTOP / LAPTOP FIRST-FOLD CONTAINMENT
    Guarantee hero form + all 3 game mode cards visible without scrolling
    ========================================================================== */
-@media (min-width: 641px) {
+@media (min-width: 641px) and (hover: hover) and (pointer: fine) {
   :root {
     --nav-height: clamp(42px, 4.8vh, 50px);
   }
@@ -495,7 +495,7 @@ body::before {
    MOBILE LAYOUT (phones, tablets, and short landscape screens)
    Dedicated Mobile Landing Page Matching Uploaded Reference
    ========================================================================== */
-@media (max-width: 800px), (orientation: landscape) and (max-width: 1024px) and (max-height: 520px) {
+@media (max-width: 640px), (hover: none) and (pointer: coarse) and (max-width: 1024px) {
   body:not(.in-room):not(.in-no-mercy-setup):not(.in-flip-setup) {
     background-color: #fcf6eb;
     height: auto;
@@ -1203,7 +1203,7 @@ body::before {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 640px), (hover: none) and (pointer: coarse) and (max-width: 1024px) {
   .home-screen {
     padding-bottom: 10px;
   }
@@ -1220,6 +1220,9 @@ body::before {
     min-height: 112px;
   }
 
+}
+
+@media (max-width: 640px) {
   .mode-setup-screen {
     padding: 13px 12px 26px;
   }

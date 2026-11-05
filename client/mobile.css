@@ -1,5 +1,5 @@
 /* Mobile foundations. Desktop styles remain in the existing screen stylesheets. */
-@media (max-width: 800px), (orientation: landscape) and (max-width: 1024px) and (max-height: 520px) {
+@media (max-width: 640px), (hover: none) and (pointer: coarse) and (max-width: 1024px) {
   body {
     --mobile-paper: #fcf6eb;
     --mobile-ink: #103b2c;
@@ -30,6 +30,16 @@
   }
   .brand-logo, .mobile-brand, .nm-nav-brand { white-space: nowrap; }
   .nav-controls { min-width: 0; }
+
+}
+
+/* Keep setup, lobby, and dialog breakpoints independent of landing selection. */
+@media (max-width: 800px), (orientation: landscape) and (max-width: 1024px) and (max-height: 520px) {
+  .modal-overlay, #modeSetupSection, body.in-room {
+    --mobile-paper: #fcf6eb;
+    --mobile-ink: #103b2c;
+    --mobile-radius: 16px;
+  }
 
   /* All dialog states use the same readable, scrollable cream surface. */
   .modal-overlay {
@@ -142,7 +152,7 @@
   .in-room .nav-btn { padding: 6px; min-height: 36px; }
 }
 
-@media (max-width: 800px), (orientation: landscape) and (max-width: 1024px) and (max-height: 520px) {
+@media (max-width: 640px), (hover: none) and (pointer: coarse) and (max-width: 1024px) {
   /* Landing flows from its content; no viewport-height distribution or portrait wrappers. */
   .home-screen, .mobile-landing-container { min-height: 0; height: auto; max-height: none; overflow: visible; }
   .home-screen { padding-bottom: 0; }
