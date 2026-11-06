@@ -808,7 +808,7 @@ class UnoArenaApp {
     if (this.el.flipJoinRoomBtn) this.el.flipJoinRoomBtn.disabled = true;
     this.playerName = name;
     localStorage.setItem('uno_arena_name', name);
-    this.joinRoom(code, name);
+    this.connectWebSocket(code, null, null, name);
     setTimeout(() => {
       this.isJoiningRoom = false;
       if (this.el.flipJoinRoomBtn) this.el.flipJoinRoomBtn.disabled = false;
