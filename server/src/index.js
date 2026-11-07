@@ -271,7 +271,23 @@ wss.on('connection', (ws, req) => {
         if (type === 'catch_uno') argument = data?.targetPlayerId;
         if (type === 'challenge_draw4') argument = true;
         const result = roomManager[actionMethods[type]](cleanRoomId, playerId, argument);
-        if (!result.success) sendError(ws, result.error);
+        if (!result.success) {
+          sendError(ws, result.error);
+          if (type === 'catch_uno') {
+            const room = roomManager.getRoom(cleanRoomId);
+            const target = room?.players.find(p => p.id === argument);
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'catch_failed',
+                data: {
+                  targetPlayerId: argument,
+                  targetName: target?.name || 'Player',
+                  message: result.error,
+                }
+              }));
+            }
+          }
+        }
         else {
           if (receipt) { room.actionReceipts = [...(room.actionReceipts || []), receipt].slice(-256); roomManager.persist(cleanRoomId); }
           broadcastRoomState(cleanRoomId);

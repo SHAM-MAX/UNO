@@ -948,9 +948,13 @@ export class RoomManager {
     }
     const remainingCards = room.playerHands[playerId].length;
     if (remainingCards === 1) {
-      if (currentPlayer.hasCalledUno) {
+      if (currentPlayer.hasCalledUno || currentPlayer.isUnoArmed) {
+        currentPlayer.hasCalledUno = true;
+        currentPlayer.isUnoArmed = false;
         this.addLog(room, `📢 ${currentPlayer.name} called UNO!`, 'action');
       } else {
+        currentPlayer.hasCalledUno = false;
+        currentPlayer.isUnoArmed = false;
         room.unoChallengeWindow = {
           targetPlayerId: playerId,
           expiresAt: room.mode !== 'flip' ? null : Date.now() + 5000,
@@ -959,6 +963,7 @@ export class RoomManager {
       }
     } else {
       currentPlayer.hasCalledUno = false;
+      currentPlayer.isUnoArmed = false;
       room.unoChallengeWindow = null;
     }
 
@@ -1024,7 +1029,10 @@ export class RoomManager {
         if (this.checkKnockout(room, currentPlayer)) break;
       }
       this.addLog(room, `${currentPlayer.name} took the penalty and drew ${drawn.length} cards!`);
-
+      if (hand.length !== 1) {
+        currentPlayer.hasCalledUno = false;
+        currentPlayer.isUnoArmed = false;
+      }
       room.turnDrawnCard = false;
       room.turnDrawnCardId = null;
       room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players, 1);
@@ -1059,6 +1067,10 @@ export class RoomManager {
       }
 
       this.addLog(room, `${currentPlayer.name} drew ${drawn.length} card(s) until finding a playable card.`);
+      if (hand.length !== 1) {
+        currentPlayer.hasCalledUno = false;
+        currentPlayer.isUnoArmed = false;
+      }
       room.turnDrawnCard = foundPlayable;
       room.turnDrawnCardId = foundPlayable ? drawn.at(-1).id : null;
       if (!foundPlayable) room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players);
@@ -1075,6 +1087,10 @@ export class RoomManager {
     const drawnCard = room.drawPile.shift();
     hand.push(drawnCard);
     currentPlayer.cardCount = hand.length;
+    if (hand.length !== 1) {
+      currentPlayer.hasCalledUno = false;
+      currentPlayer.isUnoArmed = false;
+    }
     room.turnDrawnCard = true;
     room.turnDrawnCardId = drawnCard.id;
 
@@ -1115,6 +1131,10 @@ export class RoomManager {
       return { success: false, error: 'You must draw a card before passing' };
     }
 
+    currentPlayer.isUnoArmed = false;
+    if (room.playerHands[currentPlayer.id]?.length !== 1) {
+      currentPlayer.hasCalledUno = false;
+    }
     room.turnDrawnCard = false;
     room.turnDrawnCardId = null;
     room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players, 1);
@@ -1131,18 +1151,37 @@ export class RoomManager {
     const player = room.players.find((p) => p.id === playerId);
     if (!player) return { success: false, error: 'Player not found' };
 
-    if (room.mode !== 'flip' && !((room.playerHands[playerId]?.length === 2 && room.players[room.currentTurn].id === playerId && !room.pendingAction) || room.unoChallengeWindow?.targetPlayerId === playerId || (room.mode === 'no_mercy' && room.unoChallengeTargets?.includes(playerId)))) return { success: false, error: 'Call UNO when playing down to one card' };
-    if (room.mode !== 'flip' && player.hasCalledUno) return { success: false, error: 'UNO already called' };
-    player.hasCalledUno = true;
-    if (room.unoChallengeWindow && room.unoChallengeWindow.targetPlayerId === playerId) {
-      room.unoChallengeWindow = null;
+    const hand = room.playerHands[playerId] || [];
+    const isTwoCardArming = hand.length === 2 && room.players[room.currentTurn]?.id === playerId && !room.pendingAction;
+    const isCatchWindowTarget = room.unoChallengeWindow?.targetPlayerId === playerId || (room.mode === 'no_mercy' && room.unoChallengeTargets?.includes(playerId));
+
+    if (room.mode !== 'flip' && !isTwoCardArming && !isCatchWindowTarget) {
+      return { success: false, error: 'Call UNO when playing down to one card' };
+    }
+    if (room.mode !== 'flip' && (player.hasCalledUno || player.isUnoArmed)) {
+      return { success: false, error: 'UNO already called' };
     }
 
-    if (room.mode === 'no_mercy') { room.unoChallengeTargets = (room.unoChallengeTargets || []).filter(id => id !== playerId); room.unoChallengeWindow = room.unoChallengeTargets.length ? { targetPlayerId: room.unoChallengeTargets[0], expiresAt: null } : null; }
-    this.addLog(room, `📢 ${player.name} called UNO!`, 'action');
+    if (isTwoCardArming) {
+      player.isUnoArmed = true;
+      player.hasCalledUno = true;
+      this.addLog(room, `📢 ${player.name} armed UNO!`, 'action');
+    } else {
+      player.hasCalledUno = true;
+      player.isUnoArmed = false;
+      if (room.unoChallengeWindow && room.unoChallengeWindow.targetPlayerId === playerId) {
+        room.unoChallengeWindow = null;
+      }
+      if (room.mode === 'no_mercy') {
+        room.unoChallengeTargets = (room.unoChallengeTargets || []).filter(id => id !== playerId);
+        room.unoChallengeWindow = room.unoChallengeTargets.length ? { targetPlayerId: room.unoChallengeTargets[0], expiresAt: null } : null;
+      }
+      this.addLog(room, `📢 ${player.name} called UNO!`, 'action');
+    }
+
     if (room.mode !== 'classic') this.resetTurnTimer(room);
     this.persist(roomId);
-    return { success: true };
+    return { success: true, armed: isTwoCardArming };
   }
 
   catchUno(roomId, challengerId, targetPlayerId) {
@@ -1154,10 +1193,24 @@ export class RoomManager {
     if (room.mode === 'no_mercy' && challenger?.isEliminated) return { success: false, error: 'Eliminated players cannot catch UNO' };
     if (!challenger || !target) return { success: false, error: 'Player not found' };
 
-    if (room.mode !== 'flip' && (challengerId === targetPlayerId || !(room.mode === 'no_mercy' ? room.unoChallengeTargets?.includes(targetPlayerId) : room.unoChallengeWindow?.targetPlayerId === targetPlayerId))) return { success: false, error: 'CAUGHT FAILED: UNO catch window is closed' };
+    if (challengerId === targetPlayerId) {
+      return { success: false, error: 'Cannot catch yourself' };
+    }
+
     const targetHand = room.playerHands[targetPlayerId] || [];
-    if (targetHand.length !== 1 || target.hasCalledUno) {
-      return { success: false, error: 'CAUGHT FAILED: player called UNO or no longer has one card' };
+    if (target.hasCalledUno) {
+      return { success: false, error: `CAUGHT FAILED: ${target.name} already called UNO.` };
+    }
+    if (targetHand.length !== 1) {
+      return { success: false, error: `CAUGHT FAILED: ${target.name} no longer has one card.` };
+    }
+
+    const inWindow = room.mode === 'no_mercy'
+      ? (room.unoChallengeTargets?.includes(targetPlayerId) || room.unoChallengeWindow?.targetPlayerId === targetPlayerId)
+      : (room.unoChallengeWindow?.targetPlayerId === targetPlayerId && (room.mode !== 'flip' || room.unoChallengeWindow.expiresAt > Date.now()));
+
+    if (room.mode !== 'flip' && !inWindow) {
+      return { success: false, error: 'CAUGHT FAILED: UNO catch window is closed' };
     }
 
     const drawn = [];
@@ -1170,17 +1223,20 @@ export class RoomManager {
     targetHand.push(...drawn);
     target.cardCount = targetHand.length;
     target.hasCalledUno = false;
+    target.isUnoArmed = false;
     room.unoChallengeWindow = null;
-    if (room.mode === 'no_mercy') { room.unoChallengeTargets = (room.unoChallengeTargets || []).filter(id => id !== targetPlayerId); room.unoChallengeWindow = room.unoChallengeTargets.length ? { targetPlayerId: room.unoChallengeTargets[0], expiresAt: null } : null; }
+    if (room.mode === 'no_mercy') {
+      room.unoChallengeTargets = (room.unoChallengeTargets || []).filter(id => id !== targetPlayerId);
+      room.unoChallengeWindow = room.unoChallengeTargets.length ? { targetPlayerId: room.unoChallengeTargets[0], expiresAt: null } : null;
+    }
 
-    this.addLog(
-      room,
-      `🚨 CAUGHT! ${challenger.name} caught ${target.name} forgetting to call UNO! ${target.name} drew 2 penalty cards!`,
-      'warn'
-    );
+    const caughtMsg = `CAUGHT! ${target.name} draws 2 cards.`;
+    this.addLog(room, caughtMsg, 'warn');
+    room.lastActionMessage = caughtMsg;
+
     this.checkKnockout(room, target);
     this.persist(roomId);
-    return { success: true };
+    return { success: true, targetId: targetPlayerId, targetName: target.name, drawnCount: drawn.length };
   }
 
   rematch(roomId, playerId) {
@@ -1374,6 +1430,9 @@ export class RoomManager {
     }
 
     if (room.mode === 'no_mercy') canCatchUno = room.unoChallengeTargets?.find(id => id !== playerId) || null;
+    const canCatchUnoTargets = room.mode === 'no_mercy'
+      ? (room.unoChallengeTargets || []).filter(id => id !== playerId)
+      : (canCatchUno ? [canCatchUno] : []);
     const publicPlayers = room.players.map((p) => ({
       id: p.id,
       name: p.name,
@@ -1382,6 +1441,7 @@ export class RoomManager {
       isConnected: p.isConnected,
       cardCount: p.cardCount,
       hasCalledUno: p.hasCalledUno,
+      isUnoArmed: p.isUnoArmed || false,
       isEliminated: p.isEliminated,
       eliminatedReason: p.eliminatedReason,
       score: p.score,
@@ -1456,6 +1516,7 @@ export class RoomManager {
       canDraw: room.mode === 'no_mercy' ? isMyTurn && !room.pendingAction && !room.turnDrawnCard && (room.pendingDrawPenalty > 0 || !canPlayCards.length) : room.mode === 'classic' ? isMyTurn && !room.turnDrawnCard && (!room.pendingAction || room.pendingAction.type === 'draw4_challenge') : isMyTurn,
       canCallUno: room.mode !== 'flip' ? room.status === 'playing' && ((isMyTurn && myHand.length === 2 && !room.pendingAction) || room.unoChallengeWindow?.targetPlayerId === playerId || (room.mode === 'no_mercy' && room.unoChallengeTargets?.includes(playerId))) && !myPlayer.hasCalledUno : myHand.length <= 2,
       canCatchUno,
+      canCatchUnoTargets,
       drawFourEvidence: room.lastDrawFourResult?.challengerId === playerId ? { id: room.lastDrawFourResult.id, ...room.lastDrawFourResult.evidence } : null,
     };
   }

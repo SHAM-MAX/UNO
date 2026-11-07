@@ -408,6 +408,7 @@
           <div class="pile-container">
             <button id="drawPileBtn" class="draw-pile-btn" title="Click to draw a card on your turn">
               <div id="drawPile"></div>
+              <div id="drawPenaltyBadge" class="draw-penalty-badge" style="display: none;">+2</div>
             </button>
             <span id="drawCountBadge" class="pile-label">-- CARDS</span>
           </div>
@@ -448,6 +449,13 @@
 
       <!-- Player Controls & Interactive Hand with Wooden Stand -->
       <div class="player-bottom-area">
+        <!-- Contextual Call UNO for local player when holding 2 cards -->
+        <div id="contextualUnoContainer" class="contextual-uno-container" style="display: none;">
+          <button id="btnCallUnoContextual" class="btn-call-uno-contextual" type="button" aria-label="Call UNO">
+            <span class="btn-icon">📢</span> CALL UNO!
+          </button>
+        </div>
+        <div id="localPlayerProfile" class="local-player-profile" style="display: none;"></div>
         <div class="card-rack-container">
           <div class="card-rack-groove">
             <div class="hand-scroll-container">
@@ -733,6 +741,15 @@
       </div>
       <button id="closeLeaveConfirmBtn" class="leave-confirm-close" type="button" aria-label="Close leave dialog">×</button>
     </section>
+  </div>
+
+  <!-- ACTION MODAL: CAUGHT FAILED POPUP -->
+  <div id="caughtFailedModal" class="modal-overlay caught-failed-overlay" role="dialog" aria-modal="true" aria-hidden="true" style="display: none;">
+    <div class="caught-failed-card">
+      <div class="caught-failed-icon">⚠️</div>
+      <div class="caught-failed-title">CAUGHT FAILED!</div>
+      <div id="caughtFailedMsg" class="caught-failed-message">Player already called UNO.</div>
+    </div>
   </div>
 
   <!-- Toast Notification -->

@@ -341,3 +341,69 @@
  body.classic-arena .hand-cards .game-card { width: 46px !important; height: 68px !important; }
  body.classic-arena .table-action-bar { bottom: -14px; }
 }
+
+/* Mobile adjustments for No Mercy UI cleanup, turn timer, and contextual buttons */
+@media (max-width: 768px) {
+  body.no-mercy-arena .opponents-row {
+    gap: 6px !important;
+    padding: 4px 6px;
+  }
+  body.no-mercy-arena .opponent-card-badge {
+    padding: 4px 8px !important;
+    gap: 6px !important;
+  }
+  body.no-mercy-arena .opponent-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.85rem !important;
+  }
+  body.no-mercy-arena .opponent-name {
+    font-size: 0.78rem !important;
+  }
+  body.no-mercy-arena .opponent-cards-count {
+    font-size: 0.68rem !important;
+  }
+  .active-player-turn-timer {
+    width: 28px;
+    height: 28px;
+    margin-left: 4px;
+  }
+  .active-player-turn-timer .mini-timer-ring {
+    width: 28px;
+    height: 28px;
+  }
+  .active-player-turn-timer .mini-timer-text {
+    font-size: 0.68rem;
+  }
+  .opponent-caught-btn {
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    min-height: 28px;
+  }
+  .btn-call-uno-contextual {
+    font-size: 0.92rem;
+    padding: 8px 18px;
+    min-height: 42px;
+  }
+  .draw-penalty-badge {
+    top: -6px;
+    right: -6px;
+    font-size: 0.85rem;
+    padding: 2px 7px;
+  }
+  .local-player-profile {
+    padding: 3px 10px 3px 6px;
+    margin-bottom: 6px;
+  }
+  .local-avatar {
+    width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
+  }
+  .local-name {
+    font-size: 0.78rem;
+  }
+  .local-cards-count {
+    font-size: 0.65rem;
+  }
+}

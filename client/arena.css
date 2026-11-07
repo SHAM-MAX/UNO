@@ -1890,3 +1890,388 @@ body.no-mercy-arena .direction-indicator { top:-12px !important; }
     margin: 10px 0 18px !important;
   }
 }
+
+/* ==========================================================================
+   NO MERCY GAMEPLAY UI CLEANUP & DYNAMIC TABLE COLOURS & DYNAMIC CALL UNO/CAUGHT
+   ========================================================================== */
+
+/* 1. Dynamic Table Felt Colours mapped to current active playing colour */
+.in-arena .table-felt {
+  transition: background 400ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 400ms ease;
+}
+
+.in-arena .table-felt.felt-red {
+  background: radial-gradient(ellipse at 50% 45%, #991b1b 0%, #7f1d1d 55%, #450a0a 100%) !important;
+  box-shadow:
+    0 26px 65px rgba(0, 0, 0, 0.8),
+    0 8px 18px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px #f3d17a,
+    inset 0 10px 36px rgba(69, 10, 10, 0.8),
+    0 0 45px rgba(220, 38, 38, 0.25) !important;
+}
+
+.in-arena .table-felt.felt-blue {
+  background: radial-gradient(ellipse at 50% 45%, #1e40af 0%, #1e3a8a 55%, #172554 100%) !important;
+  box-shadow:
+    0 26px 65px rgba(0, 0, 0, 0.8),
+    0 8px 18px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px #f3d17a,
+    inset 0 10px 36px rgba(23, 37, 84, 0.8),
+    0 0 45px rgba(37, 99, 235, 0.25) !important;
+}
+
+.in-arena .table-felt.felt-green {
+  background: radial-gradient(ellipse at 50% 45%, #0e6c45 0%, #094d31 55%, #042e1d 100%) !important;
+  box-shadow:
+    0 26px 65px rgba(0, 0, 0, 0.8),
+    0 8px 18px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px #f3d17a,
+    inset 0 10px 36px rgba(4, 46, 29, 0.8),
+    0 0 45px rgba(16, 185, 129, 0.2) !important;
+}
+
+.in-arena .table-felt.felt-yellow {
+  background: radial-gradient(ellipse at 50% 45%, #a16207 0%, #854d0e 55%, #502e04 100%) !important;
+  box-shadow:
+    0 26px 65px rgba(0, 0, 0, 0.8),
+    0 8px 18px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px #f3d17a,
+    inset 0 10px 36px rgba(80, 46, 4, 0.8),
+    0 0 45px rgba(234, 179, 8, 0.25) !important;
+}
+
+/* 2. Remove Unnecessary Clutter Elements from No Mercy */
+body.no-mercy-arena #actionBanner {
+  display: none !important;
+}
+body.no-mercy-arena #noMercyStatus {
+  display: none !important;
+}
+body.no-mercy-arena .direction-indicator {
+  display: none !important;
+}
+body.no-mercy-arena #btnDrawAction {
+  display: none !important;
+}
+body.no-mercy-arena .turn-status-row {
+  display: none !important;
+}
+body.no-mercy-arena #turnTimerContainer {
+  display: none !important;
+}
+body.no-mercy-arena #btnUnoAction {
+  display: none !important;
+}
+body.no-mercy-arena #btnCatchAction {
+  display: none !important;
+}
+body.no-mercy-arena .table-action-bar:not(:has(#btnViewVictory:not([style*="display: none"]))) {
+  display: none !important;
+}
+
+/* 3. Pending Draw Penalty Badge on Draw Pile */
+.draw-penalty-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 30;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: #ffffff;
+  font-family: 'Cabinet Grotesk', 'Impact', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 900;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.65), 0 0 10px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  animation: pulse-penalty 1.4s infinite ease-in-out;
+  letter-spacing: 0.5px;
+}
+
+@keyframes pulse-penalty {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 14px rgba(239, 68, 68, 0.65); }
+  50% { transform: scale(1.12); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.9); }
+}
+
+/* Draw pile interactive hover & click feedback */
+.draw-pile-btn {
+  position: relative;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  outline: none;
+}
+.draw-pile-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.03);
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
+}
+.draw-pile-btn:active:not(:disabled),
+.draw-pile-btn.deck-tap-feedback {
+  animation: deckTap 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes deckTap {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+
+/* 4. Active Player Turn Timer (Mini Ring beside name/avatar) */
+.active-player-turn-timer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+.active-player-turn-timer .mini-timer-ring {
+  width: 34px;
+  height: 34px;
+  transform: rotate(-90deg);
+}
+.active-player-turn-timer .mini-timer-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 3.5;
+}
+.active-player-turn-timer .mini-timer-prog {
+  fill: none;
+  stroke: #10b981;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.15s linear, stroke 0.3s ease;
+}
+.active-player-turn-timer .mini-timer-text {
+  position: absolute;
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+}
+.active-player-turn-timer.warning .mini-timer-prog {
+  stroke: #f59e0b;
+}
+.active-player-turn-timer.critical .mini-timer-prog {
+  stroke: #ef4444;
+  animation: timerRingPulse 0.8s infinite ease-in-out;
+}
+.active-player-turn-timer.critical .mini-timer-text {
+  color: #fca5a5;
+  animation: timerTextBlink 0.8s infinite ease-in-out;
+}
+
+@keyframes timerRingPulse {
+  0%, 100% { filter: drop-shadow(0 0 2px #ef4444); }
+  50% { filter: drop-shadow(0 0 8px #ef4444); }
+}
+@keyframes timerTextBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Local Player Profile Bar */
+.local-player-profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.4);
+  border-radius: 9999px;
+  padding: 4px 14px 4px 8px;
+  margin: 0 auto 8px;
+  width: fit-content;
+  max-width: 90%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.local-player-profile.active-turn {
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.6), 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+.local-profile-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.local-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #f59e0b;
+}
+.local-info {
+  display: flex;
+  flex-direction: column;
+}
+.local-name {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+.local-cards-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  line-height: 1.1;
+}
+
+/* 5. Contextual Call UNO Button */
+.contextual-uno-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.btn-call-uno-contextual {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: #ffffff;
+  border: 2.5px solid #fde047;
+  border-radius: 9999px;
+  padding: 10px 24px;
+  font-family: 'Cabinet Grotesk', 'Impact', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  box-shadow: 0 6px 22px rgba(239, 68, 68, 0.55), 0 0 14px rgba(253, 224, 71, 0.45);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+  animation: pulse-uno-btn 1.5s infinite ease-in-out;
+  touch-action: manipulation;
+  min-height: 44px;
+}
+.btn-call-uno-contextual:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 28px rgba(239, 68, 68, 0.75), 0 0 18px rgba(253, 224, 71, 0.65);
+}
+.btn-call-uno-contextual:active {
+  transform: scale(0.96);
+}
+.btn-call-uno-contextual.uno-armed {
+  background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+  border-color: #a7f3d0;
+  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.5), 0 0 14px rgba(167, 243, 208, 0.4);
+  animation: none;
+}
+
+@keyframes pulse-uno-btn {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); box-shadow: 0 8px 26px rgba(239, 68, 68, 0.8), 0 0 18px rgba(253, 224, 71, 0.6); }
+}
+
+/* 6. Contextual CAUGHT Button on Opponent Badge */
+.opponent-caught-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-family: 'Cabinet Grotesk', 'Impact', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.65), 0 0 8px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  white-space: nowrap;
+  animation: caughtPulse 1s infinite alternate ease-in-out;
+  flex-shrink: 0;
+  touch-action: manipulation;
+  min-height: 32px;
+}
+.opponent-caught-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.85);
+}
+.opponent-caught-btn:active {
+  transform: scale(0.94);
+}
+@keyframes caughtPulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); box-shadow: 0 6px 18px rgba(220, 38, 38, 0.85); }
+}
+
+/* UNO DECLARED badge */
+.uno-declared-badge {
+  background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+  color: #ffffff;
+  font-family: 'Cabinet Grotesk', 'Impact', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  border: 1.5px solid #a7f3d0;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+  white-space: nowrap;
+}
+
+/* 7. CAUGHT FAILED Animated Modal */
+.caught-failed-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  animation: fadeInModal 200ms ease;
+  pointer-events: auto;
+}
+.caught-failed-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 2px solid #ef4444;
+  box-shadow: 0 16px 40px rgba(239, 68, 68, 0.35), 0 0 30px rgba(0, 0, 0, 0.8);
+  border-radius: 16px;
+  padding: 24px 32px;
+  text-align: center;
+  max-width: 90vw;
+  width: 360px;
+  animation: popBounceFail 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.caught-failed-icon {
+  font-size: 2.4rem;
+  margin-bottom: 6px;
+}
+.caught-failed-title {
+  color: #ef4444;
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  font-family: 'Cabinet Grotesk', 'Impact', sans-serif;
+}
+.caught-failed-message {
+  color: #f1f5f9;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes popBounceFail {
+  0% { transform: scale(0.7); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}

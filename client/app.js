@@ -124,6 +124,12 @@ class UnoArenaApp {
       drawPileBtn: document.getElementById('drawPileBtn'),
       drawCountBadge: document.getElementById('drawCountBadge'),
       penaltyTag: document.getElementById('penaltyTag'),
+      drawPenaltyBadge: document.getElementById('drawPenaltyBadge'),
+      btnCallUnoContextual: document.getElementById('btnCallUnoContextual'),
+      contextualUnoContainer: document.getElementById('contextualUnoContainer'),
+      localPlayerProfile: document.getElementById('localPlayerProfile'),
+      caughtFailedModal: document.getElementById('caughtFailedModal'),
+      caughtFailedMsg: document.getElementById('caughtFailedMsg'),
       actionBanner: document.getElementById('actionBanner'),
       turnTimerContainer: document.getElementById('turnTimerContainer'),
       timerRingProgress: document.getElementById('timerRingProgress'),
@@ -604,6 +610,8 @@ class UnoArenaApp {
 
     this.el.drawPileBtn.addEventListener('click', () => {
       if (this.clientView?.canDraw && !(this.gameState.mode === 'classic' && this.gameState.pendingAction) && !this.isMoveInFlight) {
+        this.el.drawPileBtn.classList.add('deck-tap-feedback');
+        setTimeout(() => this.el.drawPileBtn.classList.remove('deck-tap-feedback'), 250);
         this.isMoveInFlight = true;
         clearTimeout(this.moveFlightTimer);
         this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
@@ -611,6 +619,39 @@ class UnoArenaApp {
         this.send({ type: 'draw_card' });
       }
     });
+
+    if (this.el.btnCallUnoContextual) {
+      this.el.btnCallUnoContextual.addEventListener('click', () => {
+        if (this.unoRequestPending) return;
+        this.unoRequestPending = true;
+        this.isUnoArmed = true;
+        this.el.btnCallUnoContextual.classList.add('uno-armed');
+        this.el.btnCallUnoContextual.innerHTML = '<span class="btn-icon">✓</span> UNO ARMED!';
+        sounds.playUnoCall();
+        this.send({ type: 'call_uno' });
+        this.showToast('UNO Armed! 📢');
+      });
+    }
+
+    this.el.opponentsRow.addEventListener('click', (e) => {
+      const caughtBtn = e.target.closest('.opponent-caught-btn');
+      if (caughtBtn) {
+        const targetId = caughtBtn.dataset.catchTarget;
+        if (targetId && !this.catchRequestPending) {
+          this.catchRequestPending = true;
+          sounds.playCatch();
+          this.send({ type: 'catch_uno', data: { targetPlayerId: targetId } });
+        }
+      }
+    });
+
+    if (this.el.caughtFailedModal) {
+      this.el.caughtFailedModal.addEventListener('click', () => {
+        this.el.caughtFailedModal.classList.remove('active');
+        this.el.caughtFailedModal.style.display = 'none';
+        if (this.caughtFailedTimer) clearTimeout(this.caughtFailedTimer);
+      });
+    }
 
     this.el.btnPassAction.addEventListener('click', () => {
       this.send({ type: 'pass_turn' });
@@ -1023,12 +1064,19 @@ class UnoArenaApp {
           window.history.replaceState({}, '', roomUrl);
         } else if (msg.type === 'room:state') {
           this.handleRoomState(msg.data);
+        } else if (msg.type === 'catch_failed') {
+          this.catchRequestPending = false;
+          this.showCaughtFailedModal(msg.data);
         } else if (msg.type === 'error') {
           this.rematchRequestPending=false; this.rematchActionPending=false; this.rematchDismissAfterResponseId=null; this.unoRequestPending = false; this.catchRequestPending = false; this.pendingClassicMotion = null;
           this.clearClassicAnimations?.();
           this.isMoveInFlight = false;
           this.el.playerHandCards.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
-          this.showToast(msg.message || 'Error');
+          if (msg.message && msg.message.includes('CAUGHT FAILED')) {
+            this.showCaughtFailedModal({ message: msg.message });
+          } else {
+            this.showToast(msg.message || 'Error');
+          }
         }
       } catch (err) {
         console.error('WS parse error:', err);
@@ -1482,12 +1530,14 @@ class UnoArenaApp {
       if (gameState.mode === 'no_mercy') controlsParent.prepend(controls); else controlsParent.appendChild(controls);
     }
     let mercyStatus = document.getElementById('noMercyStatus');
-    if (gameState.mode === 'no_mercy') {
-      if (!mercyStatus) { mercyStatus = document.createElement('div'); mercyStatus.id = 'noMercyStatus'; mercyStatus.setAttribute('role','status'); this.el.actionBanner.parentElement.appendChild(mercyStatus); }
-      mercyStatus.hidden = false;
-      mercyStatus.textContent = `${gameState.activeColor?.toUpperCase() || 'Choose colour'} · ${gameState.pendingAction?.type === 'color_roulette' ? 'Roulette colour choice' : isMyTurn ? 'Your turn' : gameState.players[gameState.currentTurn]?.name + ' plays'}${gameState.pendingDrawPenalty ? ' · STACK +' + gameState.pendingDrawPenalty : ''}`;
-      mercyStatus.style.borderColor = COLOR_METADATA[gameState.activeColor]?.bgHex || '#fff';
-    } else if (mercyStatus) mercyStatus.hidden = true;
+    if (mercyStatus) mercyStatus.remove();
+
+    // Dynamic Table Felt Colour
+    const feltColor = (gameState.activeColor || '').toLowerCase();
+    ['felt-red', 'felt-blue', 'felt-green', 'felt-yellow'].forEach(c => this.el.tableFelt?.classList.remove(c));
+    if (['red', 'blue', 'green', 'yellow'].includes(feltColor)) {
+      this.el.tableFelt?.classList.add(`felt-${feltColor}`);
+    }
     // Action banner
     this.el.actionBanner.textContent = gameState.lastActionMessage || 'Game in progress';
     if (gameState.mode === 'classic') {
@@ -1528,6 +1578,28 @@ class UnoArenaApp {
         const isCurrent = gameState.players[gameState.currentTurn]?.id === p.id;
         const unoActive = p.cardCount === 1;
         const avatarColor = avatarPalettes[idx % avatarPalettes.length];
+        const canCatchThis = (this.clientView?.canCatchUnoTargets?.includes(p.id) || this.clientView?.canCatchUno === p.id) || (p.cardCount === 1 && !p.hasCalledUno && !p.isEliminated);
+
+        const activeTimerHtml = (gameState.mode === 'no_mercy' && isCurrent && gameState.status === 'playing' && gameState.turnDeadline)
+          ? `<div class="active-player-turn-timer active" aria-label="Turn timer">
+               <svg class="mini-timer-ring" viewBox="0 0 34 34">
+                 <circle class="mini-timer-bg" cx="17" cy="17" r="14"></circle>
+                 <circle class="mini-timer-prog" cx="17" cy="17" r="14" stroke-dasharray="87.96" stroke-dashoffset="0"></circle>
+               </svg>
+               <span class="mini-timer-text">20</span>
+             </div>`
+          : '';
+
+        let unoStatusHtml = '';
+        if (unoActive && !p.isEliminated) {
+          if (p.hasCalledUno) {
+            unoStatusHtml = '<span class="uno-declared-badge" title="UNO Declared">UNO!</span>';
+          } else if (canCatchThis && gameState.status === 'playing') {
+            unoStatusHtml = `<button class="opponent-caught-btn" data-catch-target="${p.id}" type="button" title="Catch ${escapeHtml(p.name)}!">🚨 CATCH ${escapeHtml(p.name).toUpperCase()}!</button>`;
+          } else {
+            unoStatusHtml = '<span class="uno-alert-badge">1 CARD</span>';
+          }
+        }
 
         // Realistic fan of actual UNO card backs underneath the badge (Screenshot 2)
         let fanHtml = '';
@@ -1565,7 +1637,8 @@ class UnoArenaApp {
                   🂠 ${p.isEliminated ? 'KNOCKED OUT' : `${p.cardCount} cards${gameState.mode === 'classic' ? ` · ${p.score || 0} pts` : ''}`}
                 </div>
               </div>
-              ${unoActive && !p.isEliminated ? `<span class="uno-alert-badge">${gameState.mode !== 'classic' || p.hasCalledUno ? 'UNO!' : '1 CARD'}</span>` : ''}
+              ${gameState.mode === 'no_mercy' ? unoStatusHtml : (unoActive && !p.isEliminated ? `<span class="uno-alert-badge">${gameState.mode !== 'classic' || p.hasCalledUno ? 'UNO!' : '1 CARD'}</span>` : '')}
+              ${gameState.mode === 'no_mercy' ? activeTimerHtml : ''}
               ${gameState.mode === 'classic' && unoActive && p.hasCalledUno ? '<span class="classic-caught-failed" role="status">CAUGHT FAILED</span>' : ''}
             </div>
             ${fanHtml}
@@ -1594,11 +1667,18 @@ class UnoArenaApp {
     this.el.drawPileBtn.disabled = !canDraw || (gameState.mode === 'classic' && !!gameState.pendingAction);
     this.el.drawPileBtn.setAttribute('aria-label', 'Draw one card from the deck');
 
-    // Stacking draw penalty tag
+    // Stacking draw penalty badge on draw pile
     if (gameState.pendingDrawPenalty > 0) {
+      if (this.el.drawPenaltyBadge) {
+        this.el.drawPenaltyBadge.textContent = `+${gameState.pendingDrawPenalty}`;
+        this.el.drawPenaltyBadge.style.display = 'block';
+      }
       this.el.penaltyTag.style.display = 'block';
       this.el.penaltyTag.textContent = `+${gameState.pendingDrawPenalty} PENALTY!`;
     } else {
+      if (this.el.drawPenaltyBadge) {
+        this.el.drawPenaltyBadge.style.display = 'none';
+      }
       this.el.penaltyTag.style.display = 'none';
     }
 
@@ -1650,6 +1730,61 @@ class UnoArenaApp {
       if (this.el.btnUnoAction.parentElement.id === 'classicLocalControls') this.el.btnDrawAction.parentElement.appendChild(this.el.btnUnoAction);
       this.el.btnUnoAction.style.display = '';
     }
+    // Render Local Player Profile Bar in No Mercy
+    const me = gameState.players.find(p => p.id === this.playerId);
+    if (this.el.localPlayerProfile) {
+      if (gameState.mode === 'no_mercy' && gameState.status === 'playing') {
+        this.el.localPlayerProfile.style.display = 'flex';
+        this.el.localPlayerProfile.classList.toggle('active-turn', isMyTurn);
+        const localTimerHtml = (isMyTurn && gameState.turnDeadline)
+          ? `<div class="active-player-turn-timer active" aria-label="Turn timer">
+               <svg class="mini-timer-ring" viewBox="0 0 34 34">
+                 <circle class="mini-timer-bg" cx="17" cy="17" r="14"></circle>
+                 <circle class="mini-timer-prog" cx="17" cy="17" r="14" stroke-dasharray="87.96" stroke-dashoffset="0"></circle>
+               </svg>
+               <span class="mini-timer-text">20</span>
+             </div>`
+          : '';
+        const localUnoDeclaredHtml = (myHand.length === 1 && (me?.hasCalledUno || this.isUnoArmed))
+          ? '<span class="uno-declared-badge" style="margin-left: 8px;">✓ UNO DECLARED</span>'
+          : '';
+
+        this.el.localPlayerProfile.innerHTML = `
+          <div class="local-profile-left">
+            <div class="local-avatar">${escapeHtml(me?.name?.charAt(0)?.toUpperCase() || 'P')}</div>
+            <div class="local-info">
+              <div class="local-name">${escapeHtml(me?.name || 'Player')}${isMyTurn ? ' ⭐' : ''}</div>
+              <div class="local-cards-count">${myHand.length} card${myHand.length === 1 ? '' : 's'}</div>
+            </div>
+          </div>
+          ${localUnoDeclaredHtml}
+          ${localTimerHtml}
+        `;
+      } else {
+        this.el.localPlayerProfile.style.display = 'none';
+      }
+    }
+
+    // Contextual Call UNO Button: displayed ONLY when hand has exactly 2 cards
+    if (this.el.contextualUnoContainer && this.el.btnCallUnoContextual) {
+      if (gameState.mode === 'no_mercy' && myHand.length === 2 && gameState.status === 'playing') {
+        this.el.contextualUnoContainer.style.display = 'flex';
+        const isArmed = this.isUnoArmed || me?.isUnoArmed || (me?.hasCalledUno && myHand.length === 2);
+        if (isArmed) {
+          this.el.btnCallUnoContextual.classList.add('uno-armed');
+          this.el.btnCallUnoContextual.innerHTML = '<span class="btn-icon">✓</span> UNO ARMED!';
+        } else {
+          this.el.btnCallUnoContextual.classList.remove('uno-armed');
+          this.el.btnCallUnoContextual.innerHTML = '<span class="btn-icon">📢</span> CALL UNO!';
+        }
+      } else {
+        this.el.contextualUnoContainer.style.display = 'none';
+        if (myHand.length !== 2) {
+          this.isUnoArmed = false;
+        }
+      }
+    }
+
     // Player Hand Cards
     this.renderPlayerHand(myHand, canPlayCards, gameState.mode, gameState.flipSide);
 
@@ -1863,6 +1998,38 @@ class UnoArenaApp {
       return;
     }
 
+    if (this.gameState?.mode === 'no_mercy') {
+      if (this.el.turnTimerContainer) this.el.turnTimerContainer.style.display = 'none';
+      if (status !== 'playing' || !deadline) return;
+
+      const miniTimers = document.querySelectorAll('.active-player-turn-timer');
+      const miniCircumference = 87.96; // 2 * Math.PI * 14
+      const tick = () => {
+        const now = Date.now();
+        const remainingMs = Math.max(0, deadline - now);
+        const remainingSec = Math.ceil(remainingMs / 1000);
+        const fraction = Math.max(0, Math.min(1, remainingMs / 20000));
+        const offset = miniCircumference * (1 - fraction);
+
+        miniTimers.forEach(timer => {
+          const txt = timer.querySelector('.mini-timer-text');
+          const prog = timer.querySelector('.mini-timer-prog');
+          if (txt) txt.textContent = String(remainingSec);
+          if (prog) prog.style.strokeDashoffset = offset.toFixed(2);
+          timer.classList.toggle('warning', remainingSec <= 10 && remainingSec > 5);
+          timer.classList.toggle('critical', remainingSec <= 5);
+        });
+
+        if (remainingMs <= 0 && this.turnTimerInterval) {
+          clearInterval(this.turnTimerInterval);
+          this.turnTimerInterval = null;
+        }
+      };
+      tick();
+      if (deadline > Date.now()) this.turnTimerInterval = setInterval(tick, 100);
+      return;
+    }
+
     const container = this.el.turnTimerContainer;
     const progressRing = this.el.timerRingProgress;
     const secondsEl = this.el.turnTimerSeconds;
@@ -2037,6 +2204,36 @@ class UnoArenaApp {
     });
 
     this.el.swapPickerModal.classList.add('active');
+  }
+
+  showCaughtFailedModal(data) {
+    const modal = this.el.caughtFailedModal || document.getElementById('caughtFailedModal');
+    const msgEl = this.el.caughtFailedMsg || document.getElementById('caughtFailedMsg');
+    if (!modal || !msgEl) return;
+
+    const targetName = data?.targetName || 'Player';
+    let messageText = `${targetName} already called UNO.`;
+    if (data?.message) {
+      if (data.message.includes('already called UNO')) {
+        messageText = `${targetName} already called UNO.`;
+      } else if (data.message.includes('closed') || data.message.includes('expired')) {
+        messageText = 'The UNO catch window has closed.';
+      } else if (data.message.includes('no longer has one card')) {
+        messageText = `${targetName} no longer has one card.`;
+      } else {
+        messageText = data.message.replace(/^CAUGHT FAILED:\s*/i, '');
+      }
+    }
+    msgEl.textContent = messageText;
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+
+    if (this.caughtFailedTimer) clearTimeout(this.caughtFailedTimer);
+    this.caughtFailedTimer = setTimeout(() => {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      this.caughtFailedTimer = null;
+    }, 2400);
   }
 
   showGameOver(gameState) {
