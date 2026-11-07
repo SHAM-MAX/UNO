@@ -49,6 +49,10 @@
     backdrop-filter: none;
     z-index: 400;
   }
+  #rematchProposalModal.rematch-proposal-overlay,
+  .rematch-proposal-overlay {
+    z-index: 20000 !important;
+  }
   .modal-card {
     padding: 20px;
     max-height: calc(100dvh - 32px);

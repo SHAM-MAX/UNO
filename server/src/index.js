@@ -28,16 +28,47 @@ function broadcastRoomState(roomId) {
   const room = roomManager.getRoom(roomId);
   if (!room) return;
 
-  for (const player of [...room.players, ...(room.spectators || [])]) {
+  const sentSockets = new Set();
+  const roomParticipants = [...room.players, ...(room.spectators || [])];
+
+  for (const player of roomParticipants) {
     if (player.socket && player.socket.readyState === WebSocket.OPEN) {
       const view = roomManager.getClientView(roomId, player.id);
       if (view) {
-        player.socket.send(
-          JSON.stringify({
-            type: 'room:state',
-            data: view,
-          })
-        );
+        try {
+          player.socket.send(
+            JSON.stringify({
+              type: 'room:state',
+              data: view,
+            })
+          );
+          sentSockets.add(player.socket);
+        } catch (err) {
+          console.error('Failed to send room:state to player:', player.id, err);
+        }
+      }
+    }
+  }
+
+  for (const [ws, meta] of clientSockets.entries()) {
+    if (meta.roomId === roomId && ws.readyState === WebSocket.OPEN && !sentSockets.has(ws)) {
+      const player = roomParticipants.find((p) => p.id === meta.playerId);
+      if (player && !player.socket) {
+        player.socket = ws;
+      }
+      const view = roomManager.getClientView(roomId, meta.playerId);
+      if (view) {
+        try {
+          ws.send(
+            JSON.stringify({
+              type: 'room:state',
+              data: view,
+            })
+          );
+          sentSockets.add(ws);
+        } catch (err) {
+          console.error('Failed to send room:state to socket:', meta.playerId, err);
+        }
       }
     }
   }
@@ -207,6 +238,7 @@ wss.on('connection', (ws, req) => {
       }
       cleanRoomId = authenticated.roomId;
       playerId = authenticated.playerId;
+      roomManager.attachSocket(cleanRoomId, playerId, ws);
 
       const rematchMethods={rematch_propose:'proposeRematch',rematch_respond:'respondRematch',rematch_vote:'voteRematch',rematch_cancel:'cancelRematch'};
       if (rematchMethods[type]) {

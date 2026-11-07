@@ -1107,6 +1107,7 @@ class UnoArenaApp {
     this.el.playerHandCards.removeAttribute('inert');
     this.clientView = view;
     this.gameState = view.gameState;
+    if (view.myPlayerId) this.playerId = view.myPlayerId;
     this.rematchRequestPending=false; this.rematchActionPending=false;
     if (this.rematchDismissAfterResponseId && view.rematchProposal?.id===this.rematchDismissAfterResponseId && (view.rematchProposal.status==='cancelled' || view.rematchProposal.declinedPlayerIds.includes(this.playerId))) { this.dismissedRematchId=view.rematchProposal.id; this.rematchDismissAfterResponseId=null; }
     if (view.isSpectator) { this.renderRematchSpectator(); this.renderRematchProposal(); return; }
@@ -1196,23 +1197,34 @@ class UnoArenaApp {
     const p=this.clientView.rematchProposal;
     clearInterval(this.rematchCountdownInterval);this.rematchCountdownInterval=null;
     if (!p || !p.originalParticipantIds.includes(this.playerId) || this.dismissedRematchId===p.id || (p.status==='started'&&!this.clientView.isSpectator)) {modal.classList.remove('active');return;}
-    const accepted=p.acceptedPlayerIds.includes(this.playerId),pending=p.pendingPlayerIds.includes(this.playerId),declined=p.declinedPlayerIds.includes(this.playerId);
+    const live=['responding','voting'].includes(p.status);
+    const isMeAccepted = this.playerId === p.initiatorPlayerId || p.acceptedPlayerIds.includes(this.playerId);
+    const isMeDeclined = !isMeAccepted && p.declinedPlayerIds.includes(this.playerId);
+    const isMePending = !isMeAccepted && !isMeDeclined && (p.pendingPlayerIds.includes(this.playerId) || live);
     const initiator=p.participants.find(player=>player.id===p.initiatorPlayerId);
     const titles={responding:'Rematch Requested!',voting:'Choose the next game',resolved:'The votes are in!',cancelled:'Rematch cancelled',started:'A new game has started'};
     const labels={classic:'Classic UNO',flip:'UNO Flip',no_mercy:'UNO No Mercy'};
     const artwork={classic:'classic-card',flip:'flip-card',no_mercy:'no-mercy-card'};
     const counts=Object.fromEntries(Object.keys(labels).map(mode=>[mode,Object.entries(p.modeVotes).filter(([id,vote])=>p.acceptedPlayerIds.includes(id)&&vote===mode).length]));
-    const live=['responding','voting'].includes(p.status);
     const focusedMode=document.activeElement?.dataset?.rematchMode;
     const focusedResponse=document.activeElement?.dataset?.rematchResponse;
-    content.innerHTML=`<div class="rematch-kicker">ONE MORE GAME?</div><h2 id="rematchProposalTitle">${titles[p.status]}</h2>
-      <div class="rematch-inviter"><span class="rematch-initials">${escapeHtml(initiator?.name.split(/\s+/).map(part=>part[0]).slice(0,2).join('')||'?')}</span><p><strong>${escapeHtml(initiator?.name)}</strong> wants to play another game.<br>${pending&&live?'Do you accept?':accepted?'You have ACCEPTED.':declined?'You have DECLINED.':''}</p></div>
-      ${pending&&p.status==='responding'?'<div class="rematch-response-actions"><button data-rematch-response="accept">ACCEPT</button><button data-rematch-response="decline">DECLINE</button></div>':''}
-      ${accepted&&live?`<p class="rematch-vote-hint">Choose one mode. You can change your vote until voting closes. Uncast votes use the previous mode.</p><div class="rematch-mode-grid">${Object.keys(labels).map(mode=>`<button data-rematch-mode="${mode}" class="${p.modeVotes[this.playerId]===mode?'selected':''}" aria-pressed="${p.modeVotes[this.playerId]===mode}" ${mode!=='classic'&&p.acceptedPlayerIds.length>6?'disabled':''}><img src="/assets/game-modes/${artwork[mode]}.png" alt=""><strong>${labels[mode]}</strong><span>${counts[mode]} vote${counts[mode]===1?'':'s'}</span></button>`).join('')}</div><small>${p.acceptedPlayerIds.length>6?'More than six accepted players: Classic is the supported mode.':''}</small>`:''}
+    const acceptedVotedCount = p.acceptedPlayerIds.filter(id => p.modeVotes && p.modeVotes[id] && ['classic', 'flip', 'no_mercy'].includes(p.modeVotes[id])).length;
+    const totalAcceptedCount = p.acceptedPlayerIds.length;
+
+    content.innerHTML=`<div class="rematch-kicker">ONE MORE GAME?</div><h2 id="rematchProposalTitle">${titles[p.status] || 'Rematch'}</h2>
+      <div class="rematch-inviter"><span class="rematch-initials">${escapeHtml(initiator?.name.split(/\s+/).map(part=>part[0]).slice(0,2).join('')||'?')}</span><p><strong>${escapeHtml(initiator?.name)}</strong> wants to play another game.<br>${isMePending&&live?'Do you accept?':isMeAccepted?'You have ACCEPTED.':isMeDeclined?'You have DECLINED.':''}</p></div>
+      ${isMePending&&p.status==='responding'?'<div class="rematch-response-actions"><button data-rematch-response="accept">ACCEPT</button><button data-rematch-response="decline">DECLINE</button></div>':''}
+      ${isMeAccepted&&live?`<p class="rematch-vote-hint">Choose one mode. You can change your vote until voting closes. Uncast votes use the previous mode.</p><div class="rematch-mode-grid">${Object.keys(labels).map(mode=>`<button data-rematch-mode="${mode}" class="${p.modeVotes[this.playerId]===mode?'selected':''}" aria-pressed="${p.modeVotes[this.playerId]===mode}" ${mode!=='classic'&&p.acceptedPlayerIds.length>6?'disabled':''}><img src="/assets/game-modes/${artwork[mode]}.png" alt=""><strong>${labels[mode]}</strong><span>${counts[mode]} vote${counts[mode]===1?'':'s'}</span></button>`).join('')}</div><small>${p.acceptedPlayerIds.length>6?'More than six accepted players: Classic is the supported mode.':''}</small>`:''}
       ${p.selectedMode?`<div class="rematch-result">${labels[p.selectedMode]} selected${p.status==='resolved'?' · Starting together…':''}</div>`:''}
       ${p.reason?`<p class="rematch-reason">${escapeHtml(p.reason)}</p>`:''}
-      <ul class="rematch-roster">${p.participants.map(player=>`<li><span>${escapeHtml(player.name)}</span><b class="${p.acceptedPlayerIds.includes(player.id)?'accepted':p.declinedPlayerIds.includes(player.id)?'declined':'pending'}">${p.acceptedPlayerIds.includes(player.id)?'ACCEPTED':p.declinedPlayerIds.includes(player.id)?'DECLINED':'PENDING'}</b></li>`).join('')}</ul>
-      <footer><span>${Object.keys(p.modeVotes).filter(id=>p.acceptedPlayerIds.includes(id)).length} / ${p.acceptedPlayerIds.length} accepted players voted</span><span id="rematchCountdown"></span></footer>`;
+      <ul class="rematch-roster">${p.participants.map(player=>{
+        const isAccepted = player.id === p.initiatorPlayerId || p.acceptedPlayerIds.includes(player.id) || player.status === 'accepted';
+        const isDeclined = !isAccepted && (p.declinedPlayerIds.includes(player.id) || player.status === 'declined');
+        const statusClass = isAccepted ? 'accepted' : isDeclined ? 'declined' : 'pending';
+        const statusLabel = isAccepted ? 'ACCEPTED' : isDeclined ? 'DECLINED' : 'PENDING';
+        return `<li><span>${escapeHtml(player.name)}</span><b class="${statusClass}">${statusLabel}</b></li>`;
+      }).join('')}</ul>
+      <footer><span>${acceptedVotedCount} / ${totalAcceptedCount} accepted players voted</span><span id="rematchCountdown"></span></footer>`;
     document.getElementById('rematchCloseBtn').onclick=()=>this.closeRematchDialog();
     content.querySelectorAll('[data-rematch-response]').forEach(button=>button.onclick=()=>this.sendRematchAction('rematch_respond',{accept:button.dataset.rematchResponse==='accept'}));
     content.querySelectorAll('[data-rematch-mode]').forEach(button=>button.onclick=()=>this.sendRematchAction('rematch_vote',{mode:button.dataset.rematchMode}));
@@ -1220,7 +1232,10 @@ class UnoArenaApp {
     const deadline=p.status==='responding'?p.responseDeadline:p.status==='voting'?p.votingDeadline:p.startAt;
     const tick=()=>{const target=document.getElementById('rematchCountdown');if(target)target.textContent=live?`${p.status==='responding'?'Responses':'Voting'}: ${Math.max(0,Math.ceil((deadline-Date.now())/1000))}s`:'';};
     tick();if(live)this.rematchCountdownInterval=setInterval(tick,250);
-    const wasOpen=modal.classList.contains('active');modal.classList.add('active');if(!wasOpen)document.getElementById('rematchCloseBtn').focus();
+    const wasOpen=modal.classList.contains('active');modal.classList.add('active');if(!wasOpen){
+      sounds.playSnap?.(520, 0.15);
+      document.getElementById('rematchCloseBtn').focus();
+    }
     else if(focusedMode||focusedResponse)(content.querySelector(`[data-rematch-mode="${focusedMode}"]`) || content.querySelector('[data-rematch-mode]') || document.getElementById('rematchCloseBtn')).focus();
   }
 

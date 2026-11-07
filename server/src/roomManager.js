@@ -1207,7 +1207,37 @@ export class RoomManager {
     if (room?.status !== 'game_over' || room.winnerId !== playerId || !room.players.some(p=>p.id===playerId)) return {success:false,error:'Only the match winner can request a rematch'};
     if (['responding','voting','resolved'].includes(room.rematchProposal?.status)) return {success:false,error:'A rematch proposal is already open'};
     const now=Date.now();
-    room.rematchProposal={id:randomUUID(),version:1,initiatorPlayerId:playerId,originalParticipantIds:room.players.map(p=>p.id),participants:room.players.map(p=>({id:p.id,name:p.name})),acceptedPlayerIds:[playerId],declinedPlayerIds:[],pendingPlayerIds:room.players.filter(p=>p.id!==playerId).map(p=>p.id),modeVotes:{},status:'responding',createdAt:now,responseDeadline:now+REMATCH_RESPONSE_MS,votingDeadline:now+REMATCH_RESPONSE_MS+REMATCH_VOTING_MS,selectedMode:null,previousMode:room.mode,previousResult:{winnerId:room.winnerId,winReason:room.winReason,scores:room.players.map(p=>({id:p.id,name:p.name,score:p.score||0}))}};
+    const initiatorId = playerId;
+    const acceptedPlayerIds = [initiatorId];
+    const pendingPlayerIds = room.players.filter(p => p.id !== initiatorId).map(p => p.id);
+    const participants = room.players.map(p => ({
+      id: p.id,
+      name: p.name,
+      status: p.id === initiatorId ? 'accepted' : 'pending',
+    }));
+
+    room.rematchProposal = {
+      id: randomUUID(),
+      version: 1,
+      initiatorPlayerId: initiatorId,
+      originalParticipantIds: room.players.map(p => p.id),
+      participants,
+      acceptedPlayerIds,
+      declinedPlayerIds: [],
+      pendingPlayerIds,
+      modeVotes: {},
+      status: 'responding',
+      createdAt: now,
+      responseDeadline: now + REMATCH_RESPONSE_MS,
+      votingDeadline: now + REMATCH_RESPONSE_MS + REMATCH_VOTING_MS,
+      selectedMode: null,
+      previousMode: room.mode,
+      previousResult: {
+        winnerId: room.winnerId,
+        winReason: room.winReason,
+        scores: room.players.map(p => ({ id: p.id, name: p.name, score: p.score || 0 })),
+      },
+    };
     this.scheduleRematch(room);this.persist(roomId);return {success:true};
   }
 
@@ -1226,14 +1256,24 @@ export class RoomManager {
     if (error) return {success:false,error};
     if (payload.withdraw) {
       if (payload.accept!==false || playerId===p.initiatorPlayerId || !p.acceptedPlayerIds.includes(playerId)) return {success:false,error:'No accepted invitation to decline'};
-      p.acceptedPlayerIds=p.acceptedPlayerIds.filter(id=>id!==playerId);p.declinedPlayerIds.push(playerId);delete p.modeVotes[playerId];p.version++;
+      p.acceptedPlayerIds=p.acceptedPlayerIds.filter(id=>id!==playerId);
+      if (!p.declinedPlayerIds.includes(playerId)) p.declinedPlayerIds.push(playerId);
+      p.pendingPlayerIds=p.pendingPlayerIds.filter(id=>id!==playerId);
+      delete p.modeVotes[playerId];p.version++;
       if (p.status!=='responding' && p.acceptedPlayerIds.length<2) {p.status='cancelled';p.reason='At least two players must accept.';}
       else if (p.status==='resolved') p.selectedMode=this.selectRematchMode(p);
       this.advanceRematch(roomId);this.scheduleRematch(room);this.persist(roomId);return {success:true};
     }
     if (typeof payload.accept!=='boolean' || !p.pendingPlayerIds.includes(playerId)) return {success:false,error:'A response was already recorded or is invalid'};
     p.pendingPlayerIds=p.pendingPlayerIds.filter(id=>id!==playerId);
-    (payload.accept?p.acceptedPlayerIds:p.declinedPlayerIds).push(playerId);
+    if (payload.accept) {
+      if (!p.acceptedPlayerIds.includes(playerId)) p.acceptedPlayerIds.push(playerId);
+      p.declinedPlayerIds=p.declinedPlayerIds.filter(id=>id!==playerId);
+    } else {
+      if (!p.declinedPlayerIds.includes(playerId)) p.declinedPlayerIds.push(playerId);
+      p.acceptedPlayerIds=p.acceptedPlayerIds.filter(id=>id!==playerId);
+      delete p.modeVotes[playerId];
+    }
     if(p.acceptedPlayerIds.length>6)for(const [id,mode] of Object.entries(p.modeVotes))if(mode!=='classic')delete p.modeVotes[id];
     p.version++;
     this.advanceRematch(roomId);this.scheduleRematch(room);this.persist(roomId);return {success:true};
@@ -1271,7 +1311,12 @@ export class RoomManager {
     if (!p || !['responding','voting','resolved'].includes(p.status)) return;
     let changed=false;
     if (p.status==='responding' && (!p.pendingPlayerIds.length || now>=p.responseDeadline)) {
-      p.declinedPlayerIds.push(...p.pendingPlayerIds);p.pendingPlayerIds=[];
+      for (const id of p.pendingPlayerIds) {
+        if (!p.declinedPlayerIds.includes(id) && !p.acceptedPlayerIds.includes(id)) {
+          p.declinedPlayerIds.push(id);
+        }
+      }
+      p.pendingPlayerIds=[];
       if (p.acceptedPlayerIds.length<2) {p.status='cancelled';p.reason='At least two players must accept.';}
       else {p.status='voting';p.votingDeadline=Math.min(now,p.responseDeadline)+REMATCH_VOTING_MS;}
       p.version++;changed=true;
@@ -1375,10 +1420,34 @@ export class RoomManager {
       eventLogs: room.eventLogs.slice(0, 20),
     };
 
+    let rematchProposal = null;
+    if (room.rematchProposal) {
+      const p = room.rematchProposal;
+      const acceptedSet = new Set(p.acceptedPlayerIds || []);
+      if (p.initiatorPlayerId) acceptedSet.add(p.initiatorPlayerId);
+      const declinedSet = new Set((p.declinedPlayerIds || []).filter((id) => !acceptedSet.has(id)));
+      const pendingList = (p.pendingPlayerIds || []).filter((id) => !acceptedSet.has(id) && !declinedSet.has(id));
+
+      rematchProposal = {
+        ...p,
+        acceptedPlayerIds: Array.from(acceptedSet),
+        declinedPlayerIds: Array.from(declinedSet),
+        pendingPlayerIds: pendingList,
+        participants: (p.participants || []).map((player) => {
+          const isAccepted = acceptedSet.has(player.id) || player.id === p.initiatorPlayerId;
+          const isDeclined = !isAccepted && declinedSet.has(player.id);
+          return {
+            ...player,
+            status: isAccepted ? 'accepted' : isDeclined ? 'declined' : 'pending',
+          };
+        }),
+      };
+    }
+
     return {
       gameState,
       isSpectator,
-      rematchProposal: room.rematchProposal || null,
+      rematchProposal,
       canProposeRematch: room.status === 'game_over' && room.winnerId === playerId && !['responding','voting','resolved'].includes(room.rematchProposal?.status),
       myHand,
       myPlayerId: playerId,
