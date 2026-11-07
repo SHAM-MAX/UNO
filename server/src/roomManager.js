@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { CLASSIC_COLORS, FLIP_DARK_COLORS, NO_MERCY_MAX_CARDS } from '../../shared/constants.js';
+import { CLASSIC_COLORS, FLIP_DARK_COLORS, NO_MERCY_MAX_CARDS, REMATCH_RESPONSE_MS, REMATCH_VOTING_MS, REMATCH_RESULT_MS } from '../../shared/constants.js';
 import { createDeckForMode, getActiveFace, shuffleDeck } from '../../shared/deck.js';
 import {
   calculateScore,
@@ -35,6 +35,7 @@ export class RoomManager {
     this.rooms = new Map();
     this.store = store;
     this.turnTimers = new Map();
+    this.rematchTimers = new Map();
     this.onStateChange = null;
     this.loadFromStorage();
   }
@@ -44,11 +45,13 @@ export class RoomManager {
     for (const item of loaded) {
       if (item.state && item.roomId) {
         const state = item.state;
-        state.players.forEach((p) => {
+        state.matchId ||= randomUUID();
+        [...state.players, ...(state.spectators || [])].forEach((p) => {
           p.isConnected = false;
           p.socket = null;
         });
         this.rooms.set(item.roomId, state);
+        this.scheduleRematch(state);
       }
     }
     console.log(`[RoomManager] Rehydrated ${this.rooms.size} active rooms from persistent storage.`);
@@ -75,6 +78,7 @@ export class RoomManager {
       const snapshot = {
         ...room,
         players: cleanPlayers,
+        spectators: (room.spectators || []).map(({ socket, ...player }) => player),
       };
       this.store.saveRoom(roomId, room.mode, snapshot);
     }
@@ -175,7 +179,7 @@ export class RoomManager {
 
     // Try reconnecting via sessionToken
     if (sessionToken) {
-      const existing = room.players.find((p) => p.sessionToken === sessionToken);
+      const existing = [...room.players, ...(room.spectators || [])].find((p) => p.sessionToken === sessionToken);
       if (existing) {
         existing.isConnected = true;
         if (room.status === 'playing' && !this.turnTimers.has(room.roomId)) this.resetTurnTimer(room);
@@ -222,7 +226,7 @@ export class RoomManager {
   attachSocket(roomId, playerId, socket) {
     const room = this.rooms.get(roomId);
     if (!room) return false;
-    const player = room.players.find((p) => p.id === playerId);
+    const player = [...room.players, ...(room.spectators || [])].find((p) => p.id === playerId);
     if (!player) return false;
     player.socket = socket;
     player.isConnected = true;
@@ -231,7 +235,7 @@ export class RoomManager {
 
   detachSocket(socket) {
     for (const [roomId, room] of this.rooms.entries()) {
-      const player = room.players.find((p) => p.socket === socket);
+      const player = [...room.players, ...(room.spectators || [])].find((p) => p.socket === socket);
       if (player) {
         player.isConnected = false;
         player.socket = null;
@@ -287,6 +291,18 @@ export class RoomManager {
     const room = this.rooms.get(roomId);
     if (!room) return { roomEmpty: true };
 
+    const proposal = room.rematchProposal;
+    if (room.status === 'game_over' && proposal && ['responding','voting','resolved'].includes(proposal.status)) {
+      const participant = room.players.find(p => p.id === playerId);
+      if (participant) participant.isConnected = false;
+      if (proposal.initiatorPlayerId === playerId) this.cancelRematch(roomId, playerId, {proposalId:proposal.id});
+      else if (proposal.pendingPlayerIds.includes(playerId)) this.respondRematch(roomId,playerId,{proposalId:proposal.id,accept:false});
+      this.persist(roomId);
+      return {roomEmpty:false};
+    }
+    if (room.status === 'game_over') { const player=room.players.find(p=>p.id===playerId); if(player){player.isConnected=false;player.socket=null;} this.persist(roomId);return {roomEmpty:false}; }
+    const spectator = (room.spectators || []).find(p => p.id === playerId);
+    if (spectator) { spectator.isConnected = false; spectator.socket = null; this.persist(roomId); return {roomEmpty:false}; }
     const idx = room.players.findIndex((p) => p.id === playerId);
     if (idx === -1) return { roomEmpty: false };
 
@@ -330,8 +346,10 @@ export class RoomManager {
     if (!room) return { success: false, error: 'Room not found' };
     const player = room.players.find((p) => p.id === playerId);
     if (!player || !player.isHost) return { success: false, error: 'Only the host can start the game' };
+    if (room.status === 'game_over') return {success:false,error:'Request a rematch proposal before starting a new match'};
     if (room.players.length < 2) return { success: false, error: 'At least 2 players are required to start' };
 
+    if (room.status === 'lobby') room.matchId = randomUUID();
     if (!['lobby', 'round_over', 'game_over'].includes(room.status)) return { success: false, error: 'Round already active' };
     if (room.mode === 'classic') {
       if (room.status !== 'round_over') {
@@ -564,6 +582,7 @@ export class RoomManager {
 
   resetTurnTimer(room) {
     if (!room) return;
+    room.turnTimerGeneration = (room.turnTimerGeneration || 0) + 1;
     if (room.mode === 'classic') room.actionVersion = (room.actionVersion || 0) + 1;
     if (this.turnTimers.has(room.roomId)) {
       clearTimeout(this.turnTimers.get(room.roomId));
@@ -581,17 +600,19 @@ export class RoomManager {
 
     const currentTurnAtSchedule = room.currentTurn;
     const actionVersionAtSchedule = room.actionVersion;
+    const generationAtSchedule = room.turnTimerGeneration;
     const timer = setTimeout(() => {
-      this.handleTurnTimeout(room.roomId, currentTurnAtSchedule, actionVersionAtSchedule);
+      this.handleTurnTimeout(room.roomId, currentTurnAtSchedule, actionVersionAtSchedule, generationAtSchedule);
     }, DURATION + 150);
     if (timer.unref) timer.unref();
 
     this.turnTimers.set(room.roomId, timer);
   }
 
-  handleTurnTimeout(roomId, expectedTurn, expectedActionVersion) {
+  handleTurnTimeout(roomId, expectedTurn, expectedActionVersion, expectedGeneration) {
     const room = this.rooms.get(roomId);
     if (!room || room.status !== 'playing') return;
+    if (expectedGeneration !== undefined && expectedGeneration !== room.turnTimerGeneration) return;
     // Guard against race conditions where turn already advanced
     if (room.currentTurn !== expectedTurn) return;
     if (room.mode === 'classic' && expectedActionVersion !== undefined && expectedActionVersion !== room.actionVersion) return;
@@ -1090,13 +1111,113 @@ export class RoomManager {
 
   rematch(roomId, playerId) {
     const room = this.rooms.get(roomId);
-    if (!room || !['game_over', 'round_over'].includes(room.status)) return { success: false, error: 'Round is not over' };
+    if (room?.status === 'game_over') return this.proposeRematch(roomId, playerId);
+    if (room?.status !== 'round_over') return {success:false,error:'Round is not over'};
+    if (!room.players.find(p => p.id === playerId)?.isHost) return {success:false,error:'Only the host can start the next round'};
+    return this.startGame(roomId,playerId);
+  }
 
-    const player = room.players.find((p) => p.id === playerId);
-    if (!player || !player.isHost) return { success: false, error: 'Only the host can start a rematch' };
+  scheduleRematch(room) {
+    clearTimeout(this.rematchTimers.get(room.roomId));
+    this.rematchTimers.delete(room.roomId);
+    const p = room.rematchProposal;
+    const due = p?.status === 'responding' ? p.responseDeadline : p?.status === 'voting' ? p.votingDeadline : p?.status === 'resolved' ? p.startAt : null;
+    if (!due) return;
+    const timer = setTimeout(() => this.advanceRematch(room.roomId), Math.max(0,due-Date.now())+5);
+    timer.unref?.(); this.rematchTimers.set(room.roomId,timer);
+  }
 
-    if (room.mode !== 'classic') room.roundNumber += 1;
-    return this.startGame(roomId, playerId);
+  proposeRematch(roomId,playerId,payload={}) {
+    const room = this.rooms.get(roomId);
+    if (payload.matchId !== undefined && payload.matchId !== room?.matchId) return {success:false,error:'The match changed. This rematch request is stale'};
+    if (room?.status !== 'game_over' || room.winnerId !== playerId || !room.players.some(p=>p.id===playerId)) return {success:false,error:'Only the match winner can request a rematch'};
+    if (['responding','voting','resolved'].includes(room.rematchProposal?.status)) return {success:false,error:'A rematch proposal is already open'};
+    const now=Date.now();
+    room.rematchProposal={id:randomUUID(),version:1,initiatorPlayerId:playerId,originalParticipantIds:room.players.map(p=>p.id),participants:room.players.map(p=>({id:p.id,name:p.name})),acceptedPlayerIds:[playerId],declinedPlayerIds:[],pendingPlayerIds:room.players.filter(p=>p.id!==playerId).map(p=>p.id),modeVotes:{},status:'responding',createdAt:now,responseDeadline:now+REMATCH_RESPONSE_MS,votingDeadline:now+REMATCH_RESPONSE_MS+REMATCH_VOTING_MS,selectedMode:null,previousMode:room.mode,previousResult:{winnerId:room.winnerId,winReason:room.winReason,scores:room.players.map(p=>({id:p.id,name:p.name,score:p.score||0}))}};
+    this.scheduleRematch(room);this.persist(roomId);return {success:true};
+  }
+
+  rematchAction(roomId,playerId,payload,kind) {
+    this.advanceRematch(roomId);
+    const room=this.rooms.get(roomId),p=room?.rematchProposal;
+    if (!p || payload?.proposalId!==p.id || !p.originalParticipantIds.includes(playerId)) return {error:'Invalid or stale rematch proposal'};
+    if (payload.version !== undefined && payload.version !== p.version) return {error:'Rematch changed. Review the current proposal'};
+    if (!(['cancel','withdraw'].includes(kind)?['responding','voting','resolved']:['responding','voting']).includes(p.status)) return {error:'Rematch proposal is closed'};
+    if (kind==='respond' && (p.status!=='responding' || Date.now()>=p.responseDeadline)) return {error:'The response deadline has passed'};
+    return {room,p};
+  }
+
+  respondRematch(roomId,playerId,payload) {
+    const {room,p,error}=this.rematchAction(roomId,playerId,payload,payload.withdraw?'withdraw':'respond');
+    if (error) return {success:false,error};
+    if (payload.withdraw) {
+      if (payload.accept!==false || playerId===p.initiatorPlayerId || !p.acceptedPlayerIds.includes(playerId)) return {success:false,error:'No accepted invitation to decline'};
+      p.acceptedPlayerIds=p.acceptedPlayerIds.filter(id=>id!==playerId);p.declinedPlayerIds.push(playerId);delete p.modeVotes[playerId];p.version++;
+      if (p.status!=='responding' && p.acceptedPlayerIds.length<2) {p.status='cancelled';p.reason='At least two players must accept.';}
+      else if (p.status==='resolved') p.selectedMode=this.selectRematchMode(p);
+      this.advanceRematch(roomId);this.scheduleRematch(room);this.persist(roomId);return {success:true};
+    }
+    if (typeof payload.accept!=='boolean' || !p.pendingPlayerIds.includes(playerId)) return {success:false,error:'A response was already recorded or is invalid'};
+    p.pendingPlayerIds=p.pendingPlayerIds.filter(id=>id!==playerId);
+    (payload.accept?p.acceptedPlayerIds:p.declinedPlayerIds).push(playerId);
+    if(p.acceptedPlayerIds.length>6)for(const [id,mode] of Object.entries(p.modeVotes))if(mode!=='classic')delete p.modeVotes[id];
+    p.version++;
+    this.advanceRematch(roomId);this.scheduleRematch(room);this.persist(roomId);return {success:true};
+  }
+
+  voteRematch(roomId,playerId,payload) {
+    const {room,p,error}=this.rematchAction(roomId,playerId,payload,'vote');
+    if (error) return {success:false,error};
+    if (!p.acceptedPlayerIds.includes(playerId)) return {success:false,error:'Accept the invitation before voting'};
+    if (!['classic','flip','no_mercy'].includes(payload.mode) || (payload.mode!=='classic' && p.acceptedPlayerIds.length>6)) return {success:false,error:'That mode does not support the accepted player count'};
+    p.modeVotes[playerId]=payload.mode;p.version++;this.persist(roomId);return {success:true};
+  }
+
+  cancelRematch(roomId,playerId,payload) {
+    const {room,p,error}=this.rematchAction(roomId,playerId,payload,'cancel');
+    if (error) return {success:false,error};
+    if (p.initiatorPlayerId!==playerId) return {success:false,error:'Only the initiator may cancel'};
+    p.status='cancelled';p.reason='The initiator cancelled the rematch.';p.version++;
+    this.scheduleRematch(room);this.persist(roomId);return {success:true};
+  }
+
+  selectRematchMode(p) {
+    const allowed=['classic','flip','no_mercy'].filter(mode=>mode==='classic'||p.acceptedPlayerIds.length<=6);
+    const counts=Object.fromEntries(allowed.map(mode=>[mode,0]));
+    for (const id of p.acceptedPlayerIds) {
+      const mode=allowed.includes(p.modeVotes[id])?p.modeVotes[id]:allowed.includes(p.previousMode)?p.previousMode:'classic';
+      p.modeVotes[id]=mode;counts[mode]++;
+    }
+    const high=Math.max(...Object.values(counts)),tied=allowed.filter(mode=>counts[mode]===high);
+    return tied.includes(p.modeVotes[p.initiatorPlayerId])?p.modeVotes[p.initiatorPlayerId]:tied.includes(p.previousMode)?p.previousMode:tied[0];
+  }
+
+  advanceRematch(roomId,now=Date.now()) {
+    const room=this.rooms.get(roomId),p=room?.rematchProposal;
+    if (!p || !['responding','voting','resolved'].includes(p.status)) return;
+    let changed=false;
+    if (p.status==='responding' && (!p.pendingPlayerIds.length || now>=p.responseDeadline)) {
+      p.declinedPlayerIds.push(...p.pendingPlayerIds);p.pendingPlayerIds=[];
+      if (p.acceptedPlayerIds.length<2) {p.status='cancelled';p.reason='At least two players must accept.';}
+      else {p.status='voting';p.votingDeadline=Math.min(now,p.responseDeadline)+REMATCH_VOTING_MS;}
+      p.version++;changed=true;
+    }
+    if (p.status==='voting' && now>=p.votingDeadline) {p.selectedMode=this.selectRematchMode(p);p.status='resolved';p.startAt=p.votingDeadline+REMATCH_RESULT_MS;p.version++;changed=true;}
+    if (p.status==='resolved' && now>=p.startAt) {this.startRematchRoster(room,p);changed=true;}
+    if (changed) {this.persist(roomId);this.scheduleRematch(room);this.onStateChange?.(roomId);}
+  }
+
+  startRematchRoster(room,p) {
+    if (p.status!=='resolved' || room.status!=='game_over') return;
+    const accepted=new Set(p.acceptedPlayerIds);
+    const excluded=room.players.filter(player=>!accepted.has(player.id));
+    room.spectators=[...(room.spectators||[]),...excluded].filter((player,i,all)=>all.findIndex(x=>x.id===player.id)===i);
+    room.players=room.players.filter(player=>accepted.has(player.id));
+    const host=room.players.find(player=>player.isHost&&player.isConnected)||room.players.find(player=>player.id===p.initiatorPlayerId&&player.isConnected)||room.players.find(player=>player.isConnected)||room.players.find(player=>player.id===p.initiatorPlayerId)||room.players[0];
+    for (const player of [...room.players,...room.spectators]) {player.isHost=player.id===host.id; if(accepted.has(player.id)){player.score=0;player.isReady=true;}}
+    room.mode=p.selectedMode;room.houseRules=defaultHouseRules(room.mode);room.roundNumber=1;room.turnDrawnCardId=null;room.roundResult=null;room.lastDrawFourResult=null;room.pendingRoundWinner=null;room.actionReceipts=[];room.status='lobby';
+    p.status='started';p.version++;
+    this.startGame(room.roomId,host.id);
   }
 
   getClientView(roomId, playerId) {
@@ -1104,6 +1225,7 @@ export class RoomManager {
     if (!room) return null;
 
     const myPlayer = room.players.find((p) => p.id === playerId);
+    const isSpectator = !myPlayer && (room.spectators || []).some(p=>p.id===playerId);
     const myHand = myPlayer ? room.playerHands[playerId] || [] : [];
     const isMyTurn = room.status === 'playing' && room.players[room.currentTurn]?.id === playerId;
 
@@ -1148,6 +1270,7 @@ export class RoomManager {
     const gameState = {
       roomId: room.roomId,
       actionVersion: room.actionVersion || 0,
+      matchId: room.matchId,
       mode: room.mode,
       houseRules: room.houseRules,
       status: room.status,
@@ -1177,6 +1300,9 @@ export class RoomManager {
 
     return {
       gameState,
+      isSpectator,
+      rematchProposal: room.rematchProposal || null,
+      canProposeRematch: room.status === 'game_over' && room.winnerId === playerId && !['responding','voting','resolved'].includes(room.rematchProposal?.status),
       myHand,
       myPlayerId: playerId,
       isMyTurn,

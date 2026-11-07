@@ -28,7 +28,7 @@ function broadcastRoomState(roomId) {
   const room = roomManager.getRoom(roomId);
   if (!room) return;
 
-  for (const player of room.players) {
+  for (const player of [...room.players, ...(room.spectators || [])]) {
     if (player.socket && player.socket.readyState === WebSocket.OPEN) {
       const view = roomManager.getClientView(roomId, player.id);
       if (view) {
@@ -180,7 +180,8 @@ wss.on('connection', (ws, req) => {
           return;
         }
         playerId = joined.playerId;
-        const existingPlayer = roomManager.getRoom(cleanRoomId)?.players.find((p) => p.id === playerId);
+        const joinedRoom = roomManager.getRoom(cleanRoomId);
+        const existingPlayer = [...(joinedRoom?.players || []), ...(joinedRoom?.spectators || [])].find((p) => p.id === playerId);
         if (existingPlayer?.socket && existingPlayer.socket !== ws) {
           clientSockets.delete(existingPlayer.socket);
           existingPlayer.socket.close(4001, 'Player reconnected elsewhere');
@@ -206,6 +207,19 @@ wss.on('connection', (ws, req) => {
       }
       cleanRoomId = authenticated.roomId;
       playerId = authenticated.playerId;
+
+      const rematchMethods={rematch_propose:'proposeRematch',rematch_respond:'respondRematch',rematch_vote:'voteRematch',rematch_cancel:'cancelRematch'};
+      if (rematchMethods[type]) {
+        const room=roomManager.getRoom(cleanRoomId);
+        const receipt=typeof payload.actionId==='string'?`${playerId}:${payload.actionId.slice(0,100)}`:null;
+        if(receipt&&room?.actionReceipts?.includes(receipt)){broadcastRoomState(cleanRoomId);return;}
+        const result=roomManager[rematchMethods[type]](cleanRoomId,playerId,data||{});
+        if(result.success&&receipt){room.actionReceipts=[...(room.actionReceipts||[]),receipt].slice(-256);roomManager.persist(cleanRoomId);}
+
+        if (!result.success) sendError(ws,result.error);
+        broadcastRoomState(cleanRoomId);
+        return;
+      }
 
       // Persist bounded receipts so retransmission cannot execute a second turn.
       const actionMethods = { play_card: 'playCard', draw_card: 'drawCard', pass_turn: 'passTurn', choose_color: 'chooseOpeningColor', challenge_draw4: 'resolveDrawFour', call_uno: 'callUno', catch_uno: 'catchUno', rematch: 'rematch', start_game: 'startGame' };

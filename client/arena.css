@@ -1294,3 +1294,33 @@ body.classic-arena #btnCatchAction { font-size: 12px; }
 body.classic-arena #toast { font-size: 12px; padding: 9px 14px; max-width: min(360px, 92vw); }
 
 .classic-motion-front { position: absolute; inset: 0; }
+/* Rematch proposal overlay: isolated from table and game-rule styling. */
+.rematch-proposal-overlay { z-index: 12000; padding: max(16px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+.rematch-proposal-overlay .rematch-proposal-card { position: relative; box-sizing: border-box; width: min(650px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; background: #fff8e9; color: #153e2d; padding: 28px; border: 2px solid #d5b96e; border-radius: 22px; box-shadow: 0 20px 65px #0008; text-align: left; }
+.rematch-proposal-card h2 { font-size: 26px; margin: 8px 30px 16px 0; color: #163c2b; }
+.rematch-kicker { color: #8e6217; font-size: 11px; font-weight: 900; letter-spacing: .14em; }
+.rematch-close { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border: none; border-radius: 50%; background: #eee3c9; color: #244c35; font-size: 26px; cursor: pointer; }
+.rematch-inviter { display: flex; gap: 14px; align-items: center; }
+.rematch-inviter p { margin: 0; font-size: 14px; line-height: 1.6; }
+.rematch-initials { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0; background: #174f35; color: #fff7dc; border: 3px solid #e9bf49; font-weight: 900; }
+.rematch-response-actions { display: flex; gap: 12px; margin: 22px 0; }
+.rematch-response-actions button { flex: 1; min-height: 46px; border: 0; border-radius: 10px; background: #c72c25; color: white; font-weight: 900; cursor: pointer; }
+.rematch-response-actions [data-rematch-response="decline"] { background: #e9e0cc; color: #304a3b; }
+.rematch-vote-hint { font-size: 13px; margin: 18px 0 12px; }
+.rematch-mode-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.rematch-mode-grid button { min-width: 0; border: 2px solid #ddd0af; border-radius: 14px; padding: 10px 7px; background: #f6edd9; color: #173e2d; cursor: pointer; }
+.rematch-mode-grid button.selected { border-color: #c82b24; background: #fff0bf; box-shadow: 0 0 0 2px #e8bd48; }
+.rematch-mode-grid button:disabled { opacity: .45; cursor: not-allowed; }
+.rematch-mode-grid img { width: 100%; height: 100px; object-fit: contain; display: block; margin-bottom: 8px; }
+.rematch-mode-grid strong { display: block; font-size: 12px; }
+.rematch-mode-grid span { font-size: 11px; }
+.rematch-roster { list-style: none; margin: 18px 0 10px; padding: 0; max-height: 180px; overflow-y: auto; }
+.rematch-roster li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 2px; border-bottom: 1px solid #e9dfc6; font-size: 13px; }
+.rematch-roster li span { overflow-wrap: anywhere; }
+.rematch-roster b { font-size: 10px; align-self: center; }
+.rematch-roster .accepted { color: #18703c; }.rematch-roster .declined { color: #a32d23; }.rematch-roster .pending { color: #876118; }
+.rematch-proposal-card footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 12px; color: #56634c; }
+.rematch-result { background: #f4d66c; color: #1d402a; border-radius: 10px; padding: 14px; font-weight: 900; margin-top: 16px; }
+.rematch-reason { padding: 12px; border-radius: 10px; background: #efe5d0; }
+.rematch-proposal-card button:focus-visible { outline: 3px solid #235b3c; outline-offset: 3px; }
+@media (max-width: 480px) { .rematch-proposal-overlay .rematch-proposal-card { padding: 22px 16px; } .rematch-mode-grid { gap: 7px; } .rematch-mode-grid img { height: 76px; } .rematch-proposal-card h2 { font-size: 23px; } }

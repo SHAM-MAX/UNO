@@ -100,3 +100,7 @@ export const MODE_DESCRIPTIONS = {
 
 export const NO_MERCY_MAX_CARDS = 25;
 
+
+export const REMATCH_RESPONSE_MS = 30000;
+export const REMATCH_VOTING_MS = 30000;
+export const REMATCH_RESULT_MS = 2000;

@@ -631,8 +631,11 @@ class UnoArenaApp {
 
     // Rematch
     this.el.rematchBtn.addEventListener('click', () => {
-      this.send({ type: 'rematch' });
-      this.el.gameOverModal.classList.remove('active');
+      if (this.rematchRequestPending) return;
+      if (this.ws?.readyState!==WebSocket.OPEN) { this.showToast('Wait for the room to reconnect before requesting a rematch.'); return; }
+      this.rematchRequestPending=true;
+      this.send({ type: this.gameState.status === 'round_over' ? 'rematch' : 'rematch_propose', data:{matchId:this.gameState.matchId} });
+      if (this.gameState.status === 'round_over') this.el.gameOverModal.classList.remove('active');
     });
 
     // Rules Tabs
@@ -1000,7 +1003,7 @@ class UnoArenaApp {
         } else if (msg.type === 'room:state') {
           this.handleRoomState(msg.data);
         } else if (msg.type === 'error') {
-          this.unoRequestPending = false; this.catchRequestPending = false; this.pendingClassicMotion = null;
+          this.rematchRequestPending=false; this.rematchActionPending=false; this.rematchDismissAfterResponseId=null; this.unoRequestPending = false; this.catchRequestPending = false; this.pendingClassicMotion = null;
           this.clearClassicAnimations?.();
           this.isMoveInFlight = false;
           this.el.playerHandCards.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
@@ -1060,7 +1063,7 @@ class UnoArenaApp {
     };
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(full));
-    } else if (this.gameState?.mode === 'classic' && ['play_card', 'draw_card', 'pass_turn', 'choose_color', 'challenge_draw4', 'call_uno', 'catch_uno', 'rematch', 'start_game'].includes(payload.type)) {
+    } else if (this.gameState?.mode === 'classic' && ['play_card', 'draw_card', 'pass_turn', 'choose_color', 'challenge_draw4', 'call_uno', 'catch_uno', 'rematch', 'start_game', 'rematch_propose', 'rematch_respond', 'rematch_vote', 'rematch_cancel'].includes(payload.type)) {
       this.isMoveInFlight = false;
       this.showToast('Connection lost. Wait for the table to reconnect.');
       return false;
@@ -1082,6 +1085,9 @@ class UnoArenaApp {
     this.el.playerHandCards.removeAttribute('inert');
     this.clientView = view;
     this.gameState = view.gameState;
+    this.rematchRequestPending=false; this.rematchActionPending=false;
+    if (this.rematchDismissAfterResponseId && view.rematchProposal?.id===this.rematchDismissAfterResponseId && (view.rematchProposal.status==='cancelled' || view.rematchProposal.declinedPlayerIds.includes(this.playerId))) { this.dismissedRematchId=view.rematchProposal.id; this.rematchDismissAfterResponseId=null; }
+    if (view.isSpectator) { this.renderRematchSpectator(); this.renderRematchProposal(); return; }
     const pendingStillPlayable = this.pendingPlayCard && view.canPlayCards.includes(this.pendingPlayCard.id);
     const openingChoice = view.isMyTurn && view.gameState.pendingAction?.type === 'opening_color';
     if (view.gameState.mode === 'classic' && !pendingStillPlayable && !openingChoice) {
@@ -1117,6 +1123,72 @@ class UnoArenaApp {
       this.renderArena();
       if (view.gameState.mode === 'classic' && previous) this.animateClassicState(previous, classicGeometry);
     }
+    this.renderRematchProposal();
+  }
+
+  sendRematchAction(type,data={}) {
+    if (this.rematchActionPending || this.ws?.readyState!==WebSocket.OPEN) return;
+    this.rematchActionPending=true;
+    this.send({type,data:{proposalId:this.clientView.rematchProposal.id,...data}});
+  }
+
+  closeRematchDialog() {
+    const p=this.clientView?.rematchProposal;
+    if (!p) return;
+    if (['responding','voting','resolved'].includes(p.status)) {
+      if(this.rematchActionPending || this.ws?.readyState!==WebSocket.OPEN) return;
+      this.rematchDismissAfterResponseId=p.id;
+      if (p.initiatorPlayerId===this.playerId) this.sendRematchAction('rematch_cancel');
+      else if (p.pendingPlayerIds.includes(this.playerId)) this.sendRematchAction('rematch_respond',{accept:false});
+      else if (p.acceptedPlayerIds.includes(this.playerId)) this.sendRematchAction('rematch_respond',{accept:false,withdraw:true});
+      else this.dismissedRematchId=p.id;
+    } else this.dismissedRematchId=p.id;
+    this.renderRematchProposal();
+  }
+
+  renderRematchSpectator() {
+    const p=this.clientView.rematchProposal;
+    const result=p?.previousResult;
+    if (result) {
+      const winner=result.scores.find(player=>player.id===result.winnerId);
+      this.el.winnerNameText.textContent=`${winner?.name || 'Winner'} WINS!`;
+      this.el.winReasonText.textContent=`You are sitting out this rematch. ${result.winReason || ''}`;
+    }
+    this.el.rematchBtn.style.display='none';
+    this.el.gameOverModal.classList.add('active');
+  }
+
+  renderRematchProposal() {
+    const modal=document.getElementById('rematchProposalModal'),content=document.getElementById('rematchProposalContent');
+    const p=this.clientView.rematchProposal;
+    clearInterval(this.rematchCountdownInterval);this.rematchCountdownInterval=null;
+    if (!p || !p.originalParticipantIds.includes(this.playerId) || this.dismissedRematchId===p.id || (p.status==='started'&&!this.clientView.isSpectator)) {modal.classList.remove('active');return;}
+    const accepted=p.acceptedPlayerIds.includes(this.playerId),pending=p.pendingPlayerIds.includes(this.playerId),declined=p.declinedPlayerIds.includes(this.playerId);
+    const initiator=p.participants.find(player=>player.id===p.initiatorPlayerId);
+    const titles={responding:'Rematch Requested!',voting:'Choose the next game',resolved:'The votes are in!',cancelled:'Rematch cancelled',started:'A new game has started'};
+    const labels={classic:'Classic UNO',flip:'UNO Flip',no_mercy:'UNO No Mercy'};
+    const artwork={classic:'classic-card',flip:'flip-card',no_mercy:'no-mercy-card'};
+    const counts=Object.fromEntries(Object.keys(labels).map(mode=>[mode,Object.entries(p.modeVotes).filter(([id,vote])=>p.acceptedPlayerIds.includes(id)&&vote===mode).length]));
+    const live=['responding','voting'].includes(p.status);
+    const focusedMode=document.activeElement?.dataset?.rematchMode;
+    const focusedResponse=document.activeElement?.dataset?.rematchResponse;
+    content.innerHTML=`<div class="rematch-kicker">ONE MORE GAME?</div><h2 id="rematchProposalTitle">${titles[p.status]}</h2>
+      <div class="rematch-inviter"><span class="rematch-initials">${escapeHtml(initiator?.name.split(/\s+/).map(part=>part[0]).slice(0,2).join('')||'?')}</span><p><strong>${escapeHtml(initiator?.name)}</strong> wants to play another game.<br>${pending&&live?'Do you accept?':accepted?'You have ACCEPTED.':declined?'You have DECLINED.':''}</p></div>
+      ${pending&&p.status==='responding'?'<div class="rematch-response-actions"><button data-rematch-response="accept">ACCEPT</button><button data-rematch-response="decline">DECLINE</button></div>':''}
+      ${accepted&&live?`<p class="rematch-vote-hint">Choose one mode. You can change your vote until voting closes. Uncast votes use the previous mode.</p><div class="rematch-mode-grid">${Object.keys(labels).map(mode=>`<button data-rematch-mode="${mode}" class="${p.modeVotes[this.playerId]===mode?'selected':''}" aria-pressed="${p.modeVotes[this.playerId]===mode}" ${mode!=='classic'&&p.acceptedPlayerIds.length>6?'disabled':''}><img src="/assets/game-modes/${artwork[mode]}.png" alt=""><strong>${labels[mode]}</strong><span>${counts[mode]} vote${counts[mode]===1?'':'s'}</span></button>`).join('')}</div><small>${p.acceptedPlayerIds.length>6?'More than six accepted players: Classic is the supported mode.':''}</small>`:''}
+      ${p.selectedMode?`<div class="rematch-result">${labels[p.selectedMode]} selected${p.status==='resolved'?' · Starting together…':''}</div>`:''}
+      ${p.reason?`<p class="rematch-reason">${escapeHtml(p.reason)}</p>`:''}
+      <ul class="rematch-roster">${p.participants.map(player=>`<li><span>${escapeHtml(player.name)}</span><b class="${p.acceptedPlayerIds.includes(player.id)?'accepted':p.declinedPlayerIds.includes(player.id)?'declined':'pending'}">${p.acceptedPlayerIds.includes(player.id)?'ACCEPTED':p.declinedPlayerIds.includes(player.id)?'DECLINED':'PENDING'}</b></li>`).join('')}</ul>
+      <footer><span>${Object.keys(p.modeVotes).filter(id=>p.acceptedPlayerIds.includes(id)).length} / ${p.acceptedPlayerIds.length} accepted players voted</span><span id="rematchCountdown"></span></footer>`;
+    document.getElementById('rematchCloseBtn').onclick=()=>this.closeRematchDialog();
+    content.querySelectorAll('[data-rematch-response]').forEach(button=>button.onclick=()=>this.sendRematchAction('rematch_respond',{accept:button.dataset.rematchResponse==='accept'}));
+    content.querySelectorAll('[data-rematch-mode]').forEach(button=>button.onclick=()=>this.sendRematchAction('rematch_vote',{mode:button.dataset.rematchMode}));
+    modal.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();this.closeRematchDialog();}};
+    const deadline=p.status==='responding'?p.responseDeadline:p.status==='voting'?p.votingDeadline:p.startAt;
+    const tick=()=>{const target=document.getElementById('rematchCountdown');if(target)target.textContent=live?`${p.status==='responding'?'Responses':'Voting'}: ${Math.max(0,Math.ceil((deadline-Date.now())/1000))}s`:'';};
+    tick();if(live)this.rematchCountdownInterval=setInterval(tick,250);
+    const wasOpen=modal.classList.contains('active');modal.classList.add('active');if(!wasOpen)document.getElementById('rematchCloseBtn').focus();
+    else if(focusedMode||focusedResponse)(content.querySelector(`[data-rematch-mode="${focusedMode}"]`) || content.querySelector('[data-rematch-mode]') || document.getElementById('rematchCloseBtn')).focus();
   }
 
   classicAvatarHTML(player, active) {
@@ -1868,12 +1940,12 @@ class UnoArenaApp {
     this.el.winnerNameText.textContent = winner ? `${winner.name} WINS!` : 'GAME OVER!';
     this.el.winReasonText.textContent = (gameState.winReason || 'All cards played!') + (gameState.mode === 'classic' ? ' Scores: ' + gameState.players.map(p => `${p.name}: ${p.score}`).join(' · ') : '');
     if (gameState.status === 'round_over') this.el.winnerNameText.textContent = `${winner?.name || 'Player'} wins the round`;
-    this.el.rematchBtn.textContent = gameState.status === 'round_over' ? 'Next round' : 'Rematch';
+    this.el.rematchBtn.textContent = gameState.status === 'round_over' ? 'Next round' : 'REQUEST REMATCH';
 
     const me = gameState.players.find((p) => p.id === this.playerId);
-    this.el.rematchBtn.style.display = me?.isHost ? 'block' : 'none';
+    this.el.rematchBtn.style.display = (gameState.status === 'round_over' ? me?.isHost : this.clientView.canProposeRematch) ? 'block' : 'none';
 
-    sounds.playVictory();
+    if (!this.el.gameOverModal.classList.contains('active')) sounds.playVictory();
     this.el.gameOverModal.classList.add('active');
   }
 
