@@ -122,8 +122,8 @@ test('E2E Multiplayer Flow: Full 2-player game in Classic, Flip, and No Mercy', 
     const state2 = await client2.waitFor((m) => m.type === 'room:state' && m.data.gameState.status === 'playing');
 
     assert.equal(state1.data.gameState.status, 'playing');
-    assert.equal(state1.data.myHand.length, 7, 'Alice received 7 cards');
-    assert.equal(state2.data.myHand.length, 7, 'Bob received 7 cards');
+    assert.ok([7, 9].includes(state1.data.myHand.length), 'Alice dealt seven plus any opening penalty');
+    assert.ok([7, 9].includes(state2.data.myHand.length), 'Bob dealt seven plus any opening penalty');
     
     // Information hiding check: Alice should NOT see Bob's cards, only cardCount!
     assert.equal(typeof state1.data.gameState.players.find(p => p.id === p2Id).cardCount, 'number');
@@ -131,6 +131,7 @@ test('E2E Multiplayer Flow: Full 2-player game in Classic, Flip, and No Mercy', 
 
     // Test playing card
     const room = roomManager.getRoom(testRoomId);
+    room.pendingAction = null;
     room.direction = 1;
     room.currentTurn = 0;
     room.pendingDrawPenalty = 0;
@@ -141,11 +142,20 @@ test('E2E Multiplayer Flow: Full 2-player game in Classic, Flip, and No Mercy', 
       { id: 'c-p1-extra', color: 'blue', type: 'number', value: 1 },
     ];
 
-    client1.send('play_card', { data: { cardId: 'c-p1-card' } });
-    const updateAfterPlay = await client2.waitFor((m) => m.type === 'room:state' && m.data.gameState.currentTurn === 1);
+    client1.send('play_card', { actionId: 'classic-action-once', data: { cardId: 'c-p1-card' } });
+    const updateAfterPlay = await client2.waitFor((m) => m.type === 'room:state' && m.data.gameState.currentTurn === 1 && m.data.gameState.topDiscard?.id === 'c-p1-card');
     assert.equal(updateAfterPlay.data.gameState.currentTurn, 1, 'Turn moved to Bob');
     assert.equal(updateAfterPlay.data.gameState.topDiscard.id, 'c-p1-card');
 
+    const guestBefore = room.playerHands[p2Id].length;
+    client2.send('draw_card', { expectedActionVersion: room.actionVersion - 1, actionId: 'stale-version' });
+    const stale = await client2.waitFor(m => m.type === 'error' && /turn changed/.test(m.message));
+    assert.ok(stale);
+    assert.equal(room.playerHands[p2Id].length, guestBefore, 'Stale version rejected without drawing');
+    const beforeReplay = room.playerHands[p1Id].length;
+    client1.send('draw_card', { actionId: 'classic-action-once' });
+    await client1.waitFor(m => m.type === 'room:state' && m.data.gameState.topDiscard?.id === 'c-p1-card');
+    assert.equal(room.playerHands[p1Id].length, beforeReplay, 'Duplicate action receipt prevents a second mutation');
     client1.close();
     client2.close();
   });
@@ -173,6 +183,7 @@ test('E2E Multiplayer Flow: Full 2-player game in Classic, Flip, and No Mercy', 
     const room = roomManager.getRoom(flipRoomId);
     assert.equal(room.flipSide, 'light', 'Starts on light side');
 
+    room.pendingAction = null;
     room.direction = 1;
     room.currentTurn = 0;
     room.pendingDrawPenalty = 0;
@@ -227,6 +238,7 @@ test('E2E Multiplayer Flow: Full 2-player game in Classic, Flip, and No Mercy', 
     await client1.waitFor((m) => m.type === 'room:state' && m.data.gameState.status === 'playing');
 
     const room = roomManager.getRoom(nmRoomId);
+    room.pendingAction = null;
     room.direction = 1;
     room.currentTurn = 0;
     room.pendingDrawPenalty = 0;

@@ -311,3 +311,20 @@
   body.in-flip-setup .flip-create-btn:disabled,
   body.in-flip-setup .flip-join-btn:disabled { background: #0003; cursor: wait; }
 }
+@media (orientation: landscape) and (max-width: 1024px) and (max-height: 520px) {
+ body.classic-arena .arena-container { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); grid-template-rows: 125px 65px auto; gap: 4px 12px; padding: 4px 14px; min-height: 0 !important; }
+ body.classic-arena .opponents-row { width: 100%; min-height: 0; gap: 4px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+ body.classic-arena .opponent-avatar, body.classic-arena .opponent-cards-fan { display: none; }
+ body.classic-arena .opponent-name { font-size: 11px; }
+ body.classic-arena .opponent-cards-count { font-size: 10px; }
+ body.classic-arena .turn-status-row { width: 100%; gap: 3px; }
+ body.classic-arena #actionBanner { font-size: 10px; min-height: 20px; padding: 3px; }
+ body.classic-arena #classicTableStatus { font-size: 10px; padding: 2px; }
+ body.classic-arena .center-table { min-height: 190px !important; padding: 0 !important; }
+ body.classic-arena .table-felt { min-height: 160px !important; height: 160px !important; }
+ body.classic-arena .player-bottom-area { margin-top: 0; padding: 0; }
+ body.classic-arena .hand-scroll-container { padding: 8px 4px 2px !important; }
+ body.classic-arena .hand-cards { min-height: 80px !important; }
+ body.classic-arena .hand-cards .game-card { width: 46px !important; height: 68px !important; }
+ body.classic-arena .table-action-bar { bottom: -14px; }
+}

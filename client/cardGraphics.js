@@ -14,7 +14,7 @@ const FACE_NAMES = {
 const CLASSIC_COLOR_INDEX = { red: 0, yellow: 1, green: 2, blue: 3 };
 const CLASSIC_ZERO_COLUMNS = { blue: 0, red: 1, yellow: 2, green: 3 };
 
-function classicSheetFace(card, face) {
+export function classicSheetFace(card, face) {
   const serial = Number(card.id?.match(/^c-(\d+)$/)?.[1]);
   if (!Number.isInteger(serial) || serial < 1 || serial > 108) return null;
 

@@ -34,6 +34,8 @@ test('Turn Timer & Direction Behavior', async (t) => {
     const started = rm.startGame(roomId, p1);
     assert.equal(started.success, true);
 
+    const initialRoom = rm.getRoom(roomId);
+    if (initialRoom.pendingAction?.type === 'opening_color') rm.chooseOpeningColor(roomId, initialRoom.players[initialRoom.currentTurn].id, 'red');
     const view = rm.getClientView(roomId, p1);
     assert.ok(view.gameState.turnDeadline, 'turnDeadline should be set on game start');
     const remaining = view.gameState.turnDeadline - Date.now();

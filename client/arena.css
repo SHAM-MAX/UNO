@@ -1213,3 +1213,84 @@ body.in-arena::after {
     transform: translateY(-16px) rotate(0deg) scale(1.08) !important;
   }
 }
+
+/* Classic pointer interactions preserve the original card artwork. */
+.in-arena .classic-image-card { aspect-ratio: 100 / 151; }
+.in-arena .classic-face-image, .in-arena .classic-back-image { object-fit: contain; }
+.in-arena .card-wrapper:has(.classic-image-card) { touch-action: none; }
+.classic-drag-ghost { position: fixed; z-index: 10000; pointer-events: none; filter: drop-shadow(0 18px 14px #0009); will-change: transform; }
+.classic-drag-ghost .game-card { width: 100%; height: 100%; }
+.classic-drag-ghost img { width: 100%; height: 100%; object-fit: contain; }
+.in-arena .valid-drop { outline: 3px solid #ffe381; border-radius: 12px; box-shadow: 0 0 28px #ffe38188; }
+.in-arena:has(.classic-image-card) .opponents-row { flex-wrap: wrap; gap: 8px; }
+.in-arena:has(.classic-image-card) .opponent-wrapper { flex: 0 1 auto; }
+@media (prefers-reduced-motion: reduce) { .in-arena:has(.classic-image-card) * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+.classic-arena #classicTableStatus { color: #fff9e6; font-size: 12px; text-align: center; padding: 4px 8px; border-bottom: 3px solid var(--active-colour); background: #171923cc; border-radius: 8px; }
+body:not(.classic-arena) #classicTableStatus, body:not(.classic-arena) #classicChallenge { display: none; }
+.classic-many-players .opponents-row { display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); width: min(900px, 94vw); margin-inline: auto; min-height: 100px; }
+.classic-many-players .opponent-cards-fan { display: none; }
+.classic-many-players .opponent-card-badge { max-width: 100%; padding: 4px 6px; }
+.classic-many-players .opponent-name { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.classic-arena .modal-overlay.active .modal-card { animation: classic-result-in 220ms ease-out; }
+@keyframes classic-result-in { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (max-width: 600px) {
+ .classic-many-players .opponents-row { grid-template-columns: repeat(3, minmax(0, 1fr)); min-height: 120px; }
+ .classic-many-players .opponent-avatar { display: none; }
+ .classic-many-players .opponent-name { max-width: 94px; font-size: 11px; }
+ .classic-many-players .opponent-cards-count { font-size: 10px; }
+}
+
+.classic-arena .turn-status-row { flex-wrap: wrap; }
+.classic-arena #actionBanner { flex: 1 1 70%; }
+.classic-arena #classicTableStatus { flex: 0 0 100%; box-sizing: border-box; }
+
+.classic-draw4-response #btnUnoAction, .classic-draw4-response #btnPassAction { display: none !important; }
+.classic-draw4-response .table-action-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 6px !important; width: min(350px, 92vw); bottom: -70px !important; }
+.classic-draw4-response #btnCatchAction { grid-column: 1 / -1; font-size: 11px !important; min-height: 34px !important; padding: 6px 8px !important; }
+.classic-draw4-response #classicChallenge { font-size: 12px; padding: 8px; background: #fff4ce; color: #322006; }
+@media (orientation: landscape) and (max-height: 520px) {
+ .classic-draw4-response .table-action-bar { bottom: -24px !important; width: min(350px, 46vw); }
+ .classic-draw4-response #btnCatchAction { position: absolute; bottom: 46px; left: -110%; width: 100%; }
+}
+
+.classic-arena #classicChallenge[hidden] { display: none !important; }
+/* Targeted Classic interaction refinements. Other modes retain their controls. */
+body.classic-arena #btnDrawAction,
+body.classic-arena #actionBanner,
+body.classic-arena #turnTimerContainer { display: none !important; }
+#classicAcceptDrawFour[hidden] { display: none !important; }
+body:not(.classic-arena) #classicAcceptDrawFour,
+body:not(.classic-arena) #classicLocalControls { display: none !important; }
+body.classic-arena #drawPileBtn:disabled { opacity: .55; cursor: not-allowed; pointer-events: none; }
+body.classic-arena #drawPileBtn:not(:disabled):hover { filter: brightness(1.12); }
+body.classic-arena #drawPileBtn:not(:disabled):active { transform: translateY(2px); }
+body.classic-arena .player-bottom-area { position: relative; }
+#classicLocalControls { position: absolute; left: 12px; top: -52px; display: flex; align-items: center; gap: 14px; z-index: 30; }
+#classicLocalProfile { display: flex; align-items: center; gap: 12px; padding: 5px 10px; background: #fff6e6; color: #18352a; border-radius: 12px; font-size: 12px; font-weight: 800; }
+#classicLocalProfile small { display: block; font-size: 10px; }
+body.classic-arena .opponent-avatar { display: flex !important; position: relative; overflow: visible; flex-shrink: 0; }
+#classicLocalProfile .opponent-avatar { background: #164e35; color: white; width: 32px; height: 32px; }
+.classic-profile-ring { position: absolute; width: calc(100% + 14px); height: calc(100% + 14px); left: -7px; top: -7px; transform: rotate(-90deg); pointer-events: none; }
+.classic-profile-ring circle { stroke: #f0ba28; stroke-width: 4; }
+.classic-profile-ring.timer-critical circle { stroke: #e33c32; }
+.classic-profile-seconds { position: absolute; right: -13px; bottom: -7px; background: #123d2d; color: white; font-size: 9px; line-height: 15px; min-width: 20px; border-radius: 8px; text-align: center; z-index: 2; }
+.classic-motion-ghost { position: fixed; z-index: 10020; pointer-events: none; transform-origin: top left; will-change: transform; filter: drop-shadow(0 9px 8px #0007); }
+.classic-motion-ghost .game-card, .classic-motion-ghost img { display: block; width: 100% !important; height: 100% !important; object-fit: contain; }
+.classic-caught-failed { display: block; color: #713c13; font-size: 9px; font-weight: 900; }
+body.classic-arena .opponent-card-badge:has(.classic-caught-failed) { flex-wrap: wrap; }
+body.classic-arena #btnCatchAction { font-size: 12px; }
+@media (max-width: 600px) {
+ #classicLocalControls { top: -45px; left: 7px; gap: 10px; }
+ #classicLocalProfile { padding: 4px 8px; font-size: 10px; }
+ body.classic-arena #classicLocalControls #btnUnoAction { font-size: 11px; min-height: 36px !important; padding: 6px 10px !important; }
+ body.classic-arena .opponent-avatar { width: 26px; height: 26px; font-size: 11px; }
+ body.classic-arena.classic-many-players .opponent-card-badge { gap: 5px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+ #classicLocalControls { top: -6px; left: 8px; transform: translateY(-100%); }
+}
+
+body.classic-arena #toast { font-size: 12px; padding: 9px 14px; max-width: min(360px, 92vw); }
+
+.classic-motion-front { position: absolute; inset: 0; }

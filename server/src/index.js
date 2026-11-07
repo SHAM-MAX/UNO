@@ -103,7 +103,7 @@ app.get('/api/rooms/:roomId', (req, res) => {
     mode: room.mode,
     status: room.status,
     playerCount: room.players.length,
-    maxPlayers: 6,
+    maxPlayers: room.mode === 'classic' ? 10 : 6,
   });
 });
 
@@ -207,6 +207,32 @@ wss.on('connection', (ws, req) => {
       cleanRoomId = authenticated.roomId;
       playerId = authenticated.playerId;
 
+      // Persist bounded receipts so retransmission cannot execute a second turn.
+      const actionMethods = { play_card: 'playCard', draw_card: 'drawCard', pass_turn: 'passTurn', choose_color: 'chooseOpeningColor', challenge_draw4: 'resolveDrawFour', call_uno: 'callUno', catch_uno: 'catchUno', rematch: 'rematch', start_game: 'startGame' };
+      if (actionMethods[type]) {
+        const room = roomManager.getRoom(cleanRoomId);
+        const actionId = typeof payload.actionId === 'string' ? payload.actionId.slice(0, 100) : null;
+        const receipt = actionId ? `${playerId}:${actionId}` : null;
+        if (receipt && room.actionReceipts?.includes(receipt)) { broadcastRoomState(cleanRoomId); return; }
+        const versionedActions = ['play_card', 'draw_card', 'pass_turn', 'choose_color', 'challenge_draw4'];
+        if (room.mode === 'classic' && versionedActions.includes(type) && payload.expectedActionVersion !== undefined && payload.expectedActionVersion !== (room.actionVersion || 0)) {
+          sendError(ws, 'The turn changed. Review the current table before acting again.');
+          broadcastRoomState(cleanRoomId);
+          return;
+        }
+        let argument = data || {};
+        if (type === 'choose_color') argument = data?.chosenColor;
+        if (type === 'catch_uno') argument = data?.targetPlayerId;
+        if (type === 'challenge_draw4') argument = true;
+        const result = roomManager[actionMethods[type]](cleanRoomId, playerId, argument);
+        if (!result.success) sendError(ws, result.error);
+        else {
+          if (receipt) { room.actionReceipts = [...(room.actionReceipts || []), receipt].slice(-256); roomManager.persist(cleanRoomId); }
+          broadcastRoomState(cleanRoomId);
+        }
+        return;
+      }
+
       switch (type) {
         case 'create': {
           sendError(ws, 'This connection has already joined a room.');
@@ -233,76 +259,6 @@ wss.on('connection', (ws, req) => {
         case 'set_rules': {
           roomManager.setHouseRules(cleanRoomId, playerId, data?.houseRules);
           broadcastRoomState(cleanRoomId);
-          break;
-        }
-
-        case 'start_game': {
-          const res = roomManager.startGame(cleanRoomId, playerId);
-          if (!res.success) {
-            sendError(ws, res.error);
-          } else {
-            broadcastRoomState(cleanRoomId);
-          }
-          break;
-        }
-
-        case 'play_card': {
-          const res = roomManager.playCard(cleanRoomId, playerId, data || {});
-          if (!res.success) {
-            sendError(ws, res.error);
-          } else {
-            broadcastRoomState(cleanRoomId);
-          }
-          break;
-        }
-
-        case 'draw_card': {
-          const res = roomManager.drawCard(cleanRoomId, playerId);
-          if (!res.success) {
-            sendError(ws, res.error);
-          } else {
-            broadcastRoomState(cleanRoomId);
-          }
-          break;
-        }
-
-        case 'pass_turn': {
-          const res = roomManager.passTurn(cleanRoomId, playerId);
-          if (!res.success) {
-            sendError(ws, res.error);
-          } else {
-            broadcastRoomState(cleanRoomId);
-          }
-          break;
-        }
-
-        case 'call_uno': {
-          const res = roomManager.callUno(cleanRoomId, playerId);
-          if (!res.success) {
-            sendError(ws, res.error);
-          } else {
-            broadcastRoomState(cleanRoomId);
-          }
-          break;
-        }
-
-        case 'catch_uno': {
-          const res = roomManager.catchUno(cleanRoomId, playerId, data?.targetPlayerId);
-          if (!res.success) {
-            sendError(ws, res.error);
-          } else {
-            broadcastRoomState(cleanRoomId);
-          }
-          break;
-        }
-
-        case 'rematch': {
-          const res = roomManager.rematch(cleanRoomId, playerId);
-          if (!res.success) {
-            sendError(ws, res.error);
-          } else {
-            broadcastRoomState(cleanRoomId);
-          }
           break;
         }
 

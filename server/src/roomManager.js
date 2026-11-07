@@ -2,6 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { CLASSIC_COLORS, FLIP_DARK_COLORS, NO_MERCY_MAX_CARDS } from '../../shared/constants.js';
 import { createDeckForMode, getActiveFace, shuffleDeck } from '../../shared/deck.js';
 import {
+  calculateScore,
   canStackCard,
   checkMercyKnockout,
   checkWinCondition,
@@ -177,6 +178,7 @@ export class RoomManager {
       const existing = room.players.find((p) => p.sessionToken === sessionToken);
       if (existing) {
         existing.isConnected = true;
+        if (room.status === 'playing' && !this.turnTimers.has(room.roomId)) this.resetTurnTimer(room);
         this.addLog(room, `${existing.name} reconnected.`);
         this.persist(cleanCode);
         return { success: true, playerId: existing.id, sessionToken };
@@ -188,8 +190,8 @@ export class RoomManager {
       return { success: false, error: 'Game has already started in this room.' };
     }
 
-    if (room.players.length >= 6) {
-      return { success: false, error: 'Room is full (maximum 6 players).' };
+    if (room.players.length >= (room.mode === 'classic' ? 10 : 6)) {
+      return { success: false, error: `Room is full (maximum ${room.mode === 'classic' ? 10 : 6} players).` };
     }
 
     const playerId = `p-${randomUUID()}`;
@@ -257,6 +259,7 @@ export class RoomManager {
     if (!['classic', 'flip', 'no_mercy'].includes(mode)) return false;
     const player = room.players.find((p) => p.id === playerId);
     if (!player || !player.isHost) return false;
+    if (mode !== 'classic' && room.players.length > 6) return false;
     room.mode = mode;
     room.houseRules = defaultHouseRules(mode);
     this.addLog(room, `Game mode changed to ${mode.toUpperCase()} by host.`);
@@ -329,6 +332,21 @@ export class RoomManager {
     if (!player || !player.isHost) return { success: false, error: 'Only the host can start the game' };
     if (room.players.length < 2) return { success: false, error: 'At least 2 players are required to start' };
 
+    if (!['lobby', 'round_over', 'game_over'].includes(room.status)) return { success: false, error: 'Round already active' };
+    if (room.mode === 'classic') {
+      if (room.status !== 'round_over') {
+        room.players.forEach(p => { p.score = 0; });
+        room.roundNumber = 1;
+        room.dealerIndex = this.determineClassicDealer(room);
+      } else {
+        room.dealerIndex = (room.dealerIndex + 1) % room.players.length;
+        room.roundNumber++;
+      }
+      room.roundResult = null;
+      room.lastDrawFourResult = null;
+      room.pendingRoundWinner = null;
+      room.turnDrawnCardId = null;
+    }
     room.status = 'playing';
     room.winnerId = null;
     room.winReason = null;
@@ -380,7 +398,9 @@ export class RoomManager {
     const initialFace = getActiveFace(topCard, room.mode, 'light');
     room.activeColor = initialFace.color === 'wild' ? CLASSIC_COLORS[Math.floor(Math.random() * 4)] : initialFace.color;
 
-    if (initialFace.type === 'skip') {
+    if (room.mode === 'classic') {
+      this.applyClassicOpening(room, initialFace);
+    } else if (initialFace.type === 'skip') {
       room.currentTurn = getNextPlayerIndex(0, 1, room.players);
       this.addLog(room, `Game started! Top card is Skip: ${room.players[0].name} was skipped.`);
     } else if (initialFace.type === 'reverse') {
@@ -388,7 +408,7 @@ export class RoomManager {
       room.currentTurn = room.players.length === 2 ? 1 : room.players.length - 1;
       this.addLog(room, `Game started! Top card is Reverse: Play direction reversed.`);
     } else if (initialFace.type === 'draw2') {
-      if (room.houseRules.stackingAllowed || room.mode === 'no_mercy') {
+      if (room.mode !== 'classic' && (room.houseRules.stackingAllowed || room.mode === 'no_mercy')) {
         room.pendingDrawPenalty = 2;
         this.addLog(room, `Game started! Top card is Draw 2: +2 penalty active for ${room.players[0].name}.`);
       } else {
@@ -407,6 +427,104 @@ export class RoomManager {
       this.addLog(room, `Game started! ${room.players[0].name}'s turn.`);
     }
 
+    this.resetTurnTimer(room);
+    this.persist(roomId);
+    return { success: true };
+  }
+
+  determineClassicDealer(room, drawDeck = () => shuffleDeck(createDeckForMode('classic'))) {
+    let tied = room.players.map((_, i) => i);
+    while (tied.length > 1) {
+      const deck = drawDeck();
+      const draws = tied.map(i => ({ i, card: deck.pop() }));
+      const value = card => card.type === 'number' ? card.value : 0;
+      const high = Math.max(...draws.map(d => value(d.card)));
+      this.addLog(room, `Dealer draw: ${draws.map(d => `${room.players[d.i].name}: ${value(d.card)}`).join(', ')}.`);
+      tied = draws.filter(d => value(d.card) === high).map(d => d.i);
+      if (tied.length > 1) this.addLog(room, `Dealer draw tied. ${tied.map(i => room.players[i].name).join(', ')} draw again.`);
+    }
+    return tied[0];
+  }
+
+  takeCards(room, count) {
+    const cards = [];
+    for (let i = 0; i < count; i++) {
+      this.reshuffleIfEmpty(room);
+      if (!room.drawPile.length) break;
+      cards.push(room.drawPile.shift());
+    }
+    return cards;
+  }
+
+  applyClassicOpening(room, face) {
+    const left = (room.dealerIndex + 1) % room.players.length;
+    room.currentTurn = left;
+    if (face.type === 'reverse') { room.direction = -1; room.currentTurn = room.dealerIndex; }
+    if (face.type === 'skip' || face.type === 'draw2') {
+      if (face.type === 'draw2') {
+        const p = room.players[left];
+        room.playerHands[p.id].push(...this.takeCards(room, 2));
+        p.cardCount = room.playerHands[p.id].length;
+      }
+      room.currentTurn = (left + 1) % room.players.length;
+    }
+    if (face.type === 'wild') {
+      room.activeColor = null;
+      room.pendingAction = { type: 'opening_color', targetPlayerId: room.players[left].id };
+    }
+    this.addLog(room, `Round ${room.roundNumber}: ${room.players[room.currentTurn].name} starts. Dealer: ${room.players[room.dealerIndex].name}.`);
+  }
+
+  chooseOpeningColor(roomId, playerId, color) {
+    const room = this.rooms.get(roomId);
+    if (room?.status !== 'playing' || room.pendingAction?.type !== 'opening_color' || room.pendingAction.targetPlayerId !== playerId || !CLASSIC_COLORS.includes(color)) return { success: false, error: 'Invalid opening colour choice' };
+    room.activeColor = color;
+    room.pendingAction = null;
+    this.resetTurnTimer(room);
+    this.persist(roomId);
+    return { success: true };
+  }
+
+  finishClassicRound(room, winnerId) {
+    const points = room.players.filter(p => p.id !== winnerId).reduce((sum, p) => sum + calculateScore(room.playerHands[p.id]), 0);
+    const winner = room.players.find(p => p.id === winnerId);
+    winner.score = (winner.score || 0) + points;
+    room.roundResult = { winnerId, points, total: winner.score };
+    room.winnerId = winnerId;
+    room.status = winner.score >= 500 ? 'game_over' : 'round_over';
+    room.winReason = `${winner.name} earned ${points} points (${winner.score}/500).`;
+    room.pendingRoundWinner = null;
+    room.unoChallengeWindow = null;
+    this.resetTurnTimer(room);
+  }
+
+  resolveDrawFour(roomId, playerId, challenge = true) {
+    const room = this.rooms.get(roomId);
+    const action = room?.pendingAction;
+    if (room?.status !== 'playing' || action?.type !== 'draw4_challenge' || action.targetPlayerId !== playerId) return { success: false, error: 'No Draw Four challenge available' };
+    // Evaluate the immutable pre-play snapshot, never the current hand or chosen colour.
+    const matchingColorCount = action.handBeforePlay?.filter(card => card.color === action.previousColor).length;
+    const hadMatchingColor = matchingColorCount !== undefined ? matchingColorCount > 0 : Boolean(action.illegal);
+    const successful = challenge && hadMatchingColor;
+    const target = room.players.find(p => p.id === (successful ? action.offenderId : playerId));
+    room.playerHands[target.id].push(...this.takeCards(room, successful || !challenge ? 4 : 6));
+    target.cardCount = room.playerHands[target.id].length;
+    target.hasCalledUno = false;
+    room.lastDrawFourResult = {
+      id: action.id || randomUUID(),
+      offenderId: action.offenderId,
+      challengerId: challenge ? playerId : null,
+      outcome: !challenge ? 'accepted' : successful ? 'successful' : 'failed',
+      penalizedPlayerId: target.id,
+      drawCount: successful || !challenge ? 4 : 6,
+      evidence: challenge ? { activeColorBeforePlay: action.previousColor, hadMatchingColor, matchingColorCount } : null,
+    };
+    room.pendingAction = null;
+    room.unoChallengeWindow = null;
+    this.addLog(room, challenge ? `Draw Four challenge ${successful ? 'successful' : 'failed'}: ${target.name} draws ${successful ? 4 : 6}.` : `${target.name} accepts and draws four.`, 'action');
+    if (!successful) room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players);
+    if (room.pendingRoundWinner && !successful) this.finishClassicRound(room, room.pendingRoundWinner);
+    else { room.pendingRoundWinner = null; room.winnerId = null; }
     this.resetTurnTimer(room);
     this.persist(roomId);
     return { success: true };
@@ -446,6 +564,7 @@ export class RoomManager {
 
   resetTurnTimer(room) {
     if (!room) return;
+    if (room.mode === 'classic') room.actionVersion = (room.actionVersion || 0) + 1;
     if (this.turnTimers.has(room.roomId)) {
       clearTimeout(this.turnTimers.get(room.roomId));
       this.turnTimers.delete(room.roomId);
@@ -456,26 +575,32 @@ export class RoomManager {
       return;
     }
 
+    if (room.mode === 'classic' && room.pendingAction?.type === 'opening_color') { room.turnDeadline = null; return; }
     const DURATION = 20000; // 20 seconds
     room.turnDeadline = Date.now() + DURATION;
 
     const currentTurnAtSchedule = room.currentTurn;
+    const actionVersionAtSchedule = room.actionVersion;
     const timer = setTimeout(() => {
-      this.handleTurnTimeout(room.roomId, currentTurnAtSchedule);
+      this.handleTurnTimeout(room.roomId, currentTurnAtSchedule, actionVersionAtSchedule);
     }, DURATION + 150);
     if (timer.unref) timer.unref();
 
     this.turnTimers.set(room.roomId, timer);
   }
 
-  handleTurnTimeout(roomId, expectedTurn) {
+  handleTurnTimeout(roomId, expectedTurn, expectedActionVersion) {
     const room = this.rooms.get(roomId);
     if (!room || room.status !== 'playing') return;
     // Guard against race conditions where turn already advanced
     if (room.currentTurn !== expectedTurn) return;
+    if (room.mode === 'classic' && expectedActionVersion !== undefined && expectedActionVersion !== room.actionVersion) return;
 
     const currentPlayer = room.players[room.currentTurn];
     if (!currentPlayer || currentPlayer.isEliminated) return;
+    if (room.mode === 'classic' && room.pendingAction?.type === 'opening_color') {
+      return; // An opening wild requires the first player's explicit choice.
+    }
 
     if (room.turnDrawnCard) {
       // Player already drew, so pass their turn
@@ -520,6 +645,7 @@ export class RoomManager {
       return { success: false, error: 'It is not your turn' };
     }
 
+    if (room.mode === 'classic' && room.pendingAction) return { success: false, error: 'Resolve the pending colour or challenge first' };
     const hand = room.playerHands[playerId];
     if (!hand) return { success: false, error: 'Hand not found' };
 
@@ -528,6 +654,7 @@ export class RoomManager {
       return { success: false, error: 'Card not in hand' };
     }
     const card = hand[cardIdx];
+    if (room.mode === 'classic' && room.turnDrawnCard && card.id !== room.turnDrawnCardId) return { success: false, error: 'Only the newly drawn card may be played' };
 
     const isLegal = isCardPlayable(
       card,
@@ -566,6 +693,10 @@ export class RoomManager {
       }
     }
 
+    const previousColor = room.activeColor;
+    const hadMatchingColor = hand.some(c => c.color === previousColor);
+    const handBeforeDrawFour = room.mode === 'classic' && face.type === 'wild_draw4' ? hand.map(c => ({ ...c })) : null;
+    if (room.mode === 'classic') room.unoChallengeWindow = null;
     hand.splice(cardIdx, 1);
     room.discardPile.push(card);
     room.topDiscard = card;
@@ -645,7 +776,12 @@ export class RoomManager {
 
     let step = 1;
 
-    if (face.type === 'reverse') {
+    if (room.mode === 'classic' && face.type === 'wild_draw4') {
+      step = 1;
+      room.lastDrawFourResult = null;
+      room.pendingAction = { id: randomUUID(), type: 'draw4_challenge', offenderId: playerId, targetPlayerId: room.players[getNextPlayerIndex(room.currentTurn, room.direction, room.players)].id, illegal: hadMatchingColor, previousColor, handBeforePlay: handBeforeDrawFour };
+      this.addLog(room, `${currentPlayer.name} played Wild Draw Four. Accept or challenge.`);
+    } else if (face.type === 'reverse') {
       room.direction = room.direction * -1;
       const activePlayers = room.players.filter((p) => !p.isEliminated);
       if (activePlayers.length === 2) {
@@ -681,7 +817,7 @@ export class RoomManager {
       face.type === 'wild_draw10'
     ) {
       const penalty = getCardDrawPenalty(card, room.mode, room.flipSide);
-      if (room.mode === 'no_mercy' || room.houseRules.stackingAllowed) {
+      if (room.mode !== 'classic' && (room.mode === 'no_mercy' || room.houseRules.stackingAllowed)) {
         room.pendingDrawPenalty += penalty;
         step = 1;
         this.addLog(room, `${currentPlayer.name} played +${penalty}! Pending penalty: ${room.pendingDrawPenalty} cards.`);
@@ -689,7 +825,7 @@ export class RoomManager {
         step = 2;
         const targetPlayer = room.players[getNextPlayerIndex(room.currentTurn, room.direction, room.players, 1)];
         this.reshuffleIfEmpty(room);
-        const drawnCards = room.drawPile.splice(0, penalty);
+        const drawnCards = room.mode === 'classic' ? this.takeCards(room, penalty) : room.drawPile.splice(0, penalty);
         room.playerHands[targetPlayer.id].push(...drawnCards);
         targetPlayer.cardCount = room.playerHands[targetPlayer.id].length;
         this.addLog(room, `${currentPlayer.name} played +${penalty}! ${targetPlayer.name} drew ${drawnCards.length} cards and was skipped.`);
@@ -734,7 +870,7 @@ export class RoomManager {
       } else {
         room.unoChallengeWindow = {
           targetPlayerId: playerId,
-          expiresAt: Date.now() + 5000,
+          expiresAt: room.mode === 'classic' ? null : Date.now() + 5000,
         };
         this.addLog(room, `⚠️ ${currentPlayer.name} has 1 card left and DID NOT call UNO! Catch them!`, 'warn');
       }
@@ -745,18 +881,21 @@ export class RoomManager {
 
     const win = checkWinCondition(room.players, room.playerHands, room.mode);
     if (win.winnerId) {
-      room.status = 'game_over';
-      room.winnerId = win.winnerId;
-      room.winReason = win.reason;
+      if (room.mode === 'classic') {
+        if (!room.pendingAction) this.finishClassicRound(room, win.winnerId);
+        else room.pendingRoundWinner = win.winnerId;
+      } else room.status = 'game_over';
+      if (!room.pendingAction) room.winnerId = win.winnerId;
+      if (room.mode !== 'classic') room.winReason = win.reason;
       this.addLog(room, `🎉 ${win.reason}`, 'win');
-      this.persist(roomId);
-      return { success: true };
+      if (!room.pendingAction) { this.resetTurnTimer(room); this.persist(roomId); return { success: true }; }
     }
 
     if (step > 0) {
       room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players, step);
     }
 
+    room.turnDrawnCardId = null;
     this.resetTurnTimer(room);
     this.persist(roomId);
     return { success: true };
@@ -773,6 +912,12 @@ export class RoomManager {
       return { success: false, error: 'It is not your turn' };
     }
 
+    if (room.mode === 'classic') {
+      if (room.pendingAction?.type === 'draw4_challenge') return this.resolveDrawFour(roomId, playerId, false);
+      if (room.pendingAction || room.turnDrawnCard) return { success: false, error: 'Cannot draw again or before choosing colour' };
+      room.unoChallengeWindow = null;
+      currentPlayer.hasCalledUno = false;
+    }
     const hand = room.playerHands[playerId];
 
     if (room.pendingDrawPenalty > 0) {
@@ -797,6 +942,7 @@ export class RoomManager {
       }
 
       room.turnDrawnCard = false;
+      room.turnDrawnCardId = null;
       room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players, 1);
       this.persist(roomId);
       return { success: true, drawnCards: drawn };
@@ -839,6 +985,7 @@ export class RoomManager {
     hand.push(drawnCard);
     currentPlayer.cardCount = hand.length;
     room.turnDrawnCard = true;
+    room.turnDrawnCardId = drawnCard.id;
 
     this.addLog(room, `${currentPlayer.name} drew a card.`);
 
@@ -854,10 +1001,12 @@ export class RoomManager {
 
     if (!playable) {
       room.turnDrawnCard = false;
+      room.turnDrawnCardId = null;
       room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players, 1);
       this.addLog(room, `Drawn card was not playable. Turn passed to ${room.players[room.currentTurn].name}.`);
     }
 
+    this.resetTurnTimer(room);
     this.persist(roomId);
     return { success: true, drawnCards: [drawnCard] };
   }
@@ -869,11 +1018,13 @@ export class RoomManager {
     const currentPlayer = room.players[room.currentTurn];
     if (currentPlayer.id !== playerId) return { success: false, error: 'Not your turn' };
 
+    if (room.mode === 'classic' && room.pendingAction) return { success: false, error: 'Resolve pending action first' };
     if (!room.turnDrawnCard) {
       return { success: false, error: 'You must draw a card before passing' };
     }
 
     room.turnDrawnCard = false;
+    room.turnDrawnCardId = null;
     room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players, 1);
     this.addLog(room, `${currentPlayer.name} passed.`);
     this.resetTurnTimer(room);
@@ -888,13 +1039,15 @@ export class RoomManager {
     const player = room.players.find((p) => p.id === playerId);
     if (!player) return { success: false, error: 'Player not found' };
 
+    if (room.mode === 'classic' && !((room.playerHands[playerId]?.length === 2 && room.players[room.currentTurn].id === playerId && !room.pendingAction) || room.unoChallengeWindow?.targetPlayerId === playerId)) return { success: false, error: 'Call UNO when playing down to one card' };
+    if (room.mode === 'classic' && player.hasCalledUno) return { success: false, error: 'UNO already called' };
     player.hasCalledUno = true;
     if (room.unoChallengeWindow && room.unoChallengeWindow.targetPlayerId === playerId) {
       room.unoChallengeWindow = null;
     }
 
     this.addLog(room, `📢 ${player.name} called UNO!`, 'action');
-    this.resetTurnTimer(room);
+    if (room.mode !== 'classic') this.resetTurnTimer(room);
     this.persist(roomId);
     return { success: true };
   }
@@ -907,9 +1060,10 @@ export class RoomManager {
     const target = room.players.find((p) => p.id === targetPlayerId);
     if (!challenger || !target) return { success: false, error: 'Player not found' };
 
+    if (room.mode === 'classic' && (challengerId === targetPlayerId || room.unoChallengeWindow?.targetPlayerId !== targetPlayerId)) return { success: false, error: 'CAUGHT FAILED: UNO catch window is closed' };
     const targetHand = room.playerHands[targetPlayerId] || [];
     if (targetHand.length !== 1 || target.hasCalledUno) {
-      return { success: false, error: 'Cannot challenge: player either called UNO or does not have 1 card' };
+      return { success: false, error: 'CAUGHT FAILED: player called UNO or no longer has one card' };
     }
 
     const drawn = [];
@@ -936,12 +1090,12 @@ export class RoomManager {
 
   rematch(roomId, playerId) {
     const room = this.rooms.get(roomId);
-    if (!room || room.status !== 'game_over') return { success: false, error: 'Game is not over' };
+    if (!room || !['game_over', 'round_over'].includes(room.status)) return { success: false, error: 'Round is not over' };
 
     const player = room.players.find((p) => p.id === playerId);
     if (!player || !player.isHost) return { success: false, error: 'Only the host can start a rematch' };
 
-    room.roundNumber += 1;
+    if (room.mode !== 'classic') room.roundNumber += 1;
     return this.startGame(roomId, playerId);
   }
 
@@ -966,8 +1120,13 @@ export class RoomManager {
       );
     }
 
+    if (room.mode === 'classic') {
+      if (room.pendingAction) canPlayCards = [];
+      if (room.turnDrawnCard) canPlayCards = canPlayCards.filter(id => id === room.turnDrawnCardId);
+
+    }
     let canCatchUno = null;
-    if (room.unoChallengeWindow && room.unoChallengeWindow.expiresAt > Date.now()) {
+    if (room.unoChallengeWindow && (room.mode === 'classic' || room.unoChallengeWindow.expiresAt > Date.now())) {
       if (room.unoChallengeWindow.targetPlayerId !== playerId) {
         canCatchUno = room.unoChallengeWindow.targetPlayerId;
       }
@@ -988,6 +1147,7 @@ export class RoomManager {
 
     const gameState = {
       roomId: room.roomId,
+      actionVersion: room.actionVersion || 0,
       mode: room.mode,
       houseRules: room.houseRules,
       status: room.status,
@@ -1005,7 +1165,10 @@ export class RoomManager {
       roundNumber: room.roundNumber,
       deckRemainingCount: room.drawPile.length,
       discardRemainingCount: room.discardPile.length,
-      pendingAction: room.pendingAction,
+      pendingAction: room.mode === 'classic' && room.pendingAction ? { id: room.pendingAction.id, type: room.pendingAction.type, offenderId: room.pendingAction.offenderId, targetPlayerId: room.pendingAction.targetPlayerId } : room.pendingAction,
+      drawFourResult: room.lastDrawFourResult ? Object.fromEntries(Object.entries(room.lastDrawFourResult).filter(([key]) => key !== 'evidence')) : null,
+      roundResult: room.roundResult,
+      dealerIndex: room.dealerIndex,
       turnDrawnCard: room.turnDrawnCard,
       turnDeadline: room.turnDeadline || null,
       turnDurationMs: 20000,
@@ -1018,9 +1181,10 @@ export class RoomManager {
       myPlayerId: playerId,
       isMyTurn,
       canPlayCards,
-      canDraw: isMyTurn,
-      canCallUno: myHand.length <= 2,
+      canDraw: room.mode === 'classic' ? isMyTurn && !room.turnDrawnCard && (!room.pendingAction || room.pendingAction.type === 'draw4_challenge') : isMyTurn,
+      canCallUno: room.mode === 'classic' ? room.status === 'playing' && ((isMyTurn && myHand.length === 2 && !room.pendingAction) || room.unoChallengeWindow?.targetPlayerId === playerId) && !myPlayer.hasCalledUno : myHand.length <= 2,
       canCatchUno,
+      drawFourEvidence: room.lastDrawFourResult?.challengerId === playerId ? { id: room.lastDrawFourResult.id, ...room.lastDrawFourResult.evidence } : null,
     };
   }
 

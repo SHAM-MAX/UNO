@@ -25,7 +25,7 @@ export function getCardDrawPenalty(card, mode = 'classic', flipSide = 'light') {
 }
 
 export function canStackCard(card, mode, flipSide, currentPenalty, topCard, houseRules = {}) {
-  if (currentPenalty <= 0) return false;
+  if (mode === 'classic' || currentPenalty <= 0) return false;
 
   const cardPenalty = getCardDrawPenalty(card, mode, flipSide);
   if (cardPenalty <= 0) return false;

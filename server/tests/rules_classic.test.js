@@ -42,6 +42,7 @@ test('Classic Rules: 2-Player Reverse edge case acts as Skip', () => {
   // Force top discard to red 5 and give p1 a red reverse + extra cards so game does not end
   room.topDiscard = { id: 'top-red', color: 'red', type: 'number', value: 5 };
   room.activeColor = 'red';
+  room.pendingAction = null;
   room.currentTurn = 0; // Player 1
   room.playerHands[p1] = [
     { id: 'rev-card', color: 'red', type: 'reverse' },
@@ -69,6 +70,7 @@ test('Classic Rules: Skip advances turn past next player', () => {
 
   room.topDiscard = { id: 'top-blue', color: 'blue', type: 'number', value: 2 };
   room.activeColor = 'blue';
+  room.pendingAction = null;
   room.currentTurn = 0; // P1
   room.direction = 1;
   room.playerHands[p1] = [
@@ -96,6 +98,7 @@ test('Classic Rules: Draw Two forces opponent to draw 2 cards and lose turn', ()
   room.topDiscard = { id: 'top-green', color: 'green', type: 'number', value: 1 };
   room.activeColor = 'green';
   room.direction = 1;
+  room.pendingAction = null;
   room.currentTurn = 0;
   room.pendingDrawPenalty = 0;
   const initialP2Count = room.playerHands[p2].length;
@@ -126,6 +129,7 @@ test('Classic Rules: UNO call and Missed UNO Catch penalty', () => {
   // Set P1 with 2 cards. P1 plays 1 card down to 1 card without calling UNO!
   room.topDiscard = { id: 'top-yellow', color: 'yellow', type: 'number', value: 4 };
   room.activeColor = 'yellow';
+  room.pendingAction = null;
   room.currentTurn = 0;
   room.playerHands[p1] = [
     { id: 'play-c', color: 'yellow', type: 'number', value: 7 },
@@ -161,12 +165,13 @@ test('Classic Rules: Win condition when hand is empty', () => {
 
   room.topDiscard = { id: 'top-red', color: 'red', type: 'number', value: 3 };
   room.activeColor = 'red';
+  room.pendingAction = null;
   room.currentTurn = 0;
   room.playerHands[p1] = [{ id: 'final-card', color: 'red', type: 'number', value: 9 }];
 
   const res = rm.playCard(roomId, p1, { cardId: 'final-card' });
   assert.ok(res.success);
 
-  assert.equal(room.status, 'game_over', 'Game must end');
+  assert.equal(room.status, 'round_over', 'Round ends before 500 points');
   assert.equal(room.winnerId, p1, 'P1 must be the winner');
 });
