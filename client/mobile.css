@@ -179,7 +179,7 @@
   .mobile-modes-section { margin-top: 24px; }
   .mobile-modes-wrap { padding: 0 16px; gap: 10px; }
   .mobile-modes-wrap .mobile-control { border-radius: 14px; background: transparent; box-shadow: 0 4px 8px #60401c26; }
-  .mobile-modes-wrap img { aspect-ratio: 1 !important; object-fit: contain; }
+  .mobile-modes-wrap img { width: 100%; height: auto; aspect-ratio: 172 / 230; object-fit: contain; }
 }
 
 /* Keep the playing surface and the hand in normal flow on short screens. */

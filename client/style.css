@@ -641,6 +641,38 @@ body::before {
 .classic-image-back .classic-back-image { border-radius: 11px; }
 .classic-image-back.mini .classic-back-image { border-radius: 9px; }
 
+/* Authentic No Mercy WebP Card Faces */
+.game-card.nm-image-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  aspect-ratio: 355 / 502;
+  overflow: hidden;
+  border-radius: 9px;
+}
+
+.nm-card-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  user-select: none;
+  -webkit-user-drag: none;
+  border-radius: 9px;
+  pointer-events: none;
+}
+
+.nm-image-card.mini .nm-card-image {
+  border-radius: 7px;
+}
+
+.nm-image-back {
+  background: #111;
+  border-radius: 9px;
+}
+
 .game-card.flip-light { border-color: #fffdf5; }
 .game-card.flip-dark { border-color: #111218; box-shadow: 0 0 0 1px #fffdf5, 0 6px 16px rgba(0,0,0,.42); }
 

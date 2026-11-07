@@ -1,4 +1,4 @@
-import { renderNoMercyFace, renderNoMercyBack } from './noMercyGraphics.js';
+import { renderNoMercyFace, renderNoMercyBack, noMercyFaceKey, getNoMercyCardLabel } from './noMercyGraphics.js';
 import { COLOR_METADATA } from '../shared/constants.js';
 import { getActiveFace } from '../shared/deck.js';
 
@@ -76,7 +76,11 @@ export function renderCardHTML(card, options = {}) {
   const flipSide = options.flipSide || 'light';
   const mini = Boolean(options.mini);
   const face = getActiveFace(card, mode, flipSide);
-  if (mode === 'no_mercy') return `<div class="game-card nm-card nm-vector-card ${mini ? 'mini' : ''}">${renderNoMercyFace(face)}</div>`;
+  if (mode === 'no_mercy') {
+    const key = noMercyFaceKey(face);
+    const label = getNoMercyCardLabel(card, face);
+    return `<div class="game-card nm-card nm-image-card nm-vector-card ${mini ? 'mini' : ''}" data-face="${key}" role="img" aria-label="${label}" title="${label}">${renderNoMercyFace(card, face, mini)}</div>`;
+  }
   const metadata = COLOR_METADATA[face.color] || COLOR_METADATA.wild;
   const isWild = face.color === 'wild';
   const isNumber = face.type === 'number';
@@ -118,7 +122,9 @@ export function renderCardHTML(card, options = {}) {
 }
 
 export function renderCardBackHTML(isDark = false, mini = false, mode = 'classic') {
-  if (mode === 'no_mercy') return `<div class="game-card nm-card nm-vector-card ${mini ? 'mini' : ''}">${renderNoMercyBack()}</div>`;
+  if (mode === 'no_mercy') {
+    return `<div class="game-card nm-card nm-image-card nm-image-back nm-vector-card ${mini ? 'mini' : ''}" role="img" aria-label="No Mercy card back" title="No Mercy card back">${renderNoMercyBack(mini)}</div>`;
+  }
   if (mode === 'classic') {
     return `<div class="game-card classic-image-card classic-image-back ${mini ? 'mini' : ''}" aria-label="UNO card back" role="img"><img class="classic-back-image" src="/assets/uno-classic-back.png" alt="" draggable="false"></div>`;
   }
