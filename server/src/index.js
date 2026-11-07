@@ -229,7 +229,7 @@ wss.on('connection', (ws, req) => {
         const receipt = actionId ? `${playerId}:${actionId}` : null;
         if (receipt && room.actionReceipts?.includes(receipt)) { broadcastRoomState(cleanRoomId); return; }
         const versionedActions = ['play_card', 'draw_card', 'pass_turn', 'choose_color', 'challenge_draw4'];
-        if (room.mode === 'classic' && versionedActions.includes(type) && payload.expectedActionVersion !== undefined && payload.expectedActionVersion !== (room.actionVersion || 0)) {
+        if (room.mode !== 'flip' && versionedActions.includes(type) && payload.expectedActionVersion !== undefined && payload.expectedActionVersion !== (room.actionVersion || 0)) {
           sendError(ws, 'The turn changed. Review the current table before acting again.');
           broadcastRoomState(cleanRoomId);
           return;

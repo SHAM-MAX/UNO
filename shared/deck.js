@@ -144,74 +144,19 @@ export function createFlipDeck() {
 
 export function createNoMercyDeck() {
   const deck = [];
-  let idCounter = 1;
-
+  const add = (color, type, copies, value) => {
+    for (let i = 0; i < copies; i++) deck.push({ id: `nm-${deck.length + 1}`, color, type, ...(value === undefined ? {} : { value }) });
+  };
   for (const color of CLASSIC_COLORS) {
-    // 1x '0'
-    deck.push({ id: `nm-${idCounter++}`, color, type: 'number', value: 0 });
-
-    // 2x '1'..'9'
-    for (let val = 1; val <= 9; val++) {
-      deck.push({ id: `nm-${idCounter++}`, color, type: 'number', value: val });
-      deck.push({ id: `nm-${idCounter++}`, color, type: 'number', value: val });
-    }
-
-    // 3x 'skip'
-    for (let i = 0; i < 3; i++) {
-      deck.push({ id: `nm-${idCounter++}`, color, type: 'skip' });
-    }
-
-    // 3x 'reverse'
-    for (let i = 0; i < 3; i++) {
-      deck.push({ id: `nm-${idCounter++}`, color, type: 'reverse' });
-    }
-
-    // 3x 'draw2'
-    for (let i = 0; i < 3; i++) {
-      deck.push({ id: `nm-${idCounter++}`, color, type: 'draw2' });
-    }
-
-    // 2x colored 'draw4'
-    for (let i = 0; i < 2; i++) {
-      deck.push({ id: `nm-${idCounter++}`, color, type: 'draw4' });
-    }
-
-    // 2x colored 'discard_all'
-    for (let i = 0; i < 2; i++) {
-      deck.push({ id: `nm-${idCounter++}`, color, type: 'discard_all' });
-    }
-
-    // 1x colored 'skip_everyone'
-    deck.push({ id: `nm-${idCounter++}`, color, type: 'skip_everyone' });
+    for (let value = 0; value <= 9; value++) add(color, 'number', 2, value);
+    for (const type of ['skip', 'reverse', 'draw2', 'discard_all']) add(color, type, 3);
+    for (const type of ['draw4', 'skip_everyone']) add(color, type, 2);
   }
-
-  // Wild cards in No Mercy:
-  // 8x 'wild'
-  for (let i = 0; i < 8; i++) {
-    deck.push({ id: `nm-${idCounter++}`, color: 'wild', type: 'wild' });
-  }
-
-  // 8x 'wild_reverse_draw4'
-  for (let i = 0; i < 8; i++) {
-    deck.push({ id: `nm-${idCounter++}`, color: 'wild', type: 'wild_reverse_draw4' });
-  }
-
-  // 8x 'wild_draw6'
-  for (let i = 0; i < 8; i++) {
-    deck.push({ id: `nm-${idCounter++}`, color: 'wild', type: 'wild_draw6' });
-  }
-
-  // 4x 'wild_draw10'
-  for (let i = 0; i < 4; i++) {
-    deck.push({ id: `nm-${idCounter++}`, color: 'wild', type: 'wild_draw10' });
-  }
-
-  // 8x 'wild_color_roulette'
-  for (let i = 0; i < 8; i++) {
-    deck.push({ id: `nm-${idCounter++}`, color: 'wild', type: 'wild_color_roulette' });
-  }
-
-  return deck; // 168 cards
+  add('wild', 'wild_reverse_draw4', 8);
+  add('wild', 'wild_color_roulette', 8);
+  add('wild', 'wild_draw6', 4);
+  add('wild', 'wild_draw10', 4);
+  return deck;
 }
 
 export function createDeckForMode(mode = 'classic') {

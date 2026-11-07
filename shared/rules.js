@@ -114,25 +114,13 @@ export function getNextPlayerIndex(
   players = [],
   step = 1
 ) {
-  const activeIndices = [];
-  players.forEach((p, idx) => {
-    if (!p.isEliminated) {
-      activeIndices.push(idx);
-    }
-  });
-
-  if (activeIndices.length <= 1) {
-    return currentIndex;
+  if (!players.some(p => !p.isEliminated)) return currentIndex;
+  let index = currentIndex;
+  for (let n = 0; n < step; n++) {
+    do { index = (index + direction + players.length) % players.length; }
+    while (players[index].isEliminated);
   }
-
-  const posInActive = activeIndices.indexOf(currentIndex);
-  if (posInActive === -1) {
-    return activeIndices[0];
-  }
-
-  const nextPos = (posInActive + direction * step) % activeIndices.length;
-  const wrappedPos = (nextPos + activeIndices.length) % activeIndices.length;
-  return activeIndices[wrappedPos];
+  return index;
 }
 
 export function checkWinCondition(players = [], hands = {}, mode = 'classic') {

@@ -391,11 +391,11 @@ class UnoArenaApp {
 
     // Ensure connection immediately refreshes when tab regains visibility/focus
     document.addEventListener('visibilitychange', () => {
-      if (this.gameState?.mode === 'classic') { this.clearClassicAnimations(); this.cancelCardDrag?.(); }
+      if (['classic', 'no_mercy'].includes(this.gameState?.mode)) { this.clearClassicAnimations(); this.cancelCardDrag?.(); }
       if (document.visibilityState === 'visible' && this.roomId) {
         if (!this.ws || this.ws.readyState === WebSocket.CLOSED || this.ws.readyState === WebSocket.CLOSING) {
-          const sToken = localStorage.getItem(`session_${this.roomId}`);
-          const pId = localStorage.getItem(`player_${this.roomId}`);
+          const sToken = this.gameState?.mode === 'no_mercy' ? this.sessionToken || localStorage.getItem(`session_${this.roomId}`) : localStorage.getItem(`session_${this.roomId}`);
+          const pId = this.gameState?.mode === 'no_mercy' ? this.playerId : localStorage.getItem(`player_${this.roomId}`);
           this.connectWebSocket(this.roomId, pId, sToken, this.playerName);
         }
       }
@@ -403,8 +403,8 @@ class UnoArenaApp {
 
     window.addEventListener('focus', () => {
       if (this.roomId && (!this.ws || this.ws.readyState === WebSocket.CLOSED || this.ws.readyState === WebSocket.CLOSING)) {
-        const sToken = localStorage.getItem(`session_${this.roomId}`);
-        const pId = localStorage.getItem(`player_${this.roomId}`);
+        const sToken = this.gameState?.mode === 'no_mercy' ? this.sessionToken || localStorage.getItem(`session_${this.roomId}`) : localStorage.getItem(`session_${this.roomId}`);
+        const pId = this.gameState?.mode === 'no_mercy' ? this.playerId : localStorage.getItem(`player_${this.roomId}`);
         this.connectWebSocket(this.roomId, pId, sToken, this.playerName);
       }
     });
@@ -1015,7 +1015,7 @@ class UnoArenaApp {
     };
 
     this.ws.onclose = () => {
-      if (this.gameState?.mode === 'classic') {
+      if (['classic', 'no_mercy'].includes(this.gameState?.mode)) {
         this.cancelCardDrag?.();
         this.clearClassicAnimations?.();
         this.pendingClassicMotion = null;
@@ -1023,6 +1023,7 @@ class UnoArenaApp {
         this.pendingPlayCard = null;
         this.pendingPlayWrapper = null;
         this.el.colorPickerModal.classList.remove('active');
+        this.el.swapPickerModal.classList.remove('active');
         this.el.playerHandCards.setAttribute('inert', '');
         this.el.btnDrawAction.disabled = true;
         this.el.drawPileBtn.disabled = true;
@@ -1036,8 +1037,8 @@ class UnoArenaApp {
       if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = setTimeout(() => {
         if (this.roomId) {
-          const sToken = localStorage.getItem(`session_${this.roomId}`);
-          const pId = localStorage.getItem(`player_${this.roomId}`);
+          const sToken = this.gameState?.mode === 'no_mercy' ? this.sessionToken || localStorage.getItem(`session_${this.roomId}`) : localStorage.getItem(`session_${this.roomId}`);
+          const pId = this.gameState?.mode === 'no_mercy' ? this.playerId : localStorage.getItem(`player_${this.roomId}`);
           this.connectWebSocket(this.roomId, pId, sToken, this.playerName);
         }
       }, 2000);
@@ -1049,7 +1050,7 @@ class UnoArenaApp {
   }
 
   send(payload) {
-    if (this.gameState?.mode === 'classic' && ['draw_card', 'play_card'].includes(payload.type)) {
+    if (['classic', 'no_mercy'].includes(this.gameState?.mode) && ['draw_card', 'play_card'].includes(payload.type)) {
       const element = payload.type === 'draw_card' ? this.el.drawPile.querySelector('.game-card') : this.el.playerHandCards.querySelector(`[data-card-id="${payload.data?.cardId}"]`);
       if (element) this.pendingClassicMotion = { type: payload.type, cardId: payload.data?.cardId, rect: element.getBoundingClientRect(), html: element.querySelector('.game-card')?.outerHTML || element.outerHTML };
     }
@@ -1059,11 +1060,11 @@ class UnoArenaApp {
       sessionToken: this.sessionToken,
       ...payload,
       actionId: payload.actionId || crypto.randomUUID(),
-      expectedActionVersion: this.gameState?.mode === 'classic' ? this.gameState.actionVersion : undefined,
+      expectedActionVersion: ['classic', 'no_mercy'].includes(this.gameState?.mode) ? this.gameState.actionVersion : undefined,
     };
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(full));
-    } else if (this.gameState?.mode === 'classic' && ['play_card', 'draw_card', 'pass_turn', 'choose_color', 'challenge_draw4', 'call_uno', 'catch_uno', 'rematch', 'start_game', 'rematch_propose', 'rematch_respond', 'rematch_vote', 'rematch_cancel'].includes(payload.type)) {
+    } else if (['classic', 'no_mercy'].includes(this.gameState?.mode) && ['play_card', 'draw_card', 'pass_turn', 'choose_color', 'challenge_draw4', 'call_uno', 'catch_uno', 'rematch', 'start_game', 'rematch_propose', 'rematch_respond', 'rematch_vote', 'rematch_cancel'].includes(payload.type)) {
       this.isMoveInFlight = false;
       this.showToast('Connection lost. Wait for the table to reconnect.');
       return false;
@@ -1089,11 +1090,12 @@ class UnoArenaApp {
     if (this.rematchDismissAfterResponseId && view.rematchProposal?.id===this.rematchDismissAfterResponseId && (view.rematchProposal.status==='cancelled' || view.rematchProposal.declinedPlayerIds.includes(this.playerId))) { this.dismissedRematchId=view.rematchProposal.id; this.rematchDismissAfterResponseId=null; }
     if (view.isSpectator) { this.renderRematchSpectator(); this.renderRematchProposal(); return; }
     const pendingStillPlayable = this.pendingPlayCard && view.canPlayCards.includes(this.pendingPlayCard.id);
-    const openingChoice = view.isMyTurn && view.gameState.pendingAction?.type === 'opening_color';
-    if (view.gameState.mode === 'classic' && !pendingStillPlayable && !openingChoice) {
+    const openingChoice = view.isMyTurn && ['opening_color', 'color_roulette'].includes(view.gameState.pendingAction?.type);
+    if (view.gameState.mode !== 'flip' && !pendingStillPlayable && !openingChoice) {
       this.pendingPlayCard = null;
       this.pendingPlayWrapper = null;
       this.el.colorPickerModal.classList.remove('active');
+      if (view.gameState.mode === 'no_mercy') this.el.swapPickerModal.classList.remove('active');
     }
     if (view.gameState.status === 'playing') this.el.gameOverModal.classList.remove('active');
     if (view.drawFourEvidence && this.lastDrawFourEvidenceId !== view.drawFourEvidence.id) {
@@ -1121,8 +1123,9 @@ class UnoArenaApp {
       this.renderLobby();
     } else {
       this.renderArena();
-      if (view.gameState.mode === 'classic' && previous) this.animateClassicState(previous, classicGeometry);
+      if (view.gameState.mode !== 'flip' && previous) this.animateClassicState(previous, classicGeometry);
     }
+    if (view.gameState.mode === 'no_mercy' && openingChoice && !this.el.colorPickerModal.classList.contains('active')) this.openColorPicker();
     this.renderRematchProposal();
   }
 
@@ -1245,6 +1248,38 @@ class UnoArenaApp {
     animation.onfinish = dispose;
   }
 
+  animateNoMercyAction(previous, geometry) {
+    const state = this.gameState;
+    const destination = id => id === this.playerId ? this.el.playerHandCards : this.el.opponentsRow.querySelector(`[data-profile-id="${id}"] .opponent-avatar`);
+    const back = renderCardBackHTML(false, false, 'no_mercy');
+    const event = state.noMercyAction;
+    if (event && event.id !== previous.gameState.noMercyAction?.id) {
+      const active = state.players.filter(p => !p.isEliminated);
+      if (event.type === 'number' && state.topDiscard?.value === 7) {
+        const a = destination(event.playerId), b = destination(event.targetPlayerId);
+        if (a && b) { this.travelClassicCard(a.getBoundingClientRect(), b, back); this.travelClassicCard(b.getBoundingClientRect(), a, back, null, 120); }
+      }
+      if (event.type === 'number' && state.topDiscard?.value === 0) active.forEach((p,i) => {
+        const a = destination(p.id), b = destination(active[(i + event.direction + active.length) % active.length].id);
+        if (a && b) this.travelClassicCard(a.getBoundingClientRect(), b, back, null, i*80);
+      });
+      if (event.type === 'discard_all') event.discardedIds.forEach((id,i) => {
+        const source = geometry.hand.get(id); if (source) this.travelClassicCard(source.rect, this.el.discardPile, source.html, null, i*70);
+      });
+      if (event.type === 'skip_everyone') destination(event.playerId)?.animate([{filter:'brightness(2)'},{filter:'none'}],{duration:500});
+    }
+    const roulette = state.rouletteResult;
+    if (roulette && roulette.id !== previous.gameState.rouletteResult?.id) {
+      const target = destination(roulette.targetPlayerId);
+      roulette.revealed.forEach((card,i) => this.travelClassicCard(geometry.deck, target, renderCardHTML(card,{mode:'no_mercy'}),null,i*160));
+      this.showToast(`Roulette: ${roulette.color.toUpperCase()} · ${roulette.revealed.length} cards`);
+    }
+    state.players.filter(p => p.isEliminated && !previous.gameState.players.find(old => old.id === p.id)?.isEliminated).forEach(p => {
+      this.showToast(`${p.name} — MERCY KNOCKOUT`);
+      destination(p.id)?.animate([{transform:'scale(1.15)',opacity:1},{transform:'scale(.9)',opacity:.4}],{duration:650});
+    });
+  }
+
   animateClassicState(previous, geometry) {
     const current = this.clientView;
     this.pendingClassicMotion = null;
@@ -1253,22 +1288,30 @@ class UnoArenaApp {
     const useful = current.gameState.eventLogs?.[0];
     if (useful && useful.id !== previous.gameState.eventLogs?.[0]?.id && /call(?:ed)? UNO|CAUGHT|Draw Four challenge|penalty|drew [246]|played \+[246]/i.test(useful.text)) this.showToast(useful.text);
     if (me?.hasCalledUno && !beforeMe?.hasCalledUno) this.showToast('UNO!');
-    if (previous.gameState.mode !== 'classic' || previous.gameState.status !== 'playing' || previous.gameState.roomId !== current.gameState.roomId || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (previous.gameState.mode === 'flip' || previous.gameState.status !== 'playing' || previous.gameState.roomId !== current.gameState.roomId || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (current.gameState.mode === 'no_mercy') this.animateNoMercyAction(previous, geometry);
     const newTop = current.gameState.topDiscard;
     if (newTop?.id !== previous.gameState.topDiscard?.id && geometry.hand.has(newTop?.id)) {
       const from = geometry.pending?.cardId === newTop.id ? geometry.pending : geometry.hand.get(newTop.id);
       this.travelClassicCard(from.rect, this.el.discardPile.querySelector('.game-card'), from.html, from.html);
     }
+    const action = current.gameState.noMercyAction;
+    const transfer = current.gameState.mode === 'no_mercy' && action?.id !== previous.gameState.noMercyAction?.id && action?.type === 'number' && [0, 7].includes(current.gameState.topDiscard?.value);
+    const roulette = current.gameState.mode === 'no_mercy' && current.gameState.rouletteResult?.id !== previous.gameState.rouletteResult?.id;
+    if (current.gameState.mode === 'no_mercy' && newTop?.id !== previous.gameState.topDiscard?.id && !geometry.hand.has(newTop?.id)) {
+      const source = geometry.opponents.get(action?.playerId);
+      if (source) this.travelClassicCard(source, this.el.discardPile.querySelector('.game-card'), renderCardBackHTML(false, false, 'no_mercy'), renderCardHTML(newTop, {mode:'no_mercy'}));
+    }
     const oldIds = new Set(previous.myHand.map(c => c.id));
-    current.myHand.filter(c => !oldIds.has(c.id)).forEach((card, index) => {
+    current.myHand.filter(c => !transfer && !roulette && !oldIds.has(c.id)).forEach((card, index) => {
       const target = this.el.playerHandCards.querySelector(`[data-card-id="${card.id}"] .game-card`);
-      this.travelClassicCard(geometry.pending?.type === 'draw_card' ? geometry.pending.rect : geometry.deck, target, renderCardBackHTML(false, false, 'classic'), renderCardHTML(card, {mode:'classic'}), index*65);
+      this.travelClassicCard(geometry.pending?.type === 'draw_card' ? geometry.pending.rect : geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), renderCardHTML(card, {mode:current.gameState.mode}), index*65);
     });
     for (const player of current.gameState.players.filter(p => p.id !== this.playerId)) {
       const before = previous.gameState.players.find(p => p.id === player.id);
       const fan = this.el.opponentsRow.querySelector(`[data-profile-id="${player.id}"] .opponent-fan-card:last-child img`);
       const target = fan?.getClientRects().length ? fan : this.el.opponentsRow.querySelector(`[data-profile-id="${player.id}"] .opponent-avatar`);
-      for (let i=0; i<Math.min(10, Math.max(0, player.cardCount-(before?.cardCount ?? player.cardCount))); i++) this.travelClassicCard(geometry.deck, target, renderCardBackHTML(false, false, 'classic'), null, i*65);
+      for (let i=0; !transfer && !roulette && i<Math.min(current.gameState.mode === 'no_mercy' ? 25 : 10, Math.max(0, player.cardCount-(before?.cardCount ?? player.cardCount))); i++) this.travelClassicCard(geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), null, i*65);
     }
     // Move retained cards into their new fan positions without a layout snap.
     this.el.playerHandCards.querySelectorAll('[data-card-id]').forEach(el => {
@@ -1331,7 +1374,7 @@ class UnoArenaApp {
     if (this.gameState.mode === 'no_mercy') {
       this.el.lobbyRulesPanel.innerHTML = isHost
         ? `<div class="lobby-rules-copy"><span>HOST RULES</span><strong>No Mercy knockout</strong><small>Eliminate a player when their hand reaches the chosen limit.</small></div>
-           <label class="lobby-rule-control"><span>Knockout at</span><select id="lobbyMercyLimit" class="lobby-rule-select" aria-label="No Mercy knockout card limit">${[25, 35, 45].map((limit) => `<option value="${limit}" ${limit === mercyLimit ? 'selected' : ''}>${limit} cards</option>`).join('')}</select></label>`
+           <label class="lobby-rule-control"><span>Knockout at</span><select id="lobbyMercyLimit" class="lobby-rule-select" aria-label="No Mercy knockout card limit">${[25, 35, 45].map((limit) => `<option value="${limit}" ${limit === mercyLimit ? 'selected' : ''}>${limit} cards (${limit === 25 ? 'official' : 'house rule'})</option>`).join('')}</select></label>`
         : `<div class="lobby-rules-copy"><span>HOST RULE</span><strong>No Mercy knockout: ${mercyLimit} cards</strong><small>The host can change this before the game starts.</small></div>`;
       const mercySelect = document.getElementById('lobbyMercyLimit');
       mercySelect?.addEventListener('change', () => {
@@ -1379,6 +1422,7 @@ class UnoArenaApp {
   renderArena() {
     document.body.classList.add('in-room');
     document.body.classList.add('in-arena');
+    document.body.classList.toggle('no-mercy-arena', this.gameState.mode === 'no_mercy');
     document.body.classList.toggle('classic-arena', this.gameState.mode === 'classic');
     document.body.classList.toggle('classic-many-players', this.gameState.mode === 'classic' && this.gameState.players.length > 6);
     this.el.entryView.style.display = 'none';
@@ -1387,6 +1431,18 @@ class UnoArenaApp {
     const { gameState, myHand, isMyTurn, canPlayCards, canDraw, canCallUno, canCatchUno } = this.clientView;
     document.body.classList.toggle('classic-draw4-response', gameState.mode === 'classic' && isMyTurn && gameState.pendingAction?.type === 'draw4_challenge');
 
+    const controls = this.el.btnDrawAction.closest('.table-action-bar');
+    const controlsParent = gameState.mode === 'no_mercy' ? document.querySelector('.player-bottom-area') : this.el.tableFelt;
+    if (controls && controls.parentElement !== controlsParent) {
+      if (gameState.mode === 'no_mercy') controlsParent.prepend(controls); else controlsParent.appendChild(controls);
+    }
+    let mercyStatus = document.getElementById('noMercyStatus');
+    if (gameState.mode === 'no_mercy') {
+      if (!mercyStatus) { mercyStatus = document.createElement('div'); mercyStatus.id = 'noMercyStatus'; mercyStatus.setAttribute('role','status'); this.el.actionBanner.parentElement.appendChild(mercyStatus); }
+      mercyStatus.hidden = false;
+      mercyStatus.textContent = `${gameState.activeColor?.toUpperCase() || 'Choose colour'} · ${gameState.pendingAction?.type === 'color_roulette' ? 'Roulette colour choice' : isMyTurn ? 'Your turn' : gameState.players[gameState.currentTurn]?.name + ' plays'}${gameState.pendingDrawPenalty ? ' · STACK +' + gameState.pendingDrawPenalty : ''}`;
+      mercyStatus.style.borderColor = COLOR_METADATA[gameState.activeColor]?.bgHex || '#fff';
+    } else if (mercyStatus) mercyStatus.hidden = true;
     // Action banner
     this.el.actionBanner.textContent = gameState.lastActionMessage || 'Game in progress';
     if (gameState.mode === 'classic') {
@@ -1443,7 +1499,7 @@ class UnoArenaApp {
             const rot = startAngle + c * spread;
             const xOffset = (c - (fanCardsCount - 1) / 2) * 17;
             fanHtml += `<div class="opponent-fan-card" style="transform: translateX(${xOffset.toFixed(1)}px) rotate(${rot.toFixed(1)}deg); z-index: ${c + 1};">
-              <img src="${backSrc}" alt="" class="fan-card-img" draggable="false">
+              ${gameState.mode === 'no_mercy' ? renderCardBackHTML(false, true, 'no_mercy') : `<img src="${backSrc}" alt="" class="fan-card-img" draggable="false">`}
             </div>`;
           }
           fanHtml += '</div>';
@@ -1509,8 +1565,9 @@ class UnoArenaApp {
       this.el.btnDrawAction.innerHTML = '<span class="btn-icon">🂠</span> DRAW CARD';
     }
 
+    if (gameState.mode === 'no_mercy' && !gameState.pendingDrawPenalty) this.el.btnDrawAction.textContent = 'DRAW TO PLAY';
     // Pass button (visible if drawn this turn)
-    if (gameState.turnDrawnCard && isMyTurn) {
+    if (gameState.turnDrawnCard && isMyTurn && gameState.mode !== 'no_mercy') {
       this.el.btnPassAction.style.display = 'inline-flex';
     } else {
       this.el.btnPassAction.style.display = 'none';
@@ -1522,7 +1579,7 @@ class UnoArenaApp {
     if (canCatchUno) {
       const caughtPlayer = gameState.players.find((p) => p.id === canCatchUno);
       this.el.btnCatchAction.style.display = 'inline-flex';
-      this.el.btnCatchAction.textContent = gameState.mode === 'classic' ? 'CAUGHT' : `CATCH ${caughtPlayer?.name?.toUpperCase()} (MISSED UNO)!`;
+      this.el.btnCatchAction.textContent = gameState.mode !== 'flip' ? 'CAUGHT' : `CATCH ${caughtPlayer?.name?.toUpperCase()} (MISSED UNO)!`;
       this.el.btnCatchAction.setAttribute('aria-label', `Catch ${caughtPlayer?.name} for missed UNO`);
     } else {
       this.el.btnCatchAction.style.display = 'none';
@@ -1646,7 +1703,7 @@ class UnoArenaApp {
         }
       });
 
-      if (mode === 'classic') this.bindCardPointer(wrapper, card, isPlayable);
+      if (mode !== 'flip') this.bindCardPointer(wrapper, card, isPlayable);
       rowEl.appendChild(wrapper);
     });
   }
@@ -1679,6 +1736,8 @@ class UnoArenaApp {
       if (!drag.ghost) {
         drag.ghost = wrapper.cloneNode(true);
         drag.ghost.className = 'classic-drag-ghost';
+        drag.ghost.setAttribute('aria-hidden', 'true');
+        drag.ghost.removeAttribute('tabindex');
         Object.assign(drag.ghost.style, { width: `${drag.rect.width}px`, height: `${drag.rect.height}px`, left: `${drag.rect.left}px`, top: `${drag.rect.top}px` });
         document.body.appendChild(drag.ghost);
       }
@@ -1705,7 +1764,7 @@ class UnoArenaApp {
   }
 
   onCardInteraction(card, wrapperEl, isPlayable) {
-    if (this.gameState.mode === 'classic') {
+    if (this.gameState.mode !== 'flip') {
       if (this.ws?.readyState !== WebSocket.OPEN) return;
       if (isPlayable && this.clientView?.isMyTurn && !this.isMoveInFlight) this.handleCardClick(card, wrapperEl);
       return;
@@ -1814,7 +1873,7 @@ class UnoArenaApp {
     const face = card.color ? card : (this.gameState.flipSide === 'dark' ? card.dark : card.light);
 
     // Wild Card -> Prompt Color Picker
-    if (face.color === 'wild') {
+    if (face.color === 'wild' && !(this.gameState.mode === 'no_mercy' && face.type === 'wild_color_roulette')) {
       this.pendingPlayCard = card;
       this.pendingPlayWrapper = wrapperEl;
       this.openColorPicker();
@@ -1834,7 +1893,7 @@ class UnoArenaApp {
     clearTimeout(this.moveFlightTimer);
     this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
 
-    if (wrapperEl && this.gameState.mode !== 'classic') {
+    if (wrapperEl && this.gameState.mode === 'flip') {
       wrapperEl.classList.add('playing');
     }
 
@@ -1868,7 +1927,7 @@ class UnoArenaApp {
         clearTimeout(this.moveFlightTimer);
         this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
 
-        if (this.pendingPlayWrapper && this.gameState.mode !== 'classic') {
+        if (this.pendingPlayWrapper && this.gameState.mode === 'flip') {
           this.pendingPlayWrapper.classList.add('playing');
         }
 
@@ -1876,7 +1935,7 @@ class UnoArenaApp {
         this.el.colorPickerModal.classList.remove('active');
         sounds.playSnap(520, 0.1);
         this.send({
-          type: this.gameState.pendingAction?.type === 'opening_color' ? 'choose_color' : 'play_card',
+          type: ['opening_color', 'color_roulette'].includes(this.gameState.pendingAction?.type) ? 'choose_color' : 'play_card',
           data: {
             cardId: this.pendingPlayCard?.id,
             chosenColor,
@@ -1913,7 +1972,7 @@ class UnoArenaApp {
         clearTimeout(this.moveFlightTimer);
         this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
 
-        if (this.pendingPlayWrapper && this.gameState.mode !== 'classic') {
+        if (this.pendingPlayWrapper && this.gameState.mode === 'flip') {
           this.pendingPlayWrapper.classList.add('playing');
         }
 

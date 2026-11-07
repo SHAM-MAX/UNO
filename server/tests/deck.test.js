@@ -73,13 +73,13 @@ test('No Mercy Deck: Composition must be exactly 168 cards with all extreme acti
     types[card.type] = (types[card.type] || 0) + 1;
   }
 
-  assert.equal(types.skip_everyone, 4, '4 Skip Everyone cards (1 per color)');
-  assert.equal(types.discard_all, 8, '8 Discard All cards (2 per color)');
+  assert.equal(types.skip_everyone, 8, '8 Skip Everyone cards (2 per color)');
+  assert.equal(types.discard_all, 12, '12 Discard All cards (3 per color)');
   assert.equal(types.draw4, 8, '8 colored Draw 4 cards (2 per color)');
   assert.equal(types.wild_reverse_draw4, 8, '8 Wild Reverse Draw 4 cards');
-  assert.equal(types.wild_draw6, 8, '8 Wild Draw 6 cards');
+  assert.equal(types.wild_draw6, 4, '4 Wild Draw 6 cards');
   assert.equal(types.wild_draw10, 4, '4 Wild Draw 10 cards');
   assert.equal(types.wild_color_roulette, 8, '8 Wild Color Roulette cards');
-  assert.equal(types.wild, 8, '8 Regular Wild cards');
+  assert.equal(types.wild || 0, 0, 'No plain Wild cards');
 });
 

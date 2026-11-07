@@ -1,3 +1,4 @@
+import { renderNoMercyFace, renderNoMercyBack } from './noMercyGraphics.js';
 import { COLOR_METADATA } from '../shared/constants.js';
 import { getActiveFace } from '../shared/deck.js';
 
@@ -75,6 +76,7 @@ export function renderCardHTML(card, options = {}) {
   const flipSide = options.flipSide || 'light';
   const mini = Boolean(options.mini);
   const face = getActiveFace(card, mode, flipSide);
+  if (mode === 'no_mercy') return `<div class="game-card nm-card nm-vector-card ${mini ? 'mini' : ''}">${renderNoMercyFace(face)}</div>`;
   const metadata = COLOR_METADATA[face.color] || COLOR_METADATA.wild;
   const isWild = face.color === 'wild';
   const isNumber = face.type === 'number';
@@ -116,6 +118,7 @@ export function renderCardHTML(card, options = {}) {
 }
 
 export function renderCardBackHTML(isDark = false, mini = false, mode = 'classic') {
+  if (mode === 'no_mercy') return `<div class="game-card nm-card nm-vector-card ${mini ? 'mini' : ''}">${renderNoMercyBack()}</div>`;
   if (mode === 'classic') {
     return `<div class="game-card classic-image-card classic-image-back ${mini ? 'mini' : ''}" aria-label="UNO card back" role="img"><img class="classic-back-image" src="/assets/uno-classic-back.png" alt="" draggable="false"></div>`;
   }
