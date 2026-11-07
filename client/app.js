@@ -142,9 +142,12 @@ class UnoArenaApp {
       swapPickerModal: document.getElementById('swapPickerModal'),
       swapOptionsContainer: document.getElementById('swapOptionsContainer'),
       gameOverModal: document.getElementById('gameOverModal'),
+      gameOverCloseBtn: document.getElementById('gameOverCloseBtn'),
       winnerNameText: document.getElementById('winnerNameText'),
+      victoryWinsBadge: document.getElementById('victoryWinsBadge'),
       winReasonText: document.getElementById('winReasonText'),
       rematchBtn: document.getElementById('rematchBtn'),
+      btnViewVictory: document.getElementById('btnViewVictory'),
       rulesModal: document.getElementById('rulesModal'),
       rulesModalClose: document.getElementById('rulesModalClose'),
     };
@@ -638,6 +641,24 @@ class UnoArenaApp {
       if (this.gameState.status === 'round_over') this.el.gameOverModal.classList.remove('active');
     });
 
+    // Victory celebration close button (dismisses celebration overlay to reveal table)
+    this.el.gameOverCloseBtn?.addEventListener('click', () => {
+      const currentMatchKey = this.gameState?.matchId || `${this.roomId || ''}_${this.gameState?.roundNumber || 0}`;
+      this.dismissedGameOverMatchId = currentMatchKey || true;
+      this.el.gameOverModal.classList.remove('active');
+      if (this.el.btnViewVictory && (this.gameState?.status === 'game_over' || this.gameState?.status === 'round_over')) {
+        this.el.btnViewVictory.style.display = 'inline-flex';
+      }
+    });
+
+    // Reopen victory celebration from finished table
+    this.el.btnViewVictory?.addEventListener('click', () => {
+      this.dismissedGameOverMatchId = null;
+      if (this.el.btnViewVictory) this.el.btnViewVictory.style.display = 'none';
+      if (this.gameState) this.showGameOver(this.gameState);
+    });
+
+
     // Rules Tabs
     document.querySelectorAll('.rule-tab-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -1097,7 +1118,11 @@ class UnoArenaApp {
       this.el.colorPickerModal.classList.remove('active');
       if (view.gameState.mode === 'no_mercy') this.el.swapPickerModal.classList.remove('active');
     }
-    if (view.gameState.status === 'playing') this.el.gameOverModal.classList.remove('active');
+    if (view.gameState.status === 'playing') {
+      this.dismissedGameOverMatchId = null;
+      if (this.el.btnViewVictory) this.el.btnViewVictory.style.display = 'none';
+      this.el.gameOverModal.classList.remove('active');
+    }
     if (view.drawFourEvidence && this.lastDrawFourEvidenceId !== view.drawFourEvidence.id) {
       this.lastDrawFourEvidenceId = view.drawFourEvidence.id;
       const evidence = view.drawFourEvidence;
@@ -1154,7 +1179,12 @@ class UnoArenaApp {
     const result=p?.previousResult;
     if (result) {
       const winner=result.scores.find(player=>player.id===result.winnerId);
-      this.el.winnerNameText.textContent=`${winner?.name || 'Winner'} WINS!`;
+      if (this.el.victoryWinsBadge) {
+        this.el.winnerNameText.textContent = winner?.name || 'Winner';
+        this.el.victoryWinsBadge.textContent = 'WINS!';
+      } else {
+        this.el.winnerNameText.textContent=`${winner?.name || 'Winner'} WINS!`;
+      }
       this.el.winReasonText.textContent=`You are sitting out this rematch. ${result.winReason || ''}`;
     }
     this.el.rematchBtn.style.display='none';
@@ -1995,15 +2025,36 @@ class UnoArenaApp {
   }
 
   showGameOver(gameState) {
+    const currentMatchKey = gameState.matchId || `${this.roomId || ''}_${gameState.roundNumber || 0}`;
+    if (this.dismissedGameOverMatchId && this.dismissedGameOverMatchId === currentMatchKey) {
+      if (this.el.btnViewVictory) this.el.btnViewVictory.style.display = 'inline-flex';
+      return;
+    }
+
     const winner = gameState.players.find((p) => p.id === gameState.winnerId);
-    this.el.winnerNameText.textContent = winner ? `${winner.name} WINS!` : 'GAME OVER!';
+    if (this.el.victoryWinsBadge) {
+      if (gameState.status === 'round_over') {
+        this.el.winnerNameText.textContent = winner?.name || 'Player';
+        this.el.victoryWinsBadge.textContent = 'ROUND WON!';
+      } else if (winner) {
+        this.el.winnerNameText.textContent = winner.name;
+        this.el.victoryWinsBadge.textContent = 'WINS!';
+      } else {
+        this.el.winnerNameText.textContent = 'GAME OVER';
+        this.el.victoryWinsBadge.textContent = '';
+      }
+    } else {
+      this.el.winnerNameText.textContent = winner ? `${winner.name} WINS!` : 'GAME OVER!';
+      if (gameState.status === 'round_over') this.el.winnerNameText.textContent = `${winner?.name || 'Player'} wins the round`;
+    }
+
     this.el.winReasonText.textContent = (gameState.winReason || 'All cards played!') + (gameState.mode === 'classic' ? ' Scores: ' + gameState.players.map(p => `${p.name}: ${p.score}`).join(' · ') : '');
-    if (gameState.status === 'round_over') this.el.winnerNameText.textContent = `${winner?.name || 'Player'} wins the round`;
     this.el.rematchBtn.textContent = gameState.status === 'round_over' ? 'Next round' : 'REQUEST REMATCH';
 
     const me = gameState.players.find((p) => p.id === this.playerId);
     this.el.rematchBtn.style.display = (gameState.status === 'round_over' ? me?.isHost : this.clientView.canProposeRematch) ? 'block' : 'none';
 
+    if (this.el.btnViewVictory) this.el.btnViewVictory.style.display = 'none';
     if (!this.el.gameOverModal.classList.contains('active')) sounds.playVictory();
     this.el.gameOverModal.classList.add('active');
   }

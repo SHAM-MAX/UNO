@@ -69,6 +69,8 @@
   .rule-content-block { color: #4e5947; }
   #winReasonText { color: #59634f !important; }
   #winnerNameText { color: #103b2c !important; }
+  #gameOverModal #winnerNameText { color: #ffffff !important; }
+  #gameOverModal #winReasonText { color: #f1ebd8 !important; }
   .color-option-btn { min-height: 72px; height: auto; }
   .player-target-btn { min-height: 48px; color: #103b2c; background: #f2e6cf; }
   #colorPickerModal .modal-card > p, #swapPickerModal .modal-card > p { color: #59634f !important; }
@@ -212,6 +214,13 @@
   .in-arena .table-felt { width: min(94vw, 440px) !important; height: 205px !important; max-height: none !important; }
   .in-arena .table-action-bar { flex-wrap: wrap; bottom: -22px !important; gap: 8px !important; }
   .in-arena .action-btn { min-height: 44px !important; padding: 8px 12px !important; font-size: 12px !important; }
+  .in-arena #gameOverModal #rematchBtn.victory-rematch-btn {
+    min-height: 52px !important;
+    padding: 13px 28px !important;
+    font-size: 1.05rem !important;
+    width: 100% !important;
+    max-width: 320px !important;
+  }
   .in-arena .player-bottom-area { flex-shrink: 0; padding-top: 8px; }
   .in-arena .hand-scroll-container { overflow: visible !important; padding-top: 16px !important; }
   .in-arena .hand-cards { min-height: 110px !important; }
