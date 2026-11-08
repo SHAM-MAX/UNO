@@ -160,6 +160,9 @@ export class RoomManager {
       pendingAction: null,
       eventLogs: [],
       turnDrawnCard: false,
+      turnDrawnCardId: null,
+      turnDrawnCount: 0,
+      turnDrawnPlayable: false,
     };
 
     this.addLog(room, `${hostPlayer.name} created the room.`);
@@ -364,8 +367,10 @@ export class RoomManager {
       room.lastDrawFourResult = null;
       room.pendingRoundWinner = null;
       room.turnDrawnCardId = null;
+      room.turnDrawnCount = 0;
+      room.turnDrawnPlayable = false;
     }
-    if (room.mode === 'no_mercy') { room.dealerIndex = Math.floor(Math.random() * room.players.length); room.mercyPile = []; room.turnDrawnCardId = null; room.lastRoulette = null; room.unoChallengeTargets = []; room.lastNoMercyAction = null; }
+    if (room.mode === 'no_mercy') { room.dealerIndex = Math.floor(Math.random() * room.players.length); room.mercyPile = []; room.turnDrawnCardId = null; room.turnDrawnCount = 0; room.turnDrawnPlayable = false; room.lastRoulette = null; room.unoChallengeTargets = []; room.lastNoMercyAction = null; }
     room.status = 'playing';
     room.winnerId = null;
     room.winReason = null;
@@ -374,6 +379,9 @@ export class RoomManager {
     room.pendingDrawPenalty = 0;
     room.unoChallengeWindow = null;
     room.turnDrawnCard = false;
+    room.turnDrawnCardId = null;
+    room.turnDrawnCount = 0;
+    room.turnDrawnPlayable = false;
     room.flipSide = 'light';
     room.pendingAction = null;
 
@@ -572,7 +580,10 @@ export class RoomManager {
     }
     room.lastRoulette = { id: action.id, targetPlayerId: playerId, color, revealed };
     room.unoChallengeWindow = null;
-    room.turnDrawnCard = false; room.turnDrawnCardId = null;
+    room.turnDrawnCard = false;
+    room.turnDrawnCardId = null;
+    room.turnDrawnCount = 0;
+    room.turnDrawnPlayable = false;
     room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players);
     const win = checkWinCondition(room.players, room.playerHands, room.mode);
     if (win.winnerId) { room.status = 'game_over'; room.winnerId = win.winnerId; room.winReason = win.reason; }
@@ -658,15 +669,29 @@ export class RoomManager {
     }
 
     if (room.mode === 'no_mercy') {
-      if (!room.turnDrawnCard && !room.pendingDrawPenalty) {
+      if (room.pendingDrawPenalty > 0) {
+        this.drawCard(roomId, currentPlayer.id);
+      } else if (room.turnDrawnCard) {
+        if (room.turnDrawnPlayable && room.turnDrawnCardId) {
+          const res = this.playCard(roomId, currentPlayer.id, { cardId: room.turnDrawnCardId, chosenColor: CLASSIC_COLORS[0], targetPlayerId: room.players.find(p => !p.isEliminated && p.id !== currentPlayer.id)?.id });
+          if (!res.success) this.passTurn(roomId, currentPlayer.id);
+        } else {
+          this.passTurn(roomId, currentPlayer.id);
+        }
+      } else {
         const playable = getPlayableCardIds(room.playerHands[currentPlayer.id], room.topDiscard, room.activeColor, room.mode);
-        if (!playable.length) this.drawCard(roomId, currentPlayer.id);
-      }
-      if (room.status === 'playing' && room.players[room.currentTurn].id === currentPlayer.id) {
-        if (room.pendingDrawPenalty) this.drawCard(roomId, currentPlayer.id);
-        else {
-          const cardId = room.turnDrawnCardId || getPlayableCardIds(room.playerHands[currentPlayer.id], room.topDiscard, room.activeColor, room.mode)[0];
-          if (cardId) this.playCard(roomId, currentPlayer.id, { cardId, chosenColor: CLASSIC_COLORS[0], targetPlayerId: room.players.find(p => !p.isEliminated && p.id !== currentPlayer.id)?.id });
+        if (playable.length) {
+          this.playCard(roomId, currentPlayer.id, { cardId: playable[0], chosenColor: CLASSIC_COLORS[0], targetPlayerId: room.players.find(p => !p.isEliminated && p.id !== currentPlayer.id)?.id });
+        } else {
+          const drawRes = this.drawCard(roomId, currentPlayer.id);
+          if (drawRes.success && !drawRes.knockedOut && room.players[room.currentTurn]?.id === currentPlayer.id) {
+            if (room.turnDrawnPlayable && room.turnDrawnCardId) {
+              const playRes = this.playCard(roomId, currentPlayer.id, { cardId: room.turnDrawnCardId, chosenColor: CLASSIC_COLORS[0], targetPlayerId: room.players.find(p => !p.isEliminated && p.id !== currentPlayer.id)?.id });
+              if (!playRes.success) this.passTurn(roomId, currentPlayer.id);
+            } else {
+              this.passTurn(roomId, currentPlayer.id);
+            }
+          }
         }
       }
       if (this.onStateChange) this.onStateChange(roomId);
@@ -773,6 +798,9 @@ export class RoomManager {
     room.topDiscard = card;
     currentPlayer.cardCount = hand.length;
     room.turnDrawnCard = false;
+    room.turnDrawnCardId = null;
+    room.turnDrawnCount = 0;
+    room.turnDrawnPlayable = false;
     if (room.mode === 'no_mercy') room.lastNoMercyAction = { id: randomUUID(), type: face.type, playerId, targetPlayerId: payload.targetPlayerId, direction: room.direction, discardedIds: [] };
 
     if (face.color === 'wild') {
@@ -1012,9 +1040,11 @@ export class RoomManager {
     }
     const hand = room.playerHands[playerId];
     if (room.mode === 'no_mercy') {
-      if (room.pendingAction || room.turnDrawnCard) return { success: false, error: 'Resolve the pending action or play the drawn card' };
-      if (!room.pendingDrawPenalty && getPlayableCardIds(hand, room.topDiscard, room.activeColor, room.mode).length) return { success: false, error: 'Play a matching card before drawing' };
-      room.unoChallengeWindow = null; room.unoChallengeTargets = []; currentPlayer.hasCalledUno = false;
+      if (room.pendingAction) return { success: false, error: 'Resolve the pending action first' };
+      if (room.turnDrawnPlayable) return { success: false, error: 'A playable card has already been drawn. Draw pile is locked.' };
+      room.unoChallengeWindow = null;
+      room.unoChallengeTargets = [];
+      currentPlayer.hasCalledUno = false;
     }
 
     if (room.pendingDrawPenalty > 0) {
@@ -1035,6 +1065,8 @@ export class RoomManager {
       }
       room.turnDrawnCard = false;
       room.turnDrawnCardId = null;
+      room.turnDrawnCount = 0;
+      room.turnDrawnPlayable = false;
       room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players, 1);
       this.resetTurnTimer(room);
       this.persist(roomId);
@@ -1042,41 +1074,49 @@ export class RoomManager {
     }
 
     if (room.mode === 'no_mercy') {
-      const drawn = [];
-      let foundPlayable = false;
-
-      while (!foundPlayable) {
-        this.reshuffleIfEmpty(room);
-        if (room.drawPile.length === 0) break;
-        const card = room.drawPile.shift();
-        drawn.push(card);
-        hand.push(card);
-        currentPlayer.cardCount = hand.length;
-
-        if (this.checkKnockout(room, currentPlayer)) {
-          room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players);
-          room.turnDrawnCard = false; room.turnDrawnCardId = null;
-          this.resetTurnTimer(room);
-          this.persist(roomId);
-          return { success: true, drawnCards: drawn };
-        }
-
-        if (isCardPlayable(card, room.topDiscard, room.activeColor, room.mode, room.flipSide, 0, room.houseRules)) {
-          foundPlayable = true;
-        }
+      this.reshuffleIfEmpty(room);
+      if (room.drawPile.length === 0) {
+        return { success: false, error: 'Draw pile is empty' };
       }
 
-      this.addLog(room, `${currentPlayer.name} drew ${drawn.length} card(s) until finding a playable card.`);
+      const card = room.drawPile.shift();
+      hand.push(card);
+      currentPlayer.cardCount = hand.length;
+
+      if (this.checkKnockout(room, currentPlayer)) {
+        room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players);
+        room.turnDrawnCard = false;
+        room.turnDrawnCardId = null;
+        room.turnDrawnCount = 0;
+        room.turnDrawnPlayable = false;
+        this.resetTurnTimer(room);
+        this.persist(roomId);
+        return { success: true, drawnCards: [card], knockedOut: true };
+      }
+
+      room.turnDrawnCount = (room.turnDrawnCount || 0) + 1;
+      const playable = isCardPlayable(
+        card,
+        room.topDiscard,
+        room.activeColor,
+        room.mode,
+        room.flipSide,
+        0,
+        room.houseRules
+      );
+      room.turnDrawnPlayable = Boolean(playable);
+      room.turnDrawnCard = true;
+      room.turnDrawnCardId = card.id;
+
       if (hand.length !== 1) {
         currentPlayer.hasCalledUno = false;
         currentPlayer.isUnoArmed = false;
       }
-      room.turnDrawnCard = foundPlayable;
-      room.turnDrawnCardId = foundPlayable ? drawn.at(-1).id : null;
-      if (!foundPlayable) room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players);
+
+      this.addLog(room, `${currentPlayer.name} drew a card${playable ? ' (playable)' : ''}.`);
       this.resetTurnTimer(room);
       this.persist(roomId);
-      return { success: true, drawnCards: drawn };
+      return { success: true, drawnCards: [card], isPlayable: playable };
     }
 
     this.reshuffleIfEmpty(room);
@@ -1126,8 +1166,8 @@ export class RoomManager {
     if (currentPlayer.id !== playerId) return { success: false, error: 'Not your turn' };
 
     if (room.mode !== 'flip' && room.pendingAction) return { success: false, error: 'Resolve pending action first' };
-    if (room.mode === 'no_mercy' && room.turnDrawnCardId) return { success: false, error: 'You must play the drawn card' };
-    if (!room.turnDrawnCard) {
+    if (room.pendingDrawPenalty > 0) return { success: false, error: 'Cannot pass: must resolve pending draw penalty' };
+    if (!room.turnDrawnCard && !room.turnDrawnCount) {
       return { success: false, error: 'You must draw a card before passing' };
     }
 
@@ -1137,6 +1177,8 @@ export class RoomManager {
     }
     room.turnDrawnCard = false;
     room.turnDrawnCardId = null;
+    room.turnDrawnCount = 0;
+    room.turnDrawnPlayable = false;
     room.currentTurn = getNextPlayerIndex(room.currentTurn, room.direction, room.players, 1);
     this.addLog(room, `${currentPlayer.name} passed.`);
     this.resetTurnTimer(room);
@@ -1475,6 +1517,9 @@ export class RoomManager {
       roundResult: room.roundResult,
       dealerIndex: room.dealerIndex,
       turnDrawnCard: room.turnDrawnCard,
+      turnDrawnCardId: room.turnDrawnCardId,
+      turnDrawnCount: room.turnDrawnCount || 0,
+      turnDrawnPlayable: Boolean(room.turnDrawnPlayable),
       turnDeadline: room.turnDeadline || null,
       turnDurationMs: 20000,
       eventLogs: room.eventLogs.slice(0, 20),
@@ -1513,7 +1558,8 @@ export class RoomManager {
       myPlayerId: playerId,
       isMyTurn,
       canPlayCards,
-      canDraw: room.mode === 'no_mercy' ? isMyTurn && !room.pendingAction && !room.turnDrawnCard && (room.pendingDrawPenalty > 0 || !canPlayCards.length) : room.mode === 'classic' ? isMyTurn && !room.turnDrawnCard && (!room.pendingAction || room.pendingAction.type === 'draw4_challenge') : isMyTurn,
+      canDraw: room.mode === 'no_mercy' ? isMyTurn && !room.pendingAction && (room.pendingDrawPenalty > 0 || !room.turnDrawnPlayable) : room.mode === 'classic' ? isMyTurn && !room.turnDrawnCard && (!room.pendingAction || room.pendingAction.type === 'draw4_challenge') : isMyTurn,
+      canPass: room.mode === 'no_mercy' ? isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCount > 0 || room.turnDrawnCard) : room.mode === 'classic' ? isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCard) : isMyTurn && Boolean(room.turnDrawnCard),
       canCallUno: room.mode !== 'flip' ? room.status === 'playing' && ((isMyTurn && myHand.length === 2 && !room.pendingAction) || room.unoChallengeWindow?.targetPlayerId === playerId || (room.mode === 'no_mercy' && room.unoChallengeTargets?.includes(playerId))) && !myPlayer.hasCalledUno : myHand.length <= 2,
       canCatchUno,
       canCatchUnoTargets,

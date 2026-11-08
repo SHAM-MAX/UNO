@@ -161,6 +161,38 @@ class UnoArenaApp {
 
   initEvents() {
     // Sound toggle
+    const brandNavToggle = document.getElementById('brandNavToggle');
+    const topNav = document.querySelector('.top-nav');
+    if (brandNavToggle && topNav) {
+      brandNavToggle.addEventListener('click', (e) => {
+        if (!document.body.classList.contains('in-arena')) return;
+        e.stopPropagation();
+        const expanded = topNav.classList.toggle('nav-expanded');
+        brandNavToggle.setAttribute('aria-expanded', String(expanded));
+      });
+      brandNavToggle.addEventListener('keydown', (e) => {
+        if (!document.body.classList.contains('in-arena')) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          const expanded = topNav.classList.toggle('nav-expanded');
+          brandNavToggle.setAttribute('aria-expanded', String(expanded));
+        }
+      });
+      document.addEventListener('click', (e) => {
+        if (topNav.classList.contains('nav-expanded') && !topNav.contains(e.target)) {
+          topNav.classList.remove('nav-expanded');
+          brandNavToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && topNav.classList.contains('nav-expanded')) {
+          topNav.classList.remove('nav-expanded');
+          brandNavToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
     this.el.soundToggleBtn.addEventListener('click', () => {
       const enabled = sounds.toggle();
       this.updateSoundIcon(enabled);
@@ -654,6 +686,11 @@ class UnoArenaApp {
     }
 
     this.el.btnPassAction.addEventListener('click', () => {
+      if (this.isMoveInFlight) return;
+      this.isMoveInFlight = true;
+      clearTimeout(this.moveFlightTimer);
+      this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
+      sounds.playSnap?.(480, 0.08);
       this.send({ type: 'pass_turn' });
     });
 
@@ -1567,9 +1604,6 @@ class UnoArenaApp {
     this.el.directionArrow.textContent = isClockwise ? '↻' : '↺';
     this.el.directionText.textContent = isClockwise ? 'CLOCKWISE' : 'COUNTER-CLOCKWISE';
 
-    // Synchronized 20-Second Turn Countdown Timer
-    if (gameState.mode !== 'classic') this.updateTurnTimer(gameState.turnDeadline, isMyTurn, gameState.status);
-
     // Opponents
     const opponents = gameState.players.filter((p) => p.id !== this.playerId);
     const avatarPalettes = ['#1e3a8a', '#065f46', '#78350f', '#831843', '#4c1d95'];
@@ -1580,13 +1614,18 @@ class UnoArenaApp {
         const avatarColor = avatarPalettes[idx % avatarPalettes.length];
         const canCatchThis = (this.clientView?.canCatchUnoTargets?.includes(p.id) || this.clientView?.canCatchUno === p.id) || (p.cardCount === 1 && !p.hasCalledUno && !p.isEliminated);
 
+        const remainingMs = (gameState.turnDeadline && gameState.turnDeadline > Date.now()) ? Math.max(0, gameState.turnDeadline - Date.now()) : 20000;
+        const initialSec = Math.ceil(remainingMs / 1000);
+        const initialFraction = Math.max(0, Math.min(1, remainingMs / 20000));
+        const initialOffset = (87.96 * (1 - initialFraction)).toFixed(2);
+
         const activeTimerHtml = (gameState.mode === 'no_mercy' && isCurrent && gameState.status === 'playing' && gameState.turnDeadline)
-          ? `<div class="active-player-turn-timer active" aria-label="Turn timer">
+          ? `<div class="active-player-turn-timer active ${initialSec <= 5 ? 'critical' : (initialSec <= 10 ? 'warning' : '')}" aria-label="Turn timer">
                <svg class="mini-timer-ring" viewBox="0 0 34 34">
                  <circle class="mini-timer-bg" cx="17" cy="17" r="14"></circle>
-                 <circle class="mini-timer-prog" cx="17" cy="17" r="14" stroke-dasharray="87.96" stroke-dashoffset="0"></circle>
+                 <circle class="mini-timer-prog" cx="17" cy="17" r="14" stroke-dasharray="87.96" stroke-dashoffset="${initialOffset}"></circle>
                </svg>
-               <span class="mini-timer-text">20</span>
+               <span class="mini-timer-text">${initialSec}</span>
              </div>`
           : '';
 
@@ -1630,11 +1669,10 @@ class UnoArenaApp {
               </div>
               <div class="opponent-info">
                 <div class="opponent-name">
-                  ${p.isHost ? '👑 ' : ''}${escapeHtml(p.name)}
-                  ${isCurrent ? '⭐' : ''}
+                  ${escapeHtml(p.name)}
                 </div>
                 <div class="opponent-cards-count">
-                  🂠 ${p.isEliminated ? 'KNOCKED OUT' : `${p.cardCount} cards${gameState.mode === 'classic' ? ` · ${p.score || 0} pts` : ''}`}
+                  ${p.isEliminated ? 'KNOCKED OUT' : `${p.cardCount} card${p.cardCount === 1 ? '' : 's'}${gameState.mode === 'classic' ? ` · ${p.score || 0} pts` : ''}`}
                 </div>
               </div>
               ${gameState.mode === 'no_mercy' ? unoStatusHtml : (unoActive && !p.isEliminated ? `<span class="uno-alert-badge">${gameState.mode !== 'classic' || p.hasCalledUno ? 'UNO!' : '1 CARD'}</span>` : '')}
@@ -1667,6 +1705,16 @@ class UnoArenaApp {
     this.el.drawPileBtn.disabled = !canDraw || (gameState.mode === 'classic' && !!gameState.pendingAction);
     this.el.drawPileBtn.setAttribute('aria-label', 'Draw one card from the deck');
 
+    if (gameState.mode === 'no_mercy') {
+      if (gameState.turnDrawnPlayable || (!canDraw && isMyTurn && !gameState.pendingDrawPenalty)) {
+        this.el.drawPileBtn.classList.add('draw-locked');
+      } else {
+        this.el.drawPileBtn.classList.remove('draw-locked');
+      }
+    } else {
+      this.el.drawPileBtn.classList.remove('draw-locked');
+    }
+
     // Stacking draw penalty badge on draw pile
     if (gameState.pendingDrawPenalty > 0) {
       if (this.el.drawPenaltyBadge) {
@@ -1691,8 +1739,9 @@ class UnoArenaApp {
     }
 
     if (gameState.mode === 'no_mercy' && !gameState.pendingDrawPenalty) this.el.btnDrawAction.textContent = 'DRAW TO PLAY';
-    // Pass button (visible if drawn this turn)
-    if (gameState.turnDrawnCard && isMyTurn && gameState.mode !== 'no_mercy') {
+    // Pass button (visible if drawn this turn and eligible to pass)
+    const canPass = Boolean(this.clientView?.canPass ?? (gameState.turnDrawnCard && isMyTurn && !gameState.pendingDrawPenalty));
+    if (canPass) {
       this.el.btnPassAction.style.display = 'inline-flex';
     } else {
       this.el.btnPassAction.style.display = 'none';
@@ -1736,13 +1785,18 @@ class UnoArenaApp {
       if (gameState.mode === 'no_mercy' && gameState.status === 'playing') {
         this.el.localPlayerProfile.style.display = 'flex';
         this.el.localPlayerProfile.classList.toggle('active-turn', isMyTurn);
+        const remainingMs = (gameState.turnDeadline && gameState.turnDeadline > Date.now()) ? Math.max(0, gameState.turnDeadline - Date.now()) : 20000;
+        const initialSec = Math.ceil(remainingMs / 1000);
+        const initialFraction = Math.max(0, Math.min(1, remainingMs / 20000));
+        const initialOffset = (87.96 * (1 - initialFraction)).toFixed(2);
+
         const localTimerHtml = (isMyTurn && gameState.turnDeadline)
-          ? `<div class="active-player-turn-timer active" aria-label="Turn timer">
+          ? `<div class="active-player-turn-timer active ${initialSec <= 5 ? 'critical' : (initialSec <= 10 ? 'warning' : '')}" aria-label="Turn timer">
                <svg class="mini-timer-ring" viewBox="0 0 34 34">
                  <circle class="mini-timer-bg" cx="17" cy="17" r="14"></circle>
-                 <circle class="mini-timer-prog" cx="17" cy="17" r="14" stroke-dasharray="87.96" stroke-dashoffset="0"></circle>
+                 <circle class="mini-timer-prog" cx="17" cy="17" r="14" stroke-dasharray="87.96" stroke-dashoffset="${initialOffset}"></circle>
                </svg>
-               <span class="mini-timer-text">20</span>
+               <span class="mini-timer-text">${initialSec}</span>
              </div>`
           : '';
         const localUnoDeclaredHtml = (myHand.length === 1 && (me?.hasCalledUno || this.isUnoArmed))
@@ -1753,7 +1807,7 @@ class UnoArenaApp {
           <div class="local-profile-left">
             <div class="local-avatar">${escapeHtml(me?.name?.charAt(0)?.toUpperCase() || 'P')}</div>
             <div class="local-info">
-              <div class="local-name">${escapeHtml(me?.name || 'Player')}${isMyTurn ? ' ⭐' : ''}</div>
+              <div class="local-name">${escapeHtml(me?.name || 'Player')}</div>
               <div class="local-cards-count">${myHand.length} card${myHand.length === 1 ? '' : 's'}</div>
             </div>
           </div>
@@ -1783,6 +1837,11 @@ class UnoArenaApp {
           this.isUnoArmed = false;
         }
       }
+    }
+
+    // Synchronized Turn Timer (invoked after all DOM elements are mounted)
+    if (gameState.mode !== 'classic') {
+      this.updateTurnTimer(gameState.turnDeadline, isMyTurn, gameState.status);
     }
 
     // Player Hand Cards
@@ -1974,109 +2033,85 @@ class UnoArenaApp {
   }
 
   updateTurnTimer(deadline, isMyTurn, status) {
-    if (this.turnTimerInterval) {
-      clearInterval(this.turnTimerInterval);
-      this.turnTimerInterval = null;
-    }
+    this.activeTurnDeadline = deadline;
+    this.activeTurnStatus = status;
+    this.activeTurnIsMyTurn = Boolean(isMyTurn);
 
-    if (this.gameState?.mode === 'classic') {
-      this.el.turnTimerContainer.style.display = 'none';
-      if (status !== 'playing' || !deadline) return;
-      const ring = document.querySelector('.classic-profile-ring');
-      if (!ring) return;
-      const circle = ring.querySelector('circle');
-      const seconds = ring.parentElement.querySelector('.classic-profile-seconds');
-      const tick = () => {
-        const remaining = Math.max(0, deadline - Date.now());
-        circle.style.strokeDashoffset = String(138.23 * (1 - Math.min(1, remaining / 20000)));
-        if (seconds) seconds.textContent = `${Math.ceil(remaining / 1000)}s`;
-        ring.classList.toggle('timer-critical', remaining <= 5000);
-        if (!remaining) { clearInterval(this.turnTimerInterval); this.turnTimerInterval = null; }
-      };
-      tick();
-      if (deadline > Date.now()) this.turnTimerInterval = setInterval(tick, 100);
-      return;
-    }
+    const tick = () => {
+      if (this.activeTurnStatus !== 'playing' || !this.activeTurnDeadline) {
+        if (this.turnTimerInterval) {
+          clearInterval(this.turnTimerInterval);
+          this.turnTimerInterval = null;
+        }
+        return;
+      }
 
-    if (this.gameState?.mode === 'no_mercy') {
-      if (this.el.turnTimerContainer) this.el.turnTimerContainer.style.display = 'none';
-      if (status !== 'playing' || !deadline) return;
+      const now = Date.now();
+      const remainingMs = Math.max(0, this.activeTurnDeadline - now);
+      const remainingSec = Math.ceil(remainingMs / 1000);
 
-      const miniTimers = document.querySelectorAll('.active-player-turn-timer');
-      const miniCircumference = 87.96; // 2 * Math.PI * 14
-      const tick = () => {
-        const now = Date.now();
-        const remainingMs = Math.max(0, deadline - now);
-        const remainingSec = Math.ceil(remainingMs / 1000);
+      if (this.gameState?.mode === 'classic') {
+        if (this.el.turnTimerContainer) this.el.turnTimerContainer.style.display = 'none';
+        const ring = document.querySelector('.classic-profile-ring');
+        if (ring) {
+          const circle = ring.querySelector('circle');
+          const seconds = ring.parentElement?.querySelector('.classic-profile-seconds');
+          if (circle) circle.style.strokeDashoffset = String(138.23 * (1 - Math.min(1, remainingMs / 20000)));
+          if (seconds) seconds.textContent = `${remainingSec}s`;
+          ring.classList.toggle('timer-critical', remainingMs <= 5000);
+        }
+        return;
+      }
+
+      if (this.gameState?.mode === 'no_mercy') {
+        if (this.el.turnTimerContainer) this.el.turnTimerContainer.style.display = 'none';
+        const miniTimers = document.querySelectorAll('.active-player-turn-timer');
+        const miniCircumference = 87.96;
         const fraction = Math.max(0, Math.min(1, remainingMs / 20000));
-        const offset = miniCircumference * (1 - fraction);
+        const offset = (miniCircumference * (1 - fraction)).toFixed(2);
 
         miniTimers.forEach(timer => {
           const txt = timer.querySelector('.mini-timer-text');
           const prog = timer.querySelector('.mini-timer-prog');
           if (txt) txt.textContent = String(remainingSec);
-          if (prog) prog.style.strokeDashoffset = offset.toFixed(2);
+          if (prog) prog.style.strokeDashoffset = offset;
           timer.classList.toggle('warning', remainingSec <= 10 && remainingSec > 5);
           timer.classList.toggle('critical', remainingSec <= 5);
         });
+        return;
+      }
 
-        if (remainingMs <= 0 && this.turnTimerInterval) {
-          clearInterval(this.turnTimerInterval);
-          this.turnTimerInterval = null;
-        }
-      };
-      tick();
-      if (deadline > Date.now()) this.turnTimerInterval = setInterval(tick, 100);
-      return;
-    }
+      const container = this.el.turnTimerContainer;
+      const progressRing = this.el.timerRingProgress;
+      const secondsEl = this.el.turnTimerSeconds;
 
-    const container = this.el.turnTimerContainer;
-    const progressRing = this.el.timerRingProgress;
-    const secondsEl = this.el.turnTimerSeconds;
-
-    if (!container || !progressRing || !secondsEl) return;
-
-    if (status !== 'playing' || !deadline) {
-      container.style.display = 'none';
-      return;
-    }
-
-    container.style.display = 'flex';
-    container.classList.toggle('my-turn', Boolean(isMyTurn));
-
-    const totalSeconds = 20;
-    const circumference = 138.23; // 2 * Math.PI * 22
-
-    const tick = () => {
-      const now = Date.now();
-      const remainingMs = Math.max(0, deadline - now);
-      const remainingSec = Math.ceil(remainingMs / 1000);
-
+      if (!container || !progressRing || !secondsEl) return;
+      container.style.display = 'flex';
+      container.classList.toggle('my-turn', this.activeTurnIsMyTurn);
       secondsEl.textContent = String(remainingSec);
-
-      const fraction = Math.max(0, Math.min(1, remainingMs / (totalSeconds * 1000)));
-      const offset = circumference * (1 - fraction);
-      progressRing.style.strokeDashoffset = offset.toFixed(2);
+      const fraction = Math.max(0, Math.min(1, remainingMs / 20000));
+      const offset = (138.23 * (1 - fraction)).toFixed(2);
+      progressRing.style.strokeDashoffset = offset;
 
       container.classList.remove('timer-normal', 'timer-warning', 'timer-critical', 'timer-expired');
-      if (remainingSec > 10) {
-        container.classList.add('timer-normal');
-      } else if (remainingSec > 5) {
-        container.classList.add('timer-warning');
-      } else if (remainingSec > 0) {
-        container.classList.add('timer-critical');
-      } else {
-        container.classList.add('timer-expired');
-      }
-
-      if (remainingMs <= 0 && this.turnTimerInterval) {
-        clearInterval(this.turnTimerInterval);
-        this.turnTimerInterval = null;
-      }
+      if (remainingSec > 10) container.classList.add('timer-normal');
+      else if (remainingSec > 5) container.classList.add('timer-warning');
+      else if (remainingSec > 0) container.classList.add('timer-critical');
+      else container.classList.add('timer-expired');
     };
 
     tick();
-    this.turnTimerInterval = setInterval(tick, 250);
+
+    if (status === 'playing' && deadline > Date.now()) {
+      if (!this.turnTimerInterval) {
+        this.turnTimerInterval = setInterval(tick, 100);
+      }
+    } else {
+      if (this.turnTimerInterval) {
+        clearInterval(this.turnTimerInterval);
+        this.turnTimerInterval = null;
+      }
+    }
   }
 
   handleCardClick(card, wrapperEl) {
@@ -2124,9 +2159,9 @@ class UnoArenaApp {
       .map((c) => {
         const meta = COLOR_METADATA[c];
         return `
-          <button class="color-option-btn" style="background-color: ${meta.bgHex};" data-color="${c}">
-            <span style="font-size: 1.8rem;">${meta.symbol}</span>
-            <span>${meta.name}</span>
+          <button class="color-option-btn color-choice-${c}" data-color="${c}" type="button" aria-label="${meta.name}">
+            <span class="color-choice-symbol" aria-hidden="true">${meta.symbol}</span>
+            <span class="color-choice-name">${meta.name.toUpperCase()}</span>
           </button>
         `;
       })
@@ -2139,22 +2174,28 @@ class UnoArenaApp {
         clearTimeout(this.moveFlightTimer);
         this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
 
+        const currentBtn = e.currentTarget;
+        currentBtn.classList.add('is-selected');
+
         if (this.pendingPlayWrapper && this.gameState.mode === 'flip') {
           this.pendingPlayWrapper.classList.add('playing');
         }
 
-        const chosenColor = e.currentTarget.dataset.color;
-        this.el.colorPickerModal.classList.remove('active');
+        const chosenColor = currentBtn.dataset.color;
         sounds.playSnap(520, 0.1);
-        this.send({
-          type: ['opening_color', 'color_roulette'].includes(this.gameState.pendingAction?.type) ? 'choose_color' : 'play_card',
-          data: {
-            cardId: this.pendingPlayCard?.id,
-            chosenColor,
-          },
-        });
-        this.pendingPlayCard = null;
-        this.pendingPlayWrapper = null;
+
+        setTimeout(() => {
+          this.el.colorPickerModal.classList.remove('active');
+          this.send({
+            type: ['opening_color', 'color_roulette'].includes(this.gameState.pendingAction?.type) ? 'choose_color' : 'play_card',
+            data: {
+              cardId: this.pendingPlayCard?.id,
+              chosenColor,
+            },
+          });
+          this.pendingPlayCard = null;
+          this.pendingPlayWrapper = null;
+        }, 120);
       });
     });
 

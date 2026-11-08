@@ -50,10 +50,39 @@ for (const type of ['reverse', 'skip_everyone', 'wild_reverse_draw4']) test(`No 
 test('No Mercy two-player Reverse Draw Four may stack back to opponent', () => {
     const { rm, r, ids, roomId } = setup(2); r.playerHands[ids[0]].push(card('rev', 'wild', 'wild_reverse_draw4'), card('six', 'wild', 'wild_draw6')); rm.playCard(roomId, ids[0], { cardId: 'rev', chosenColor: 'red' }); assert.ok(rm.playCard(roomId, ids[0], { cardId: 'six', chosenColor: 'blue' }).success); assert.equal(r.currentTurn, 1); assert.equal(r.pendingDrawPenalty, 10);
 });
-test('No Mercy drawing enforces exact identity, rejects pass and repeat draw', () => {
-    const { rm, r, ids, roomId } = setup(); r.drawPile = [card('unplayable', 'yellow', 'number', 2), card('drawn', 'red', 'number', 5)]; assert.ok(rm.drawCard(roomId, ids[0]).success); assert.equal(r.turnDrawnCardId, 'drawn'); assert.ok(!rm.passTurn(roomId, ids[0]).success); assert.ok(!rm.drawCard(roomId, ids[0]).success); assert.ok(!rm.playCard(roomId, ids[0], { cardId: 'h0' }).success); assert.ok(rm.playCard(roomId, ids[0], { cardId: 'drawn' }).success);
+test('No Mercy voluntary drawing draws one card per click, allows pass after unplayable, locks when playable', () => {
+    const { rm, r, ids, roomId } = setup();
+    r.drawPile = [card('unplayable', 'yellow', 'number', 2), card('drawn', 'red', 'number', 5)];
+    // 1. First voluntary draw: unplayable card
+    const d1 = rm.drawCard(roomId, ids[0]);
+    assert.ok(d1.success);
+    assert.equal(r.turnDrawnCardId, 'unplayable');
+    assert.equal(r.turnDrawnPlayable, false);
+    // Can pass after drawing unplayable card
+    const view1 = rm.getClientView(roomId, ids[0]);
+    assert.equal(view1.canPass, true);
+    assert.equal(view1.canDraw, true);
+
+    // 2. Second voluntary draw: playable card
+    const d2 = rm.drawCard(roomId, ids[0]);
+    assert.ok(d2.success);
+    assert.equal(r.turnDrawnCardId, 'drawn');
+    assert.equal(r.turnDrawnPlayable, true);
+    const view2 = rm.getClientView(roomId, ids[0]);
+    assert.equal(view2.canDraw, false, 'Draw pile locked after playable card drawn');
+    assert.equal(view2.canPass, true, 'Can pass or play drawn card');
+
+    // 3. Repeat draw rejected
+    assert.ok(!rm.drawCard(roomId, ids[0]).success);
+    // 4. Playing held card rejected; playing drawn card succeeds
+    assert.ok(!rm.playCard(roomId, ids[0], { cardId: 'h0' }).success);
+    assert.ok(rm.playCard(roomId, ids[0], { cardId: 'drawn' }).success);
 });
-test('No Mercy cannot draw when matching card held', () => { const { rm, r, ids, roomId } = setup(); r.playerHands[ids[0]].push(card('match')); assert.ok(!rm.drawCard(roomId, ids[0]).success); });
+test('No Mercy can draw voluntarily even when matching card held', () => {
+    const { rm, r, ids, roomId } = setup();
+    r.playerHands[ids[0]].push(card('match'));
+    assert.ok(rm.drawCard(roomId, ids[0]).success, 'Voluntary draw permitted when matching card held');
+});
 for (const penalty of [false, true]) test(`No Mercy immediate knockout advances eliminated current turn; penalty=${penalty}`, () => {
     const { rm, r, ids, roomId } = setup(); r.playerHands[ids[0]] = Array.from({ length: 24 }, (_, i) => card('held' + i, 'blue', 'number', 8)); r.drawPile = [card('last', 'yellow', 'number', 4), card('rest')]; r.pendingDrawPenalty = penalty ? 10 : 0; const version = r.actionVersion; assert.ok(rm.drawCard(roomId, ids[0]).success); assert.ok(r.players[0].isEliminated); assert.equal(r.mercyPile.length, 25); assert.equal(r.playerHands[ids[0]].length, 0); assert.equal(r.currentTurn, 1); assert.equal(r.pendingDrawPenalty, 0); assert.ok(r.actionVersion > version); assert.equal(r.discardPile.at(-1).id, r.topDiscard.id);
 });
@@ -72,7 +101,7 @@ test('No Mercy next active seat after elimination respects both directions', () 
 for (const n of [2, 3, 4, 6]) test(`No Mercy full games conserve 168 identities after every action: ${n} players`, () => {
     for (let match = 0; match < 5; match++) {
         const { rm, r, ids, roomId } = setup(n); r.status = 'lobby'; rm.startGame(roomId, ids[0]); let actions = 0;
-        while (r.status === 'playing' && actions++ < 5000) { const id = r.players[r.currentTurn].id; if (r.pendingAction) { assert.ok(rm.chooseOpeningColor(roomId, id, 'red').success); } else { const hand = r.playerHands[id]; const playable = hand.filter(c => (!r.turnDrawnCard || r.turnDrawnCardId === c.id) && isCardPlayable(c, r.topDiscard, r.activeColor, r.mode, r.flipSide, r.pendingDrawPenalty, r.houseRules)); const c = playable[Math.floor(Math.random() * playable.length)]; const res = c ? rm.playCard(roomId, id, { cardId: c.id, chosenColor: 'red', targetPlayerId: ids.find(other => other !== id && !r.players.find(p => p.id === other).isEliminated) }) : rm.drawCard(roomId, id); assert.ok(res.success, res.error); } conserve(r); if (r.status === 'playing') assert.ok(!r.players[r.currentTurn].isEliminated); }
+        while (r.status === 'playing' && actions++ < 5000) { const id = r.players[r.currentTurn].id; if (r.pendingAction) { assert.ok(rm.chooseOpeningColor(roomId, id, 'red').success); } else { const hand = r.playerHands[id]; const playable = hand.filter(c => (!r.turnDrawnCard || r.turnDrawnCardId === c.id) && isCardPlayable(c, r.topDiscard, r.activeColor, r.mode, r.flipSide, r.pendingDrawPenalty, r.houseRules)); const c = playable[Math.floor(Math.random() * playable.length)]; const res = c ? rm.playCard(roomId, id, { cardId: c.id, chosenColor: 'red', targetPlayerId: ids.find(other => other !== id && !r.players.find(p => p.id === other).isEliminated) }) : (r.turnDrawnCard && Math.random() < 0.5 ? rm.passTurn(roomId, id) : rm.drawCard(roomId, id)); assert.ok(res.success, res.error); } conserve(r); if (r.status === 'playing') assert.ok(!r.players[r.currentTurn].isEliminated); }
         assert.equal(r.status, 'game_over'); assert.ok(r.winnerId);
     }
 });

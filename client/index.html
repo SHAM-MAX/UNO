@@ -18,10 +18,11 @@
     <button id="flipBackToModesBtn" class="flip-nav-back-btn" type="button" aria-label="Game modes" title="Game modes">
       <span class="flip-nav-back-arrow" aria-hidden="true">←</span>
     </button>
-    <div class="brand-logo">
+    <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="Toggle navigation menu" title="Toggle menu">
       <span class="logo-badge">ARENA</span>
       <span>UNO</span>
-    </div>
+      <span class="nav-toggle-cue" aria-hidden="true">▾</span>
+    </button>
 
     <div class="nav-controls">
       <span id="navRoomCode" class="room-code-badge" style="display: none; font-size: 0.95rem; padding: 4px 10px;"></span>
@@ -350,12 +351,7 @@
     <div id="arenaView" class="arena-container" style="display: none;">
       
       <!-- Decorative Tabletop Items (Screenshot 2 Environment) -->
-      <div class="arena-decorations" aria-hidden="true">
-        <img src="./assets/deco-plant-left.png" class="deco-item deco-plant-left" alt="" draggable="false">
-        <img src="./assets/deco-plant-right.png" class="deco-item deco-plant-right" alt="" draggable="false">
-        <img src="./assets/deco-cards-tray.png" class="deco-item deco-cards-tray" alt="" draggable="false">
-        <img src="./assets/deco-coffee-mug.png" class="deco-item deco-coffee-mug" alt="" draggable="false">
-      </div>
+      <!-- Decorative Tabletop Items removed for clean gameplay screen -->
 
       <!-- Opponents Row -->
       <div id="opponentsRow" class="opponents-row"></div>
@@ -410,7 +406,7 @@
               <div id="drawPile"></div>
               <div id="drawPenaltyBadge" class="draw-penalty-badge" style="display: none;">+2</div>
             </button>
-            <span id="drawCountBadge" class="pile-label">-- CARDS</span>
+            <span id="drawCountBadge" class="pile-label" style="display: none;">-- CARDS</span>
           </div>
 
           <!-- Discard Pile -->
@@ -418,7 +414,7 @@
             <!-- Draw Penalty Tag -->
             <div id="penaltyTag" class="penalty-tag" style="display: none;">+2 PENALTY</div>
             <div id="discardPile"></div>
-            <span class="pile-label">DISCARD PILE</span>
+            <span class="pile-label" style="display: none;">DISCARD PILE</span>
           </div>
 
           <!-- Action Buttons Bar inside Table (Screenshot 2 Placement) -->
@@ -471,12 +467,13 @@
   </main>
 
   <!-- ACTION MODAL: COLOR PICKER -->
-  <div id="colorPickerModal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">Choose Active Color</h3>
+  <div id="colorPickerModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="colorPickerTitle">
+    <div class="modal-card color-picker-card">
+      <div class="color-picker-header">
+        <span class="color-picker-badge">UNO ARENA</span>
+        <h3 id="colorPickerTitle" class="modal-title color-picker-title">CHOOSE ACTIVE COLOR</h3>
+        <p class="color-picker-subtitle">Select the next color for play</p>
       </div>
-      <p style="color: #94A3B8; font-size: 0.9rem; margin-bottom: 12px;">Select the color for the next player to match:</p>
       <div id="colorOptionsContainer" class="color-picker-grid"></div>
     </div>
   </div>

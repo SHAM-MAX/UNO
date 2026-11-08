@@ -77,7 +77,12 @@
   #gameOverModal #winReasonText { color: #f1ebd8 !important; }
   .color-option-btn { min-height: 72px; height: auto; }
   .player-target-btn { min-height: 48px; color: #103b2c; background: #f2e6cf; }
-  #colorPickerModal .modal-card > p, #swapPickerModal .modal-card > p { color: #59634f !important; }
+  #swapPickerModal .modal-card > p { color: #59634f !important; }
+  #colorPickerModal .modal-card.color-picker-card { width: min(350px, 92vw) !important; max-width: 350px !important; padding: 18px 14px !important; }
+  #colorPickerModal .color-picker-title { font-size: 1.25rem !important; }
+  #colorPickerModal .color-picker-subtitle { color: #cbd5e1 !important; font-size: 0.8rem !important; }
+  #colorPickerModal .color-picker-grid { gap: 10px !important; }
+  #colorPickerModal .color-option-btn { height: 76px !important; min-height: 76px !important; }
   .leave-confirm-card { max-height: calc(100dvh - 32px); overflow-y: auto; }
   .toast-msg {
     max-width: calc(100vw - 24px);
@@ -384,6 +389,14 @@
     font-size: 0.92rem;
     padding: 8px 18px;
     min-height: 42px;
+  }
+  body.no-mercy-arena .table-action-bar {
+    bottom: -20px !important;
+  }
+  body.no-mercy-arena .btn-pass {
+    padding: 7px 16px !important;
+    font-size: 0.8rem !important;
+    min-height: 38px !important;
   }
   .draw-penalty-badge {
     top: -6px;

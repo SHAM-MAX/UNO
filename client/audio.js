@@ -51,6 +51,10 @@ class SoundSynthesizer {
     osc.stop(this.ctx.currentTime + duration);
   }
 
+  playCard(freq = 480, duration = 0.08) {
+    this.playSnap(freq, duration);
+  }
+
   playDraw() {
     if (!this.enabled) return;
     this.init();
