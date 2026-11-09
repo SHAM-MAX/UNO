@@ -115,10 +115,13 @@ app.post('/api/rooms', (req, res) => {
 
 // Create AI Bot Room REST endpoint
 app.post('/api/rooms/bot', (req, res) => {
-  const { hostName, mode, botCount, houseRules } = req.body;
+  const { hostName, mode, botCount, houseRules, botNames } = req.body;
   try {
-    const count = Math.max(1, Math.min(5, Number(botCount) || 3));
-    const result = roomManager.createBotRoom(hostName, mode, count, houseRules);
+    const names = Array.isArray(botNames)
+      ? botNames.filter((n) => typeof n === 'string' && n.trim()).map((n) => n.trim().slice(0, 30))
+      : null;
+    const count = names ? names.length : Math.max(1, Math.min(5, Number(botCount) || 3));
+    const result = roomManager.createBotRoom(hostName, mode, count, houseRules, names);
     res.status(201).json({
       success: true,
       roomId: result.roomId,
@@ -219,8 +222,11 @@ wss.on('connection', (ws, req) => {
           return;
         }
         try {
-          const botCount = Math.max(1, Math.min(5, Number(data?.botCount) || 3));
-          const created = roomManager.createBotRoom(playerName || 'Player', data?.mode || 'classic', botCount, data?.houseRules);
+          const botNames = Array.isArray(data?.botNames)
+            ? data.botNames.filter((n) => typeof n === 'string' && n.trim()).map((n) => n.trim().slice(0, 30))
+            : null;
+          const botCount = botNames ? botNames.length : Math.max(1, Math.min(5, Number(data?.botCount) || 3));
+          const created = roomManager.createBotRoom(playerName || 'Player', data?.mode || 'classic', botCount, data?.houseRules, botNames);
           playerId = created.playerId;
           roomManager.attachSocket(created.roomId, playerId, ws);
           clientSockets.set(ws, { roomId: created.roomId, playerId });

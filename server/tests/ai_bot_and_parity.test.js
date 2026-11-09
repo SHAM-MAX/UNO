@@ -111,6 +111,23 @@ test('AI Bot System and Social Parity Features', async (t) => {
     client.close();
   });
 
+  await t.test('create_bot_room with user-selected botNames spins up match with exact chosen bots', async () => {
+    const client = createClient(port);
+    await client.waitForOpen;
+
+    const chosenBots = ['MatrixMaster', 'CircuitChampion'];
+    client.send('create_bot_room', { playerName: 'TacticalHuman', data: { mode: 'flip', botNames: chosenBots } });
+    const joined = await client.waitFor((m) => m.type === 'joined');
+    assert.ok(joined.data.roomId);
+
+    const playingState = await client.waitFor((m) => m.type === 'room:state' && m.data.gameState.status === 'playing');
+    assert.equal(playingState.data.gameState.players.length, 3, 'Total 3 players (1 human + 2 bots)');
+    const activeBotNames = playingState.data.gameState.players.filter((p) => p.isBot).map((p) => p.name);
+    assert.deepEqual(activeBotNames, chosenBots, 'Exact user-selected bot names must be present');
+
+    client.close();
+  });
+
   await t.test('Bot automatically takes turn when scheduled', async () => {
     const client = createClient(port);
     await client.waitForOpen;

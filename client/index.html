@@ -403,9 +403,8 @@
           </div>
           
           <!-- Direction Wheel -->
-          <div class="direction-indicator">
+          <div class="direction-indicator" title="Play Direction">
             <span id="directionArrow" class="direction-arrow">↻</span>
-            <span id="directionText">CLOCKWISE</span>
           </div>
 
           <!-- Draw Pile -->
@@ -544,6 +543,93 @@
             <span id="rouletteSpinnerIcon" class="roulette-spinner-icon" aria-hidden="true"></span>
             <span id="rouletteStatusText">Spinning...</span>
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION MODAL: PLAY VS AI SETUP -->
+  <div id="aiSetupModal" class="modal-overlay ai-setup-overlay" role="dialog" aria-modal="true" aria-labelledby="aiSetupTitle">
+    <div class="ai-setup-wrapper">
+      <div class="modal-card ai-setup-card">
+        <div class="ai-setup-header">
+          <span class="ai-setup-badge">UNO ARENA</span>
+          <div class="ai-setup-title-row">
+            <span class="gold-decor-line left" aria-hidden="true"></span>
+            <h3 id="aiSetupTitle" class="modal-title ai-setup-title">PLAY VS AI</h3>
+            <span class="gold-decor-line right" aria-hidden="true"></span>
+          </div>
+          <p class="ai-setup-subtitle">Configure your battle before starting the game</p>
+          <button id="aiSetupCloseBtn" class="ai-setup-close-btn" type="button" aria-label="Close setup">&times;</button>
+        </div>
+
+        <div class="ai-setup-body">
+          <!-- Step 1: Game Mode (Required) -->
+          <div class="ai-setup-section">
+            <div class="ai-setup-section-label">
+              <span class="section-step-num">1</span>
+              <span class="section-title-text">SELECT GAME MODE <strong class="req-tag">*REQUIRED</strong></span>
+            </div>
+            <p class="section-hint">Choose which UNO ruleset you want to play:</p>
+            <div class="ai-mode-grid" id="aiModeGrid">
+              <button class="ai-mode-option" type="button" data-mode="classic">
+                <span class="ai-mode-icon">🎴</span>
+                <span class="ai-mode-name">Classic UNO</span>
+                <span class="ai-mode-desc">Standard 108 cards • Official rules</span>
+              </button>
+              <button class="ai-mode-option" type="button" data-mode="flip">
+                <span class="ai-mode-icon">🔄</span>
+                <span class="ai-mode-name">UNO Flip</span>
+                <span class="ai-mode-desc">Dual-sided cards • Light & Dark side</span>
+              </button>
+              <button class="ai-mode-option" type="button" data-mode="no_mercy">
+                <span class="ai-mode-icon">⚡</span>
+                <span class="ai-mode-name">No Mercy</span>
+                <span class="ai-mode-desc">168 cards • Stacking & 25-card Knockout</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Total Player Count (Required) -->
+          <div class="ai-setup-section">
+            <div class="ai-setup-section-label">
+              <span class="section-step-num">2</span>
+              <span class="section-title-text">TOTAL PLAYERS <strong class="req-tag">*REQUIRED</strong></span>
+            </div>
+            <p class="section-hint">Total seats at the table (Includes you + AI opponents):</p>
+            <div class="ai-player-count-pills" id="aiPlayerCountPills">
+              <button class="ai-count-pill" type="button" data-count="2">2 Players (1 Bot)</button>
+              <button class="ai-count-pill" type="button" data-count="3">3 Players (2 Bots)</button>
+              <button class="ai-count-pill" type="button" data-count="4">4 Players (3 Bots)</button>
+              <button class="ai-count-pill" type="button" data-count="5">5 Players (4 Bots)</button>
+              <button class="ai-count-pill" type="button" data-count="6">6 Players (5 Bots)</button>
+            </div>
+          </div>
+
+          <!-- Step 3: Choose AI Opponents (Required) -->
+          <div class="ai-setup-section">
+            <div class="ai-setup-section-label">
+              <span class="section-step-num">3</span>
+              <span class="section-title-text">CHOOSE AI OPPONENTS <strong class="req-tag">*REQUIRED</strong></span>
+            </div>
+            <p id="aiBotSelectionHint" class="section-hint bot-hint">Select player count above to see bot requirement</p>
+            <div class="ai-bots-grid" id="aiBotsGrid">
+              <!-- Dynamically populated from bot roster with personality tags and selection state -->
+            </div>
+          </div>
+
+          <!-- Summary & Validation Notification -->
+          <div class="ai-setup-summary-bar" id="aiSetupSummaryBar">
+            <div class="summary-item"><span class="summary-label">Mode:</span> <span id="summaryModeVal" class="summary-val pending">None selected</span></div>
+            <div class="summary-item"><span class="summary-label">Players:</span> <span id="summaryPlayersVal" class="summary-val pending">None selected</span></div>
+            <div class="summary-item"><span class="summary-label">Bots:</span> <span id="summaryBotsVal" class="summary-val pending">0 selected</span></div>
+          </div>
+          <div id="aiSetupValidationMsg" class="ai-setup-validation-msg" role="status">Please choose a game mode and player count.</div>
+        </div>
+
+        <div class="ai-setup-actions">
+          <button id="aiSetupCancelBtn" class="ai-setup-btn ai-btn-cancel" type="button">CANCEL</button>
+          <button id="aiSetupStartBtn" class="ai-setup-btn ai-btn-start" type="button" disabled>START GAME ▶</button>
         </div>
       </div>
     </div>

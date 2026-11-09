@@ -313,14 +313,14 @@ body::before {
   top: 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(0, 0, 0, 0.4);
-  padding: 4px 12px;
-  border-radius: 20px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.55);
+  border: 1.5px solid rgba(212, 175, 55, 0.7);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .direction-arrow {

@@ -307,11 +307,17 @@ export class RoomManager {
     return { success: true };
   }
 
-  createBotRoom(hostName, mode = 'classic', botCount = 3, houseRulesInput = {}) {
+  createBotRoom(hostName, mode = 'classic', botCount = 3, houseRulesInput = {}, botNames = null) {
     const created = this.createRoom(hostName, mode, houseRulesInput);
-    const count = Math.max(1, Math.min(mode === 'classic' ? 5 : 5, botCount));
-    for (let i = 0; i < count; i++) {
-      this.addBot(created.roomId);
+    if (Array.isArray(botNames) && botNames.length > 0) {
+      for (const name of botNames) {
+        this.addBot(created.roomId, name);
+      }
+    } else {
+      const count = Math.max(1, Math.min(mode === 'classic' ? 5 : 5, botCount));
+      for (let i = 0; i < count; i++) {
+        this.addBot(created.roomId);
+      }
     }
     this.setReady(created.roomId, created.playerId, true);
     this.startGame(created.roomId, created.playerId);

@@ -21,6 +21,14 @@ class UnoArenaApp {
     this.clientView = null;
     this.pendingPlayCard = null; // Card awaiting color or target selection
 
+    this.aiSetup = {
+      mode: null,
+      totalPlayers: null,
+      selectedBots: [],
+    };
+    this.handCardElements = new Map();
+    this.inFlightCardId = null;
+
     this.initElements();
     this.initEvents();
     this.initDialogAccessibility();
@@ -162,6 +170,18 @@ class UnoArenaApp {
       rouletteStatusText: document.getElementById('rouletteStatusText'),
       swapPickerModal: document.getElementById('swapPickerModal'),
       swapOptionsContainer: document.getElementById('swapOptionsContainer'),
+      aiSetupModal: document.getElementById('aiSetupModal'),
+      aiSetupCloseBtn: document.getElementById('aiSetupCloseBtn'),
+      aiSetupCancelBtn: document.getElementById('aiSetupCancelBtn'),
+      aiSetupStartBtn: document.getElementById('aiSetupStartBtn'),
+      aiModeGrid: document.getElementById('aiModeGrid'),
+      aiPlayerCountPills: document.getElementById('aiPlayerCountPills'),
+      aiBotsGrid: document.getElementById('aiBotsGrid'),
+      summaryModeVal: document.getElementById('summaryModeVal'),
+      summaryPlayersVal: document.getElementById('summaryPlayersVal'),
+      summaryBotsVal: document.getElementById('summaryBotsVal'),
+      aiBotSelectionHint: document.getElementById('aiBotSelectionHint'),
+      aiSetupValidationMsg: document.getElementById('aiSetupValidationMsg'),
       gameOverModal: document.getElementById('gameOverModal'),
       gameOverCloseBtn: document.getElementById('gameOverCloseBtn'),
       winnerNameText: document.getElementById('winnerNameText'),
@@ -656,12 +676,7 @@ class UnoArenaApp {
     });
 
     const triggerPlayVsAi = () => {
-      const name = (this.el.playerNameInput?.value || '').trim() ||
-        (this.el.mobilePlayerNameInput?.value || '').trim() ||
-        this.playerName || 'Player 1';
-      this.playerName = name;
-      localStorage.setItem('uno_arena_name', name);
-      this.createBotRoom(name, this.preferredMode, 3, this.getSelectedHouseRules());
+      this.openAiSetupModal();
     };
 
     if (this.el.playVsAiBtn) {
@@ -670,6 +685,48 @@ class UnoArenaApp {
     if (this.el.mobilePlayVsAiBtn) {
       this.el.mobilePlayVsAiBtn.addEventListener('click', triggerPlayVsAi);
     }
+
+    if (this.el.aiSetupCloseBtn) {
+      this.el.aiSetupCloseBtn.addEventListener('click', () => this.closeAiSetupModal());
+    }
+    if (this.el.aiSetupCancelBtn) {
+      this.el.aiSetupCancelBtn.addEventListener('click', () => this.closeAiSetupModal());
+    }
+    if (this.el.aiSetupStartBtn) {
+      this.el.aiSetupStartBtn.addEventListener('click', () => this.startAiGame());
+    }
+    if (this.el.aiSetupModal) {
+      this.el.aiSetupModal.addEventListener('click', (e) => {
+        if (e.target === this.el.aiSetupModal) this.closeAiSetupModal();
+      });
+    }
+
+    // AI Setup Mode selections (Required, none preselected)
+    this.el.aiModeGrid?.querySelectorAll('.ai-mode-option').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode;
+        this.aiSetup.mode = mode;
+        this.el.aiModeGrid.querySelectorAll('.ai-mode-option').forEach((b) => b.classList.toggle('selected', b.dataset.mode === mode));
+        sounds.playSnap?.(440, 0.08);
+        this.updateAiSetupState();
+      });
+    });
+
+    // AI Setup Player Count pills (Required, none preselected)
+    this.el.aiPlayerCountPills?.querySelectorAll('.ai-count-pill').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const count = Number(btn.dataset.count);
+        this.aiSetup.totalPlayers = count;
+        this.el.aiPlayerCountPills.querySelectorAll('.ai-count-pill').forEach((b) => b.classList.toggle('selected', Number(b.dataset.count) === count));
+        sounds.playSnap?.(480, 0.08);
+        const maxBots = count - 1;
+        if (this.aiSetup.selectedBots.length > maxBots) {
+          this.aiSetup.selectedBots = this.aiSetup.selectedBots.slice(0, maxBots);
+        }
+        this.renderAiSetupBots();
+        this.updateAiSetupState();
+      });
+    });
 
     if (this.el.addBotBtn) {
       this.el.addBotBtn.addEventListener('click', () => {
@@ -738,10 +795,10 @@ class UnoArenaApp {
         this.unoRequestPending = true;
         this.isUnoArmed = true;
         this.el.btnCallUnoContextual.classList.add('uno-armed');
-        this.el.btnCallUnoContextual.innerHTML = '<span class="btn-icon">✓</span> UNO ARMED!';
+        this.el.btnCallUnoContextual.innerHTML = '<span class="btn-icon">✓</span> UNO READY!';
         sounds.playUnoCall();
         this.send({ type: 'call_uno' });
-        this.showToast('UNO Armed! 📢');
+        this.showToast('UNO Ready! 📢');
       });
     }
 
@@ -1116,7 +1173,170 @@ class UnoArenaApp {
     }
   }
 
-  async createBotRoom(hostName, mode = this.preferredMode, botCount = 3, houseRules = {}) {
+  openAiSetupModal() {
+    this.aiSetup = {
+      mode: null,
+      totalPlayers: null,
+      selectedBots: [],
+    };
+    if (this.el.aiModeGrid) {
+      this.el.aiModeGrid.querySelectorAll('.ai-mode-option').forEach(b => b.classList.remove('selected'));
+    }
+    if (this.el.aiPlayerCountPills) {
+      this.el.aiPlayerCountPills.querySelectorAll('.ai-count-pill').forEach(b => b.classList.remove('selected'));
+    }
+    this.renderAiSetupBots();
+    this.updateAiSetupState();
+    if (this.el.aiSetupModal) {
+      this.el.aiSetupModal.classList.add('active');
+    }
+  }
+
+  closeAiSetupModal() {
+    if (this.el.aiSetupModal) {
+      this.el.aiSetupModal.classList.remove('active');
+    }
+  }
+
+  renderAiSetupBots() {
+    if (!this.el.aiBotsGrid) return;
+    this.el.aiBotsGrid.innerHTML = UnoArenaApp.BOT_ROSTER.map(bot => {
+      const isSelected = this.aiSetup.selectedBots.includes(bot.name);
+      return `
+        <div class="ai-bot-card ${isSelected ? 'selected' : ''}" data-bot-name="${escapeHtml(bot.name)}" role="button" tabindex="0" aria-pressed="${isSelected}">
+          <div class="ai-bot-avatar" aria-hidden="true">${bot.avatar}</div>
+          <div class="ai-bot-name" title="${escapeHtml(bot.name)}">${escapeHtml(bot.name)}</div>
+          <div class="ai-bot-tag">${escapeHtml(bot.tag)}</div>
+          <div class="ai-bot-check">${isSelected ? '✓ SELECTED' : '+ ADD'}</div>
+        </div>
+      `;
+    }).join('');
+
+    this.el.aiBotsGrid.querySelectorAll('.ai-bot-card').forEach(card => {
+      const handleToggle = () => {
+        const botName = card.dataset.botName;
+        const isSelected = this.aiSetup.selectedBots.includes(botName);
+        const required = this.aiSetup.totalPlayers ? this.aiSetup.totalPlayers - 1 : null;
+
+        if (isSelected) {
+          this.aiSetup.selectedBots = this.aiSetup.selectedBots.filter(n => n !== botName);
+          sounds.playSnap?.(400, 0.08);
+        } else {
+          if (!this.aiSetup.totalPlayers) {
+            this.showToast('Select total players count first! 👥');
+            return;
+          }
+          if (this.aiSetup.selectedBots.length >= required) {
+            this.showToast(`Already selected ${required} bot(s). Deselect one to swap!`);
+            return;
+          }
+          this.aiSetup.selectedBots.push(botName);
+          sounds.playSnap?.(520, 0.08);
+        }
+        this.renderAiSetupBots();
+        this.updateAiSetupState();
+      };
+
+      card.addEventListener('click', handleToggle);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleToggle();
+        }
+      });
+    });
+  }
+
+  updateAiSetupState() {
+    const modeNames = { classic: 'Classic UNO', flip: 'UNO Flip', no_mercy: 'No Mercy' };
+    const requiredBots = this.aiSetup.totalPlayers ? this.aiSetup.totalPlayers - 1 : null;
+
+    if (this.el.summaryModeVal) {
+      if (this.aiSetup.mode) {
+        this.el.summaryModeVal.textContent = modeNames[this.aiSetup.mode] || this.aiSetup.mode;
+        this.el.summaryModeVal.className = 'summary-val';
+      } else {
+        this.el.summaryModeVal.textContent = 'None selected';
+        this.el.summaryModeVal.className = 'summary-val pending';
+      }
+    }
+
+    if (this.el.summaryPlayersVal) {
+      if (this.aiSetup.totalPlayers) {
+        this.el.summaryPlayersVal.textContent = `${this.aiSetup.totalPlayers} Players (You + ${requiredBots} Bots)`;
+        this.el.summaryPlayersVal.className = 'summary-val';
+      } else {
+        this.el.summaryPlayersVal.textContent = 'None selected';
+        this.el.summaryPlayersVal.className = 'summary-val pending';
+      }
+    }
+
+    if (this.el.summaryBotsVal) {
+      const count = this.aiSetup.selectedBots.length;
+      this.el.summaryBotsVal.textContent = `${count} / ${requiredBots ?? '?'} selected`;
+      if (requiredBots !== null && count === requiredBots) {
+        this.el.summaryBotsVal.className = 'summary-val';
+      } else {
+        this.el.summaryBotsVal.className = 'summary-val pending';
+      }
+    }
+
+    if (this.el.aiBotSelectionHint) {
+      if (!this.aiSetup.totalPlayers) {
+        this.el.aiBotSelectionHint.textContent = 'Select player count above to see bot requirement.';
+      } else if (this.aiSetup.selectedBots.length < requiredBots) {
+        const remaining = requiredBots - this.aiSetup.selectedBots.length;
+        this.el.aiBotSelectionHint.textContent = `Select ${remaining} more bot(s) to match ${this.aiSetup.totalPlayers} total players.`;
+      } else {
+        this.el.aiBotSelectionHint.textContent = `✓ Exactly ${requiredBots} bot(s) selected for ${this.aiSetup.totalPlayers} total players.`;
+      }
+    }
+
+    const isValid = Boolean(
+      this.aiSetup.mode &&
+      this.aiSetup.totalPlayers &&
+      requiredBots !== null &&
+      this.aiSetup.selectedBots.length === requiredBots
+    );
+
+    if (this.el.aiSetupValidationMsg) {
+      if (!this.aiSetup.mode) {
+        this.el.aiSetupValidationMsg.textContent = 'Please choose a game mode (Classic, Flip, or No Mercy).';
+        this.el.aiSetupValidationMsg.className = 'ai-setup-validation-msg';
+      } else if (!this.aiSetup.totalPlayers) {
+        this.el.aiSetupValidationMsg.textContent = 'Please choose total player count (2 to 6 players).';
+        this.el.aiSetupValidationMsg.className = 'ai-setup-validation-msg';
+      } else if (this.aiSetup.selectedBots.length < requiredBots) {
+        const remaining = requiredBots - this.aiSetup.selectedBots.length;
+        this.el.aiSetupValidationMsg.textContent = `Please select ${remaining} more AI opponent(s).`;
+        this.el.aiSetupValidationMsg.className = 'ai-setup-validation-msg';
+      } else {
+        this.el.aiSetupValidationMsg.textContent = '✓ Ready! Click START GAME to enter the arena.';
+        this.el.aiSetupValidationMsg.className = 'ai-setup-validation-msg valid';
+      }
+    }
+
+    if (this.el.aiSetupStartBtn) {
+      this.el.aiSetupStartBtn.disabled = !isValid;
+    }
+  }
+
+  startAiGame() {
+    const requiredBots = this.aiSetup.totalPlayers ? this.aiSetup.totalPlayers - 1 : null;
+    if (!this.aiSetup.mode || !this.aiSetup.totalPlayers || this.aiSetup.selectedBots.length !== requiredBots) {
+      return;
+    }
+
+    const name = (this.el.playerNameInput?.value || '').trim() ||
+      (this.el.mobilePlayerNameInput?.value || '').trim() ||
+      this.playerName || 'Player 1';
+    this.playerName = name;
+    localStorage.setItem('uno_arena_name', name);
+    this.closeAiSetupModal();
+    this.createBotRoom(name, this.aiSetup.mode, this.aiSetup.selectedBots.length, this.getSelectedHouseRules(), this.aiSetup.selectedBots);
+  }
+
+  async createBotRoom(hostName, mode = this.preferredMode, botCount = 3, houseRules = {}, botNames = null) {
     if (this.isCreatingRoom) return;
     this.isCreatingRoom = true;
     if (this.el.createRoomBtn) this.el.createRoomBtn.disabled = true;
@@ -1127,7 +1347,7 @@ class UnoArenaApp {
       const res = await fetch('/api/rooms/bot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hostName, mode, botCount, houseRules }),
+        body: JSON.stringify({ hostName, mode, botCount, houseRules, botNames }),
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data && data.success) {
@@ -1233,6 +1453,15 @@ class UnoArenaApp {
           this.rematchRequestPending = false; this.rematchActionPending = false; this.rematchDismissAfterResponseId = null; this.unoRequestPending = false; this.catchRequestPending = false; this.pendingClassicMotion = null;
           this.clearClassicAnimations?.();
           this.isMoveInFlight = false;
+          if (this.inFlightCardId) {
+            const el = this.handCardElements.get(this.inFlightCardId);
+            if (el) {
+              el.style.opacity = '1';
+              el.style.pointerEvents = '';
+              el.animate([{ transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'none' }], { duration: 220 });
+            }
+            this.inFlightCardId = null;
+          }
           this.el.playerHandCards.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
           if (msg.message && msg.message.includes('CAUGHT FAILED')) {
             this.showCaughtFailedModal({ message: msg.message });
@@ -1359,6 +1588,11 @@ class UnoArenaApp {
     this.el.playerHandCards.removeAttribute('inert');
     this.clientView = view;
     this.gameState = view.gameState;
+    if (this.inFlightCardId) {
+      if (view.gameState.topDiscard?.id === this.inFlightCardId || !view.myHand.some(c => c.id === this.inFlightCardId)) {
+        this.inFlightCardId = null;
+      }
+    }
     if (view.myPlayerId) this.playerId = view.myPlayerId;
     this.rematchRequestPending = false; this.rematchActionPending = false;
     if (this.rematchDismissAfterResponseId && view.rematchProposal?.id === this.rematchDismissAfterResponseId && (view.rematchProposal.status === 'cancelled' || view.rematchProposal.declinedPlayerIds.includes(this.playerId))) { this.dismissedRematchId = view.rematchProposal.id; this.rematchDismissAfterResponseId = null; }
@@ -1819,9 +2053,14 @@ class UnoArenaApp {
       this.el.tableFelt.classList.toggle('direction-clockwise', isClockwise);
       this.el.tableFelt.classList.toggle('direction-counter-clockwise', !isClockwise);
     }
-    this.el.directionArrow.className = `direction-arrow ${!isClockwise ? 'counter-clockwise' : ''}`;
-    this.el.directionArrow.textContent = isClockwise ? '↻' : '↺';
-    this.el.directionText.textContent = isClockwise ? 'CLOCKWISE' : 'COUNTER-CLOCKWISE';
+    if (this.el.directionArrow) {
+      this.el.directionArrow.className = `direction-arrow ${!isClockwise ? 'counter-clockwise' : ''}`;
+      this.el.directionArrow.textContent = isClockwise ? '↻' : '↺';
+    }
+    if (this.el.directionText) {
+      this.el.directionText.textContent = '';
+      this.el.directionText.style.display = 'none';
+    }
 
     // Opponents
     const opponents = gameState.players.filter((p) => p.id !== this.playerId);
@@ -1831,7 +2070,7 @@ class UnoArenaApp {
         const isCurrent = gameState.players[gameState.currentTurn]?.id === p.id;
         const unoActive = p.cardCount === 1;
         const avatarColor = avatarPalettes[idx % avatarPalettes.length];
-        const canCatchThis = (this.clientView?.canCatchUnoTargets?.includes(p.id) || this.clientView?.canCatchUno === p.id) || (p.cardCount === 1 && !p.hasCalledUno && !p.isEliminated);
+        const canCatchThis = ((this.clientView?.canCatchUnoTargets?.includes(p.id) || this.clientView?.canCatchUno === p.id) || (p.cardCount === 1 && !p.hasCalledUno && !p.isEliminated)) && p.id !== this.playerId;
 
         const durationMs = gameState.turnDurationMs || 30000;
         const remainingMs = (gameState.turnDeadline && gameState.turnDeadline > Date.now()) ? Math.max(0, gameState.turnDeadline - Date.now()) : durationMs;
@@ -1861,7 +2100,7 @@ class UnoArenaApp {
           if (p.hasCalledUno) {
             unoStatusHtml = '<span class="uno-declared-badge" title="UNO Declared">UNO!</span>';
           } else if (canCatchThis && gameState.status === 'playing') {
-            unoStatusHtml = `<button class="opponent-caught-btn" data-catch-target="${p.id}" type="button" title="Catch ${escapeHtml(p.name)}!">🚨 CATCH ${escapeHtml(p.name).toUpperCase()}!</button>`;
+            unoStatusHtml = `<button class="opponent-caught-btn" data-catch-target="${p.id}" type="button" title="Catch ${escapeHtml(p.name)}!">🚨 CAUGHT</button>`;
           } else {
             unoStatusHtml = '<span class="uno-alert-badge">1 CARD</span>';
           }
@@ -1899,7 +2138,7 @@ class UnoArenaApp {
                 </div>
                 ${disconnectBadge}
               </div>
-              ${gameState.mode === 'no_mercy' ? unoStatusHtml : (unoActive && !p.isEliminated ? `<span class="uno-alert-badge">${gameState.mode !== 'classic' || p.hasCalledUno ? 'UNO!' : '1 CARD'}</span>` : '')}
+              ${unoStatusHtml}
               ${activeTimerHtml}
               ${gameState.mode === 'classic' && unoActive && p.hasCalledUno ? '<span class="classic-caught-failed" role="status">CAUGHT FAILED</span>' : ''}
             </div>
@@ -2044,14 +2283,15 @@ class UnoArenaApp {
       }
     }
 
-    // Contextual Call UNO Button: displayed ONLY when hand has exactly 2 cards
+    // Contextual Call UNO Button: displayed ONLY when local player's turn and hand has exactly 2 cards
+    const isUnoEligible = isMyTurn && myHand.length === 2 && gameState.status === 'playing' && !gameState.pendingAction;
     if (this.el.contextualUnoContainer && this.el.btnCallUnoContextual) {
-      if (gameState.mode === 'no_mercy' && myHand.length === 2 && gameState.status === 'playing') {
+      if (isUnoEligible) {
         this.el.contextualUnoContainer.style.display = 'flex';
         const isArmed = this.isUnoArmed || me?.isUnoArmed || (me?.hasCalledUno && myHand.length === 2);
         if (isArmed) {
           this.el.btnCallUnoContextual.classList.add('uno-armed');
-          this.el.btnCallUnoContextual.innerHTML = '<span class="btn-icon">✓</span> UNO ARMED!';
+          this.el.btnCallUnoContextual.innerHTML = '<span class="btn-icon">✓</span> UNO READY!';
         } else {
           this.el.btnCallUnoContextual.classList.remove('uno-armed');
           this.el.btnCallUnoContextual.innerHTML = '<span class="btn-icon">📢</span> CALL UNO!';
@@ -2080,36 +2320,54 @@ class UnoArenaApp {
 
   renderPlayerHand(hand, canPlayIds, mode, flipSide) {
     const container = this.el.playerHandCards;
-    container.innerHTML = '';
-
     const count = hand.length;
-    if (count === 0) return;
+    if (count === 0) {
+      container.innerHTML = '';
+      this.handCardElements.clear();
+      return;
+    }
 
     const isMobile = window.innerWidth <= 760;
     // On mobile, if > 7 cards, use two compact rows. On desktop, if > 14 cards, use two rows.
     const useTwoRows = isMobile ? count > 7 : count > 14;
     container.classList.toggle('two-rows', useTwoRows);
 
+    // Track active card IDs and prune departed DOM nodes
+    const newCardIds = new Set(hand.map(c => c.id));
+    for (const [id, el] of this.handCardElements.entries()) {
+      if (!newCardIds.has(id) && id !== this.inFlightCardId) {
+        el.remove();
+        this.handCardElements.delete(id);
+      }
+    }
+
+    let row1El = container.querySelector('.hand-row-top') || container.querySelector('.hand-row-single');
+    let row2El = container.querySelector('.hand-row-bottom');
+
     if (useTwoRows) {
+      if (!container.querySelector('.hand-row-top')) {
+        container.innerHTML = '';
+        row1El = document.createElement('div');
+        row1El.className = 'hand-row hand-row-top';
+        row2El = document.createElement('div');
+        row2El.className = 'hand-row hand-row-bottom';
+        container.appendChild(row1El);
+        container.appendChild(row2El);
+      }
       const row1Count = Math.ceil(count / 2);
       const row1Cards = hand.slice(0, row1Count);
       const row2Cards = hand.slice(row1Count);
 
-      const row1El = document.createElement('div');
-      row1El.className = 'hand-row hand-row-top';
-      const row2El = document.createElement('div');
-      row2El.className = 'hand-row hand-row-bottom';
-
       this.populateHandRow(row1El, row1Cards, 0, canPlayIds, mode, flipSide, isMobile);
       this.populateHandRow(row2El, row2Cards, row1Count, canPlayIds, mode, flipSide, isMobile);
-
-      container.appendChild(row1El);
-      container.appendChild(row2El);
     } else {
-      const rowEl = document.createElement('div');
-      rowEl.className = 'hand-row hand-row-single';
-      this.populateHandRow(rowEl, hand, 0, canPlayIds, mode, flipSide, isMobile);
-      container.appendChild(rowEl);
+      if (!container.querySelector('.hand-row-single')) {
+        container.innerHTML = '';
+        row1El = document.createElement('div');
+        row1El.className = 'hand-row hand-row-single';
+        container.appendChild(row1El);
+      }
+      this.populateHandRow(row1El, hand, 0, canPlayIds, mode, flipSide, isMobile);
     }
   }
 
@@ -2134,51 +2392,65 @@ class UnoArenaApp {
       const globalIdx = startIndex + idx;
       const isPlayable = canPlayIds.includes(card.id);
       const isSelected = this.selectedCardId === card.id;
+      const rot = rowCount > 1 ? (startAngle + idx * angleStep).toFixed(1) : '0';
 
-      const wrapper = document.createElement('div');
+      let wrapper = this.handCardElements.get(card.id);
+      const isNew = !wrapper;
+
+      if (isNew) {
+        wrapper = document.createElement('div');
+        wrapper.dataset.cardId = card.id;
+        wrapper.dataset.flipSide = flipSide || 'light';
+        wrapper.innerHTML = renderCardHTML(card, { mode, flipSide });
+
+        wrapper.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (wrapper._suppressClick) { wrapper._suppressClick = false; return; }
+          this.onCardInteraction(card, wrapper, canPlayIds.includes(card.id));
+        });
+        wrapper.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.onCardInteraction(card, wrapper, canPlayIds.includes(card.id));
+          }
+        });
+        wrapper.addEventListener('mouseenter', () => {
+          if (this.clientView?.isMyTurn) {
+            this.send({ type: 'player_card_hovered', data: { cardIndex: globalIdx } });
+          }
+        });
+        wrapper.addEventListener('mouseleave', () => {
+          if (this.clientView?.isMyTurn) {
+            this.send({ type: 'player_card_hovered', data: { cardIndex: null } });
+          }
+        });
+
+        if (mode !== 'flip') this.bindCardPointer(wrapper, card, isPlayable);
+        this.handCardElements.set(card.id, wrapper);
+      } else {
+        if (wrapper.dataset.flipSide !== (flipSide || 'light')) {
+          wrapper.dataset.flipSide = flipSide || 'light';
+          wrapper.innerHTML = renderCardHTML(card, { mode, flipSide });
+        }
+      }
+
       wrapper.className = `card-wrapper ${isPlayable ? 'playable' : 'unplayable'} ${isSelected ? 'is-selected' : ''}`;
       wrapper.style.zIndex = isSelected ? 200 : (idx + 1);
-      if (idx > 0) {
-        wrapper.style.marginLeft = `${overlapMargin}px`;
-      }
+      wrapper.style.marginLeft = idx > 0 ? `${overlapMargin}px` : '0px';
       wrapper.setAttribute('role', isPlayable ? 'button' : 'img');
       wrapper.setAttribute('tabindex', isPlayable ? '0' : '-1');
-      wrapper.dataset.cardId = card.id;
 
       const cardTitle = card.type === 'number' ? `${card.color || ''} ${card.value}` : `${card.color || ''} ${card.type}`;
       wrapper.setAttribute('aria-label', isPlayable ? `Play card: ${cardTitle}` : `Card: ${cardTitle}`);
-      wrapper.innerHTML = renderCardHTML(card, { mode, flipSide });
 
-      const rot = rowCount > 1 ? (startAngle + idx * angleStep).toFixed(1) : '0';
       wrapper.style.setProperty('--card-rot', `${rot}deg`);
       if (!isSelected) {
         wrapper.style.transform = `rotate(${rot}deg)`;
       }
 
-      wrapper.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (wrapper._suppressClick) { wrapper._suppressClick = false; return; }
-        this.onCardInteraction(card, wrapper, isPlayable);
-      });
-      wrapper.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          this.onCardInteraction(card, wrapper, isPlayable);
-        }
-      });
-      wrapper.addEventListener('mouseenter', () => {
-        if (this.clientView?.isMyTurn) {
-          this.send({ type: 'player_card_hovered', data: { cardIndex: globalIdx } });
-        }
-      });
-      wrapper.addEventListener('mouseleave', () => {
-        if (this.clientView?.isMyTurn) {
-          this.send({ type: 'player_card_hovered', data: { cardIndex: null } });
-        }
-      });
-
-      if (mode !== 'flip') this.bindCardPointer(wrapper, card, isPlayable);
-      rowEl.appendChild(wrapper);
+      if (rowEl.children[idx] !== wrapper) {
+        rowEl.appendChild(wrapper);
+      }
     });
   }
 
@@ -2385,16 +2657,65 @@ class UnoArenaApp {
     clearTimeout(this.moveFlightTimer);
     this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
 
+    sounds.playSnap();
+
+    // Optimistic local card departure towards discard pile
+    if (wrapperEl && this.el.discardPile) {
+      const sourceRect = wrapperEl.getBoundingClientRect();
+      const targetRect = this.el.discardPile.getBoundingClientRect();
+      if (sourceRect.width > 0 && targetRect.width > 0 && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const ghost = wrapperEl.cloneNode(true);
+        ghost.className = 'card-departure-motion';
+        ghost.removeAttribute('tabindex');
+        ghost.removeAttribute('role');
+        Object.assign(ghost.style, {
+          left: `${sourceRect.left}px`,
+          top: `${sourceRect.top}px`,
+          width: `${sourceRect.width}px`,
+          height: `${sourceRect.height}px`,
+          transform: 'translate3d(0, 0, 0) scale(1)',
+          opacity: '1',
+        });
+        document.body.appendChild(ghost);
+
+        const dx = targetRect.left + (targetRect.width - sourceRect.width) / 2 - sourceRect.left;
+        const dy = targetRect.top + (targetRect.height - sourceRect.height) / 2 - sourceRect.top;
+        const scale = targetRect.width / sourceRect.width;
+
+        requestAnimationFrame(() => {
+          ghost.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(${scale}) rotate(0deg)`;
+          ghost.style.opacity = '0.92';
+        });
+
+        setTimeout(() => {
+          ghost.remove();
+        }, 240);
+      }
+      this.inFlightCardId = card.id;
+      wrapperEl.style.opacity = '0';
+      wrapperEl.style.pointerEvents = 'none';
+    }
+
     if (wrapperEl && this.gameState.mode === 'flip') {
       wrapperEl.classList.add('playing');
     }
 
-    sounds.playSnap();
     this.send({
       type: 'play_card',
       data: { cardId: card.id },
     });
   }
+
+  static BOT_ROSTER = [
+    { name: 'RoboMax', avatar: '🤖', tag: 'Aggressive' },
+    { name: 'CardBot 3000', avatar: '⚙️', tag: 'Balanced' },
+    { name: 'UnoDroid', avatar: '🦾', tag: 'Tactical' },
+    { name: 'BytePlayer', avatar: '💻', tag: 'Quick' },
+    { name: 'MatrixMaster', avatar: '🌐', tag: 'Strategic' },
+    { name: 'CyberAce', avatar: '⚡', tag: 'Wildcard' },
+    { name: 'PixelPro', avatar: '👾', tag: 'Adaptive' },
+    { name: 'CircuitChampion', avatar: '🏆', tag: 'Expert' },
+  ];
 
   static COLOR_SVGS = {
     red: '<svg class="color-choice-svg" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><polygon points="12,2 22,12 12,22 2,12" fill="currentColor"/></svg>',

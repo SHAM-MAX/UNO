@@ -465,4 +465,44 @@
   .local-cards-count {
     font-size: 0.65rem;
   }
+
+  /* Play vs AI Setup Modal on Mobile */
+  .ai-setup-card {
+    padding: 16px 14px 18px !important;
+    max-height: 94vh !important;
+    border-radius: 20px !important;
+  }
+  .ai-setup-title {
+    font-size: 1.25rem !important;
+  }
+  .ai-mode-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .ai-mode-option {
+    flex-direction: row !important;
+    text-align: left !important;
+    gap: 12px !important;
+    padding: 10px 14px !important;
+  }
+  .ai-mode-icon {
+    font-size: 1.8rem !important;
+    margin-bottom: 0 !important;
+  }
+  .ai-bots-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+  .ai-player-count-pills {
+    gap: 6px !important;
+  }
+  .ai-count-pill {
+    padding: 6px 12px !important;
+    font-size: 0.74rem !important;
+  }
+  .ai-setup-summary-bar {
+    flex-direction: column !important;
+    gap: 4px !important;
+    padding: 8px 12px !important;
+  }
 }
