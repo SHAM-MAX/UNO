@@ -2471,165 +2471,581 @@ body.no-mercy-arena .table-action-bar:not(:has(#btnViewVictory:not([style*="disp
 }
 
 /* ==========================================================================
-   PREMIUM ACTIVE COLOR SELECTION SCREEN (Requirement 8)
+   PREMIUM ACTIVE COLOR SELECTION SCREEN (Authentic Casino Red Felt & Gold)
    ========================================================================== */
 #colorPickerModal {
-  backdrop-filter: blur(12px) brightness(0.65);
-  background: rgba(4, 20, 14, 0.78);
-  transition: opacity 0.22s ease, visibility 0.22s ease;
+  backdrop-filter: blur(8px) brightness(0.7);
+  background:
+    radial-gradient(ellipse at center, rgba(14, 5, 2, 0.45) 0%, rgba(8, 3, 1, 0.88) 100%),
+    url('./assets/tabletop-wood.jpg') center center / cover no-repeat fixed;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
   z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-#colorPickerModal .color-picker-card {
-  background: radial-gradient(circle at 50% 20%, #17382c 0%, #0d231b 60%, #071510 100%);
-  border: 2.5px solid #d4af37;
-  border-radius: 24px;
+.color-picker-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 530px;
+  margin: auto;
+  padding-top: 54px;
+}
+
+/* Card Fan behind panel */
+.color-picker-card-fan {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+  width: 320px;
+  height: 122px;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+#colorPickerModal:not(.active) .color-picker-card-fan,
+#rouletteModal:not(.active) .color-picker-card-fan {
+  transform: translateX(-50%) translateY(26px);
+  opacity: 0;
+}
+
+#colorPickerModal.active .color-picker-card-fan,
+#rouletteModal.active .color-picker-card-fan {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.color-fan-card {
+  position: absolute;
+  width: 82px;
+  height: 120px;
+  border-radius: 8px;
+  transform: translate(var(--fan-x, 0px), var(--fan-y, 0px)) rotate(var(--fan-rot, 0deg));
+  transform-origin: 50% 120%;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.75), 0 2px 4px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: transform 0.3s ease;
+}
+
+.color-fan-card .game-card {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  border-radius: inherit !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.color-fan-card img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block;
+}
+
+/* Central Selection Panel */
+#colorPickerModal .color-picker-card,
+#rouletteModal .color-picker-card {
+  position: relative;
+  z-index: 2;
+  background:
+    radial-gradient(circle at 50% 25%, #8b0c1c 0%, #630512 40%, #3e020a 75%, #240005 100%) padding-box,
+    linear-gradient(135deg,
+      #fff3b0 0%,
+      #dca336 15%,
+      #8c5809 30%,
+      #ffe48a 45%,
+      #b87d1a 60%,
+      #fdeaa2 75%,
+      #784405 90%,
+      #ffd875 100%) border-box;
+  border: 6px solid transparent;
+  border-radius: 32px;
   box-shadow:
+    0 0 0 2px #3d2003,
+    0 0 0 5px #f3be48,
+    0 0 0 7px #553005,
     0 24px 60px rgba(0, 0, 0, 0.85),
-    0 0 35px rgba(212, 175, 55, 0.35),
-    inset 0 1px 2px rgba(255, 255, 255, 0.2),
-    inset 0 0 20px rgba(0, 0, 0, 0.5);
-  padding: 24px 28px;
-  width: min(440px, 92vw);
-  max-width: 440px;
+    0 0 45px rgba(245, 185, 45, 0.3),
+    inset 0 4px 18px rgba(0, 0, 0, 0.75),
+    inset 0 1px 2px rgba(255, 235, 160, 0.4);
+  padding: 28px 34px 34px;
+  width: min(520px, 92vw);
+  max-width: 520px;
   text-align: center;
   transform: scale(0.92);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
 }
 
-#colorPickerModal.active .color-picker-card {
+#colorPickerModal.active .color-picker-card,
+#rouletteModal.active .color-picker-card {
   transform: scale(1);
 }
 
 .color-picker-header {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .color-picker-badge {
-  display: inline-block;
-  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
   font-weight: 900;
-  letter-spacing: 1.5px;
-  color: #fde047;
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  border-radius: 20px;
-  padding: 3px 12px;
-  margin-bottom: 8px;
+  letter-spacing: 2px;
+  color: #ffd84d;
+  background: rgba(35, 4, 8, 0.85);
+  border: 1.5px solid #d4982a;
+  border-radius: 9999px;
+  padding: 4px 22px;
+  margin-bottom: 12px;
   text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 235, 150, 0.25);
 }
 
-.color-picker-title {
-  font-size: 1.55rem;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  color: #ffffff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 0 12px rgba(245, 158, 11, 0.4);
+.color-picker-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
   margin: 4px 0 6px;
 }
 
+.gold-decor-line {
+  display: inline-block;
+  width: 48px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #dfa52f 40%, #fff2a8 50%, #dfa52f 60%, transparent 100%);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.gold-decor-line::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: #fff2a8;
+  box-shadow: 0 0 4px #eab308;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.color-picker-title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85), 0 0 16px rgba(255, 225, 130, 0.35);
+  margin: 0;
+  white-space: nowrap;
+}
+
 .color-picker-subtitle {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #cbd5e1;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #f7e7ce;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
   margin: 0;
 }
 
 .color-picker-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-top: 14px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 16px;
 }
 
+/* 2x2 Selection Buttons */
 .color-option-btn {
   position: relative;
-  height: 94px;
-  border-radius: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  height: 106px;
+  border-radius: 20px;
+  border: 3.5px solid #fff2bd;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   cursor: pointer;
   overflow: hidden;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.4);
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease, filter 0.15s ease;
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.55),
+    inset 0 2px 3px rgba(255, 255, 255, 0.45),
+    inset 0 -3px 4px rgba(0, 0, 0, 0.35);
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, border-color 0.16s ease, filter 0.16s ease;
   user-select: none;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.color-choice-symbol {
-  font-size: 1.7rem;
-  line-height: 1;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+.color-option-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: #ffffff;
 }
 
-.color-choice-name {
-  font-size: 0.95rem;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+.color-option-btn:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
 }
 
-/* RED */
-.color-choice-red {
-  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
-  border-color: #fca5a5 !important;
-  color: #ffffff !important;
-}
-.color-choice-red:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6), 0 0 24px rgba(239, 68, 68, 0.85) !important;
+.color-option-btn.is-selected {
+  transform: scale(0.97) !important;
+  box-shadow: 0 0 0 4px #ffd700, 0 0 35px rgba(255, 215, 0, 0.95) !important;
+  filter: brightness(1.22);
   border-color: #ffffff !important;
 }
 
-/* YELLOW */
-.color-choice-yellow {
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%) !important;
-  border-color: #fef08a !important;
-  color: #1e293b !important;
+.color-choice-symbol-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
 }
-.color-choice-yellow .color-choice-symbol,
+
+.color-choice-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.color-choice-name {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+/* 1. RED */
+.color-choice-red {
+  background: linear-gradient(180deg, #ea3333 0%, #b31010 100%) !important;
+  color: #ffffff !important;
+  border-color: #fff1b8 !important;
+}
+.color-choice-red .color-choice-svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+.color-choice-red .color-choice-name {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+.color-choice-red:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.65), 0 0 26px rgba(234, 51, 51, 0.85), inset 0 2px 3px rgba(255, 255, 255, 0.6) !important;
+  border-color: #ffffff !important;
+}
+
+/* 2. YELLOW */
+.color-choice-yellow {
+  background: linear-gradient(180deg, #ffc820 0%, #f09502 100%) !important;
+  color: #18181b !important;
+  border-color: #fff5cc !important;
+}
+.color-choice-yellow .color-choice-svg {
+  filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.3));
+}
 .color-choice-yellow .color-choice-name {
   text-shadow: none;
 }
 .color-choice-yellow:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6), 0 0 24px rgba(251, 191, 36, 0.85) !important;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.65), 0 0 26px rgba(255, 200, 32, 0.85), inset 0 2px 3px rgba(255, 255, 255, 0.6) !important;
   border-color: #ffffff !important;
 }
 
-/* GREEN */
+/* 3. GREEN */
 .color-choice-green {
-  background: linear-gradient(135deg, #10b981 0%, #047857 100%) !important;
-  border-color: #a7f3d0 !important;
+  background: linear-gradient(180deg, #12b77d 0%, #037d4d 100%) !important;
   color: #ffffff !important;
+  border-color: #fff1b8 !important;
+}
+.color-choice-green .color-choice-svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+.color-choice-green .color-choice-name {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
 }
 .color-choice-green:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6), 0 0 24px rgba(16, 185, 129, 0.85) !important;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.65), 0 0 26px rgba(18, 183, 125, 0.85), inset 0 2px 3px rgba(255, 255, 255, 0.6) !important;
   border-color: #ffffff !important;
 }
 
-/* BLUE */
+/* 4. BLUE */
 .color-choice-blue {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-  border-color: #bfdbfe !important;
+  background: linear-gradient(180deg, #2b7af0 0%, #1555c8 100%) !important;
   color: #ffffff !important;
+  border-color: #fff1b8 !important;
+}
+.color-choice-blue .color-choice-svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+.color-choice-blue .color-choice-name {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
 }
 .color-choice-blue:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6), 0 0 24px rgba(59, 130, 246, 0.85) !important;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.65), 0 0 26px rgba(43, 122, 240, 0.85), inset 0 2px 3px rgba(255, 255, 255, 0.6) !important;
   border-color: #ffffff !important;
 }
 
-/* Selected state feedback */
-.color-option-btn.is-selected {
-  transform: scale(0.96) !important;
-  box-shadow: 0 0 0 3px #ffffff, 0 0 30px rgba(255, 255, 255, 0.9) !important;
-  filter: brightness(1.25);
+/* 5. ORANGE (Flip Dark) */
+.color-choice-orange {
+  background: linear-gradient(180deg, #f97316 0%, #c2410c 100%) !important;
+  color: #ffffff !important;
+  border-color: #fff1b8 !important;
+}
+.color-choice-orange .color-choice-svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+.color-choice-orange .color-choice-name {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+.color-choice-orange:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.65), 0 0 26px rgba(249, 115, 22, 0.85), inset 0 2px 3px rgba(255, 255, 255, 0.6) !important;
+  border-color: #ffffff !important;
+}
+
+/* 6. PINK (Flip Dark) */
+.color-choice-pink {
+  background: linear-gradient(180deg, #ec4899 0%, #be185d 100%) !important;
+  color: #ffffff !important;
+  border-color: #fff1b8 !important;
+}
+.color-choice-pink .color-choice-svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+.color-choice-pink .color-choice-name {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+.color-choice-pink:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.65), 0 0 26px rgba(236, 72, 153, 0.85), inset 0 2px 3px rgba(255, 255, 255, 0.6) !important;
+  border-color: #ffffff !important;
+}
+
+/* 7. TEAL (Flip Dark) */
+.color-choice-teal {
+  background: linear-gradient(180deg, #14b8a6 0%, #0f766e 100%) !important;
+  color: #ffffff !important;
+  border-color: #fff1b8 !important;
+}
+.color-choice-teal .color-choice-svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+.color-choice-teal .color-choice-name {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+.color-choice-teal:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.65), 0 0 26px rgba(20, 184, 166, 0.85), inset 0 2px 3px rgba(255, 255, 255, 0.6) !important;
+  border-color: #ffffff !important;
+}
+
+/* 8. PURPLE (Flip Dark) */
+.color-choice-purple {
+  background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%) !important;
+  color: #ffffff !important;
+  border-color: #fff1b8 !important;
+}
+.color-choice-purple .color-choice-svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+.color-choice-purple .color-choice-name {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+.color-choice-purple:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.65), 0 0 26px rgba(139, 92, 246, 0.85), inset 0 2px 3px rgba(255, 255, 255, 0.6) !important;
+  border-color: #ffffff !important;
+}
+
+/* ==========================================================================
+   PREMIUM COLOR ROULETTE SCREEN (Casino Red Velvet, Gold Bezel & 4-Quadrant Wheel)
+   ========================================================================== */
+#rouletteModal {
+  backdrop-filter: blur(8px) brightness(0.7);
+  background:
+    radial-gradient(ellipse at center, rgba(14, 5, 2, 0.45) 0%, rgba(8, 3, 1, 0.88) 100%),
+    url('./assets/tabletop-wood.jpg') center center / cover no-repeat fixed;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  z-index: 520;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#rouletteModal .roulette-card {
+  padding: 24px 34px 28px;
+}
+
+/* Wheel Container with Pointer and Glow Arcs */
+.roulette-wheel-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px auto;
+  width: 270px;
+  height: 270px;
+}
+
+/* 12 o'clock Fixed Gold Pointer */
+.roulette-pointer {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 28px;
+  z-index: 25;
+  clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+  background: linear-gradient(180deg, #fff4be 0%, #dfa52f 45%, #8c5809 100%);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.85));
+  pointer-events: none;
+}
+.roulette-pointer::after {
+  content: '';
+  position: absolute;
+  inset: 2px 3px 4px 3px;
+  clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #ffd76a 50%, #b87d1a 100%);
+}
+
+/* Curved Golden Glow Arcs flanking the wheel */
+.roulette-glow-arc {
+  position: absolute;
+  top: 50%;
+  width: 28px;
+  height: 180px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.85;
+}
+.roulette-glow-arc.left {
+  left: -14px;
+  border-radius: 50% 0 0 50%;
+  background: radial-gradient(ellipse at 100% 50%, rgba(255, 215, 0, 0.6) 0%, rgba(255, 215, 0, 0.15) 55%, transparent 80%);
+  filter: blur(3px);
+}
+.roulette-glow-arc.right {
+  right: -14px;
+  border-radius: 0 50% 50% 0;
+  background: radial-gradient(ellipse at 0% 50%, rgba(255, 215, 0, 0.6) 0%, rgba(255, 215, 0, 0.15) 55%, transparent 80%);
+  filter: blur(3px);
+}
+
+/* Rotating Wheel Frame */
+.roulette-wheel-frame {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  border: 7px solid transparent;
+  background:
+    radial-gradient(circle, transparent 65%, rgba(0, 0, 0, 0.4) 100%) padding-box,
+    linear-gradient(135deg, #fff3b0 0%, #dca336 25%, #8c5809 50%, #ffe48a 75%, #b87d1a 100%) border-box;
+  box-shadow:
+    0 0 0 2px #3d2003,
+    0 0 0 4.5px #f3be48,
+    0 12px 30px rgba(0, 0, 0, 0.85),
+    0 0 40px rgba(245, 185, 45, 0.35),
+    inset 0 3px 6px rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  transform: rotate(0deg);
+  will-change: transform;
+}
+
+.roulette-wheel-frame.spinning-free {
+  animation: roulette-spin-continuous 0.55s linear infinite;
+}
+
+@keyframes roulette-spin-continuous {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.roulette-wheel-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.roulette-quadrant {
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+.roulette-quadrant.is-winner {
+  filter: brightness(1.28) drop-shadow(0 0 14px #ffd700);
+}
+
+/* Status / Action Pill */
+.roulette-status-container {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+}
+.roulette-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 28px;
+  border-radius: 9999px;
+  background: rgba(30, 2, 5, 0.9);
+  border: 1.5px solid #d4982a;
+  color: #ffd84d;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 235, 150, 0.25);
+  cursor: default;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+.roulette-status-pill.clickable {
+  cursor: pointer;
+  border-color: #fde047;
+  color: #ffffff;
+}
+.roulette-status-pill.clickable:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+.roulette-status-pill.landed {
+  border-color: #ffd700;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+  background: rgba(50, 6, 12, 0.95);
+}
+.roulette-spinner-icon {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 216, 77, 0.3);
+  border-top-color: #ffd84d;
+  border-radius: 50%;
+  animation: roulette-spin-icon 0.8s linear infinite;
+  display: inline-block;
+}
+@keyframes roulette-spin-icon {
+  to { transform: rotate(360deg); }
 }
 
 /* ============================================================

@@ -489,14 +489,63 @@
   </main>
 
   <!-- ACTION MODAL: COLOR PICKER -->
-  <div id="colorPickerModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="colorPickerTitle">
-    <div class="modal-card color-picker-card">
-      <div class="color-picker-header">
-        <span class="color-picker-badge">UNO ARENA</span>
-        <h3 id="colorPickerTitle" class="modal-title color-picker-title">CHOOSE ACTIVE COLOR</h3>
-        <p class="color-picker-subtitle">Select the next color for play</p>
+  <div id="colorPickerModal" class="modal-overlay color-picker-overlay" role="dialog" aria-modal="true" aria-labelledby="colorPickerTitle">
+    <div class="color-picker-wrapper">
+      <div id="colorPickerCardFan" class="color-picker-card-fan" aria-hidden="true"></div>
+      <div class="modal-card color-picker-card">
+        <div class="color-picker-header">
+          <span class="color-picker-badge">UNO ARENA</span>
+          <div class="color-picker-title-row">
+            <span class="gold-decor-line left" aria-hidden="true"></span>
+            <h3 id="colorPickerTitle" class="modal-title color-picker-title">CHOOSE ACTIVE COLOR</h3>
+            <span class="gold-decor-line right" aria-hidden="true"></span>
+          </div>
+          <p class="color-picker-subtitle">Select the next color for play</p>
+        </div>
+        <div id="colorOptionsContainer" class="color-picker-grid"></div>
       </div>
-      <div id="colorOptionsContainer" class="color-picker-grid"></div>
+    </div>
+  </div>
+
+  <!-- ACTION MODAL: COLOR ROULETTE -->
+  <div id="rouletteModal" class="modal-overlay roulette-overlay" role="dialog" aria-modal="true" aria-labelledby="rouletteTitle">
+    <div class="color-picker-wrapper roulette-wrapper">
+      <div id="rouletteCardFan" class="color-picker-card-fan roulette-card-fan" aria-hidden="true"></div>
+      <div class="modal-card color-picker-card roulette-card">
+        <div class="color-picker-header">
+          <span class="color-picker-badge">UNO ARENA</span>
+          <div class="color-picker-title-row">
+            <span class="gold-decor-line left" aria-hidden="true"></span>
+            <h3 id="rouletteTitle" class="modal-title color-picker-title">COLOR ROULETTE</h3>
+            <span class="gold-decor-line right" aria-hidden="true"></span>
+          </div>
+          <p id="rouletteSubtitle" class="color-picker-subtitle">Spinning to choose the next color...</p>
+        </div>
+
+        <div class="roulette-wheel-container">
+          <!-- Fixed 12 o'clock Gold Pointer -->
+          <div class="roulette-pointer" aria-hidden="true"></div>
+
+          <!-- Outer Decorative Glow Accents -->
+          <div class="roulette-glow-arc left" aria-hidden="true"></div>
+          <div class="roulette-glow-arc right" aria-hidden="true"></div>
+
+          <!-- Rotating Wheel Frame -->
+          <div class="roulette-wheel-frame" id="rouletteWheelFrame">
+            <svg id="rouletteWheelSvg" class="roulette-wheel-svg" viewBox="0 0 200 200" width="240" height="240" aria-label="Color Roulette Wheel">
+              <!-- Dynamically populated -->
+            </svg>
+          </div>
+        </div>
+
+        <!-- Status / Action Pill -->
+        <div class="roulette-status-container">
+          <button id="rouletteActionBtn" class="roulette-status-pill" type="button" aria-live="polite">
+            <span id="rouletteSpinnerIcon" class="roulette-spinner-icon" aria-hidden="true"></span>
+            <span id="rouletteStatusText">Spinning...</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

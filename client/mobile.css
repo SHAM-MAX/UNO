@@ -78,11 +78,57 @@
   .color-option-btn { min-height: 72px; height: auto; }
   .player-target-btn { min-height: 48px; color: #103b2c; background: #f2e6cf; }
   #swapPickerModal .modal-card > p { color: #59634f !important; }
-  #colorPickerModal .modal-card.color-picker-card { width: min(350px, 92vw) !important; max-width: 350px !important; padding: 18px 14px !important; }
-  #colorPickerModal .color-picker-title { font-size: 1.25rem !important; }
-  #colorPickerModal .color-picker-subtitle { color: #cbd5e1 !important; font-size: 0.8rem !important; }
-  #colorPickerModal .color-picker-grid { gap: 10px !important; }
-  #colorPickerModal .color-option-btn { height: 76px !important; min-height: 76px !important; }
+  .color-picker-wrapper { padding-top: 36px !important; }
+  #colorPickerModal .color-picker-card-fan { top: 2px !important; width: 210px !important; height: 76px !important; }
+  #colorPickerModal .color-fan-card { width: 50px !important; height: 74px !important; border-radius: 6px !important; }
+  #colorPickerModal .modal-card.color-picker-card,
+  #rouletteModal .modal-card.color-picker-card {
+    position: relative !important;
+    z-index: 2 !important;
+    width: min(355px, 92vw) !important;
+    max-width: 355px !important;
+    padding: 18px 14px 20px !important;
+    border-radius: 24px !important;
+    border: 4.5px solid transparent !important;
+    background:
+      radial-gradient(circle at 50% 25%, #8b0c1c 0%, #630512 40%, #3e020a 75%, #240005 100%) padding-box,
+      linear-gradient(135deg,
+        #fff3b0 0%,
+        #dca336 15%,
+        #8c5809 30%,
+        #ffe48a 45%,
+        #b87d1a 60%,
+        #fdeaa2 75%,
+        #784405 90%,
+        #ffd875 100%) border-box !important;
+    box-shadow:
+      0 0 0 1.5px #3d2003,
+      0 0 0 3.5px #f3be48,
+      0 16px 40px rgba(0, 0, 0, 0.85),
+      0 0 30px rgba(245, 185, 45, 0.3) !important;
+  }
+  #colorPickerModal .color-picker-badge,
+  #rouletteModal .color-picker-badge { font-size: 0.68rem !important; padding: 3px 14px !important; margin-bottom: 8px !important; }
+  #colorPickerModal .color-picker-title,
+  #rouletteModal .color-picker-title { font-size: 1.28rem !important; }
+  #colorPickerModal .gold-decor-line,
+  #rouletteModal .gold-decor-line { width: 24px !important; }
+  #colorPickerModal .color-picker-subtitle,
+  #rouletteModal .color-picker-subtitle { color: #f7e7ce !important; font-size: 0.82rem !important; margin-bottom: 10px !important; }
+  #colorPickerModal .color-picker-grid { gap: 10px !important; margin-top: 10px !important; }
+  #colorPickerModal .color-option-btn { height: 78px !important; min-height: 78px !important; border-radius: 14px !important; border-width: 3px !important; }
+  #colorPickerModal .color-choice-symbol-wrap { width: 24px !important; height: 24px !important; }
+  #colorPickerModal .color-choice-name { font-size: 0.92rem !important; }
+  #rouletteModal .color-picker-card-fan { top: 2px !important; width: 210px !important; height: 76px !important; }
+  #rouletteModal .color-fan-card { width: 50px !important; height: 74px !important; border-radius: 6px !important; }
+  #rouletteModal .roulette-wheel-container { width: 210px !important; height: 210px !important; margin: 4px auto !important; }
+  #rouletteModal .roulette-wheel-frame { width: 184px !important; height: 184px !important; border-width: 5.5px !important; }
+  #rouletteModal .roulette-pointer { top: 2px !important; width: 26px !important; height: 24px !important; }
+  #rouletteModal .roulette-glow-arc { width: 20px !important; height: 130px !important; }
+  #rouletteModal .roulette-glow-arc.left { left: 0px !important; }
+  #rouletteModal .roulette-glow-arc.right { right: 0px !important; }
+  #rouletteModal .roulette-status-container { margin-top: 14px !important; }
+  #rouletteModal .roulette-status-pill { font-size: 0.82rem !important; padding: 6px 20px !important; }
   .leave-confirm-card { max-height: calc(100dvh - 32px); overflow-y: auto; }
   .toast-msg {
     max-width: calc(100vw - 24px);

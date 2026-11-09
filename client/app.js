@@ -150,7 +150,16 @@ class UnoArenaApp {
 
       // Modals
       colorPickerModal: document.getElementById('colorPickerModal'),
+      colorPickerCardFan: document.getElementById('colorPickerCardFan'),
       colorOptionsContainer: document.getElementById('colorOptionsContainer'),
+      rouletteModal: document.getElementById('rouletteModal'),
+      rouletteCardFan: document.getElementById('rouletteCardFan'),
+      rouletteSubtitle: document.getElementById('rouletteSubtitle'),
+      rouletteWheelFrame: document.getElementById('rouletteWheelFrame'),
+      rouletteWheelSvg: document.getElementById('rouletteWheelSvg'),
+      rouletteActionBtn: document.getElementById('rouletteActionBtn'),
+      rouletteSpinnerIcon: document.getElementById('rouletteSpinnerIcon'),
+      rouletteStatusText: document.getElementById('rouletteStatusText'),
       swapPickerModal: document.getElementById('swapPickerModal'),
       swapOptionsContainer: document.getElementById('swapOptionsContainer'),
       gameOverModal: document.getElementById('gameOverModal'),
@@ -209,6 +218,16 @@ class UnoArenaApp {
     // How to Play modal
     this.el.howToPlayBtn.addEventListener('click', () => this.openRulesModal());
     this.el.rulesModalClose.addEventListener('click', () => this.closeRulesModal());
+
+    // Color Roulette modal actions
+    if (this.el.rouletteActionBtn) {
+      this.el.rouletteActionBtn.addEventListener('click', () => this.handleRouletteSpinClick());
+    }
+    if (this.el.rouletteWheelFrame) {
+      this.el.rouletteWheelFrame.addEventListener('click', () => {
+        if (this.isRouletteInteractive) this.handleRouletteSpinClick();
+      });
+    }
 
     // Window resize handler: seamlessly recalculate card fan and hand overlap
     window.addEventListener('resize', () => {
@@ -1345,8 +1364,14 @@ class UnoArenaApp {
     if (this.rematchDismissAfterResponseId && view.rematchProposal?.id === this.rematchDismissAfterResponseId && (view.rematchProposal.status === 'cancelled' || view.rematchProposal.declinedPlayerIds.includes(this.playerId))) { this.dismissedRematchId = view.rematchProposal.id; this.rematchDismissAfterResponseId = null; }
     if (view.isSpectator) { this.renderRematchSpectator(); this.renderRematchProposal(); return; }
     const pendingStillPlayable = this.pendingPlayCard && view.canPlayCards.includes(this.pendingPlayCard.id);
-    const openingChoice = view.isMyTurn && ['opening_color', 'color_roulette'].includes(view.gameState.pendingAction?.type);
-    if (view.gameState.mode !== 'flip' && !pendingStillPlayable && !openingChoice) {
+    const openingChoice = view.isMyTurn && view.gameState.pendingAction?.type === 'opening_color';
+    const rouletteChoice = view.gameState.pendingAction?.type === 'color_roulette';
+    if (!view.isMyTurn && !openingChoice) {
+      this.pendingPlayCard = null;
+      this.pendingPlayWrapper = null;
+      this.el.colorPickerModal.classList.remove('active');
+      if (view.gameState.mode === 'no_mercy') this.el.swapPickerModal.classList.remove('active');
+    } else if (view.gameState.mode !== 'flip' && !pendingStillPlayable && !openingChoice) {
       this.pendingPlayCard = null;
       this.pendingPlayWrapper = null;
       this.el.colorPickerModal.classList.remove('active');
@@ -1384,7 +1409,36 @@ class UnoArenaApp {
       this.renderArena();
       if (view.gameState.mode !== 'flip' && previous) this.animateClassicState(previous, classicGeometry);
     }
-    if (view.gameState.mode === 'no_mercy' && openingChoice && !this.el.colorPickerModal.classList.contains('active')) this.openColorPicker();
+    if (openingChoice && !this.el.colorPickerModal.classList.contains('active')) {
+      this.openColorPicker();
+    } else if (this.el.colorPickerModal.classList.contains('active') && (this.pendingPlayCard || openingChoice)) {
+      this.renderColorPickerContent();
+    }
+
+    if (rouletteChoice) {
+      const isTarget = view.gameState.pendingAction.targetPlayerId === this.playerId;
+      if (!this.el.rouletteModal.classList.contains('active')) {
+        this.openRouletteModal(isTarget);
+        if (isTarget) {
+          this.isRouletteInteractive = true;
+          if (this.rouletteAutoSpinTimer) clearTimeout(this.rouletteAutoSpinTimer);
+          this.rouletteAutoSpinTimer = setTimeout(() => {
+            if (this.isRouletteInteractive && this.el.rouletteModal.classList.contains('active')) {
+              this.handleRouletteSpinClick();
+            }
+          }, 7000);
+        }
+      }
+    } else if (!view.gameState.rouletteResult && this.el.rouletteModal?.classList.contains('active') && !this.isRouletteDecelerating) {
+      this.closeRouletteModal();
+    }
+
+    if (view.gameState.mode === 'no_mercy' && view.gameState.rouletteResult && view.gameState.rouletteResult.id !== this.lastHandledRouletteId && (!previous || view.isSpectator)) {
+      this.lastHandledRouletteId = view.gameState.rouletteResult.id;
+      this.displayRouletteResult(view.gameState.rouletteResult, () => {
+        this.showToast(`Roulette: ${view.gameState.rouletteResult.color.toUpperCase()} · ${view.gameState.rouletteResult.revealed.length} cards`);
+      });
+    }
     this.renderRematchProposal();
   }
 
@@ -1547,10 +1601,13 @@ class UnoArenaApp {
       if (event.type === 'skip_everyone') destination(event.playerId)?.animate([{ filter: 'brightness(2)' }, { filter: 'none' }], { duration: 500 });
     }
     const roulette = state.rouletteResult;
-    if (roulette && roulette.id !== previous.gameState.rouletteResult?.id) {
-      const target = destination(roulette.targetPlayerId);
-      roulette.revealed.forEach((card, i) => this.travelClassicCard(geometry.deck, target, renderCardHTML(card, { mode: 'no_mercy' }), null, i * 160));
-      this.showToast(`Roulette: ${roulette.color.toUpperCase()} · ${roulette.revealed.length} cards`);
+    if (roulette && roulette.id !== previous.gameState.rouletteResult?.id && roulette.id !== this.lastHandledRouletteId) {
+      this.lastHandledRouletteId = roulette.id;
+      this.displayRouletteResult(roulette, () => {
+        const target = destination(roulette.targetPlayerId);
+        roulette.revealed.forEach((card, i) => this.travelClassicCard(geometry.deck, target, renderCardHTML(card, { mode: 'no_mercy' }), null, i * 160));
+        this.showToast(`Roulette: ${roulette.color.toUpperCase()} · ${roulette.revealed.length} cards`);
+      });
     }
     state.players.filter(p => p.isEliminated && !previous.gameState.players.find(old => old.id === p.id)?.isEliminated).forEach(p => {
       this.showToast(`${p.name} — MERCY KNOCKOUT`);
@@ -2339,16 +2396,54 @@ class UnoArenaApp {
     });
   }
 
-  openColorPicker() {
-    const isDark = this.gameState.mode === 'flip' && this.gameState.flipSide === 'dark';
-    const colors = isDark ? FLIP_DARK_COLORS : CLASSIC_COLORS;
+  static COLOR_SVGS = {
+    red: '<svg class="color-choice-svg" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><polygon points="12,2 22,12 12,22 2,12" fill="currentColor"/></svg>',
+    yellow: '<svg class="color-choice-svg" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="currentColor"/></svg>',
+    green: '<svg class="color-choice-svg" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><polygon points="12,3 22,21 2,21" fill="currentColor"/></svg>',
+    blue: '<svg class="color-choice-svg" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="currentColor"/></svg>',
+    orange: '<svg class="color-choice-svg" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><path d="M12 2l2.6 6.4L21 9l-5.4 4.6L17.2 21 12 17.5 6.8 21l1.6-7.4L3 9l6.4-.6L12 2z" fill="currentColor"/></svg>',
+    pink: '<svg class="color-choice-svg" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3z" fill="currentColor"/></svg>',
+    teal: '<svg class="color-choice-svg" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><polygon points="12,2 22,9.2 18.2,21 5.8,21 2,9.2" fill="currentColor"/></svg>',
+    purple: '<svg class="color-choice-svg" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-5.4-5.4c0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/></svg>',
+  };
+
+  renderColorPickerCardFan(mode, isDark) {
+    if (!this.el.colorPickerCardFan) return;
+    const cardBackHtml = renderCardBackHTML(isDark, false, mode);
+    const fanCards = [
+      { pos: 0, rot: -18, x: -100, y: 14, z: 1 },
+      { pos: 1, rot: -9,  x: -50,  y: 2,  z: 2 },
+      { pos: 2, rot: 0,   x: 0,    y: -8, z: 3 },
+      { pos: 3, rot: 9,   x: 50,   y: 2,  z: 2 },
+      { pos: 4, rot: 18,  x: 100,  y: 14, z: 1 },
+    ];
+    this.el.colorPickerCardFan.innerHTML = fanCards
+      .map(
+        (c) => `
+        <div class="color-fan-card fan-pos-${c.pos}" style="--fan-rot: ${c.rot}deg; --fan-x: ${c.x}px; --fan-y: ${c.y}px; z-index: ${c.z};" aria-hidden="true">
+          ${cardBackHtml}
+        </div>
+      `
+      )
+      .join('');
+  }
+
+  renderColorPickerContent() {
+    const mode = this.gameState?.mode || 'classic';
+    const isDark = mode === 'flip' && this.gameState?.flipSide === 'dark';
+    const colors = isDark
+      ? ['orange', 'pink', 'teal', 'purple']
+      : ['red', 'yellow', 'green', 'blue'];
+
+    this.renderColorPickerCardFan(mode, isDark);
 
     this.el.colorOptionsContainer.innerHTML = colors
       .map((c) => {
-        const meta = COLOR_METADATA[c];
+        const meta = COLOR_METADATA[c] || { name: c };
+        const svgIcon = UnoArenaApp.COLOR_SVGS[c] || '';
         return `
           <button class="color-option-btn color-choice-${c}" data-color="${c}" type="button" aria-label="${meta.name}">
-            <span class="color-choice-symbol" aria-hidden="true">${meta.symbol}</span>
+            <span class="color-choice-symbol-wrap" aria-hidden="true">${svgIcon}</span>
             <span class="color-choice-name">${meta.name.toUpperCase()}</span>
           </button>
         `;
@@ -2365,7 +2460,7 @@ class UnoArenaApp {
         const currentBtn = e.currentTarget;
         currentBtn.classList.add('is-selected');
 
-        if (this.pendingPlayWrapper && this.gameState.mode === 'flip') {
+        if (this.pendingPlayWrapper && this.gameState?.mode === 'flip') {
           this.pendingPlayWrapper.classList.add('playing');
         }
 
@@ -2375,7 +2470,7 @@ class UnoArenaApp {
         setTimeout(() => {
           this.el.colorPickerModal.classList.remove('active');
           this.send({
-            type: ['opening_color', 'color_roulette'].includes(this.gameState.pendingAction?.type) ? 'choose_color' : 'play_card',
+            type: ['opening_color'].includes(this.gameState?.pendingAction?.type) ? 'choose_color' : 'play_card',
             data: {
               cardId: this.pendingPlayCard?.id,
               chosenColor,
@@ -2386,8 +2481,271 @@ class UnoArenaApp {
         }, 120);
       });
     });
+  }
 
+  openColorPicker() {
+    this.renderColorPickerContent();
     this.el.colorPickerModal.classList.add('active');
+  }
+
+  static ROULETTE_ANGLES = {
+    red: 45,
+    yellow: 315,
+    blue: 225,
+    green: 135,
+  };
+
+  renderRouletteCardFan(mode = 'no_mercy') {
+    if (!this.el.rouletteCardFan) return;
+    const cardBackHtml = renderCardBackHTML(false, false, mode);
+    const fanCards = [
+      { pos: 0, rot: -18, x: -100, y: 14, z: 1 },
+      { pos: 1, rot: -9,  x: -50,  y: 2,  z: 2 },
+      { pos: 2, rot: 0,   x: 0,    y: -8, z: 3 },
+      { pos: 3, rot: 9,   x: 50,   y: 2,  z: 2 },
+      { pos: 4, rot: 18,  x: 100,  y: 14, z: 1 },
+    ];
+    this.el.rouletteCardFan.innerHTML = fanCards
+      .map(
+        (c) => `
+        <div class="color-fan-card fan-pos-${c.pos}" style="--fan-rot: ${c.rot}deg; --fan-x: ${c.x}px; --fan-y: ${c.y}px; z-index: ${c.z};" aria-hidden="true">
+          ${cardBackHtml}
+        </div>
+      `
+      )
+      .join('');
+  }
+
+  renderRouletteWheelSvg() {
+    if (!this.el.rouletteWheelSvg) return;
+    this.el.rouletteWheelSvg.innerHTML = `
+      <defs>
+        <!-- Quadrant gradients for rich satin depth -->
+        <radialGradient id="rouletteGradRed" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#ef4444" />
+          <stop offset="60%" stop-color="#dc2626" />
+          <stop offset="100%" stop-color="#991b1b" />
+        </radialGradient>
+        <radialGradient id="rouletteGradYellow" cx="70%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#fef08a" />
+          <stop offset="45%" stop-color="#facc15" />
+          <stop offset="100%" stop-color="#ca8a04" />
+        </radialGradient>
+        <radialGradient id="rouletteGradBlue" cx="70%" cy="70%" r="70%">
+          <stop offset="0%" stop-color="#60a5fa" />
+          <stop offset="55%" stop-color="#2563eb" />
+          <stop offset="100%" stop-color="#1e40af" />
+        </radialGradient>
+        <radialGradient id="rouletteGradGreen" cx="30%" cy="70%" r="70%">
+          <stop offset="0%" stop-color="#4ade80" />
+          <stop offset="55%" stop-color="#16a34a" />
+          <stop offset="100%" stop-color="#166534" />
+        </radialGradient>
+        <filter id="rouletteDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.6" />
+        </filter>
+      </defs>
+
+      <!-- 4 Quadrants -->
+      <!-- TOP-LEFT: RED (270° to 180° / 9 o'clock to 12 o'clock) -->
+      <g class="roulette-quadrant" data-color="red">
+        <path d="M 100,100 L 0,100 A 100,100 0 0,1 100,0 Z" fill="url(#rouletteGradRed)" />
+        <polygon points="58,44 72,58 58,72 44,58" fill="#ffffff" filter="url(#rouletteDropShadow)" />
+      </g>
+
+      <!-- TOP-RIGHT: YELLOW (12 o'clock to 3 o'clock) -->
+      <g class="roulette-quadrant" data-color="yellow">
+        <path d="M 100,100 L 100,0 A 100,100 0 0,1 200,100 Z" fill="url(#rouletteGradYellow)" />
+        <polygon points="142,45 145.5,54 155,55 147.5,62 149.5,71 142,66 134.5,71 136.5,62 129,55 138.5,54" fill="#111111" />
+      </g>
+
+      <!-- BOTTOM-RIGHT: BLUE (3 o'clock to 6 o'clock) -->
+      <g class="roulette-quadrant" data-color="blue">
+        <path d="M 100,100 L 200,100 A 100,100 0 0,1 100,200 Z" fill="url(#rouletteGradBlue)" />
+        <circle cx="142" cy="142" r="13" fill="#ffffff" filter="url(#rouletteDropShadow)" />
+      </g>
+
+      <!-- BOTTOM-LEFT: GREEN (6 o'clock to 9 o'clock) -->
+      <g class="roulette-quadrant" data-color="green">
+        <path d="M 100,100 L 100,200 A 100,100 0 0,1 0,100 Z" fill="url(#rouletteGradGreen)" />
+        <polygon points="58,130 72,154 44,154" fill="#ffffff" filter="url(#rouletteDropShadow)" />
+      </g>
+
+      <!-- Quadrant Dividers -->
+      <line x1="0" y1="100" x2="200" y2="100" stroke="#2a050b" stroke-width="2.5" />
+      <line x1="100" y1="0" x2="100" y2="200" stroke="#2a050b" stroke-width="2.5" />
+
+      <!-- Center Hub with UNO Logo -->
+      <g class="roulette-center-hub" filter="url(#rouletteDropShadow)">
+        <circle cx="100" cy="100" r="32" fill="#dca336" stroke="#5a3505" stroke-width="2" />
+        <circle cx="100" cy="100" r="28" fill="#140205" stroke="#fde047" stroke-width="1.2" />
+        <g transform="translate(100, 100) rotate(-13)">
+          <ellipse cx="0" cy="0" rx="21" ry="12.5" fill="#d11a2a" stroke="#ffd700" stroke-width="1.5" />
+          <text x="0" y="4.5" text-anchor="middle" font-family="'Impact', 'Arial Black', sans-serif" font-weight="900" font-style="italic" font-size="12.5" fill="#ffffff" stroke="#110202" stroke-width="0.8">UNO</text>
+        </g>
+      </g>
+    `;
+  }
+
+  getCurrentWheelAngle() {
+    if (!this.el.rouletteWheelFrame) return 0;
+    try {
+      const st = window.getComputedStyle(this.el.rouletteWheelFrame);
+      const tr = st.transform;
+      if (tr && tr !== 'none') {
+        const values = tr.split('(')[1].split(')')[0].split(',');
+        const a = parseFloat(values[0]);
+        const b = parseFloat(values[1]);
+        const angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
+        return ((angle % 360) + 360) % 360;
+      }
+    } catch (_) {}
+    return this.currentRouletteAngle || 0;
+  }
+
+  openRouletteModal(isTargetPlayer = false) {
+    if (!this.el.rouletteModal) return;
+    if (this.rouletteLandedTimer) { clearTimeout(this.rouletteLandedTimer); this.rouletteLandedTimer = null; }
+    if (this.rouletteCloseTimer) { clearTimeout(this.rouletteCloseTimer); this.rouletteCloseTimer = null; }
+
+    const mode = this.gameState?.mode || 'no_mercy';
+    this.renderRouletteCardFan(mode);
+    this.renderRouletteWheelSvg();
+
+    this.isRouletteInteractive = isTargetPlayer;
+    this.isRouletteDecelerating = false;
+
+    if (this.el.rouletteWheelFrame) {
+      this.el.rouletteWheelFrame.style.transition = 'none';
+      this.el.rouletteWheelFrame.style.transform = 'rotate(0deg)';
+      this.currentRouletteAngle = 0;
+      this.el.rouletteWheelSvg?.querySelectorAll('.roulette-quadrant').forEach(q => q.classList.remove('is-winner'));
+    }
+
+    if (this.el.rouletteActionBtn) {
+      this.el.rouletteActionBtn.classList.remove('landed');
+      if (isTargetPlayer) {
+        this.el.rouletteActionBtn.classList.add('clickable');
+        this.el.rouletteStatusText.textContent = 'SPIN WHEEL';
+        if (this.el.rouletteSpinnerIcon) this.el.rouletteSpinnerIcon.style.display = 'none';
+        if (this.el.rouletteSubtitle) this.el.rouletteSubtitle.textContent = 'Spin the wheel to choose your roulette color...';
+      } else {
+        this.el.rouletteActionBtn.classList.remove('clickable');
+        this.el.rouletteStatusText.textContent = 'Spinning...';
+        if (this.el.rouletteSpinnerIcon) this.el.rouletteSpinnerIcon.style.display = 'inline-block';
+        if (this.el.rouletteSubtitle) this.el.rouletteSubtitle.textContent = 'Spinning to choose the next color...';
+        this.el.rouletteWheelFrame?.classList.add('spinning-free');
+      }
+    }
+
+    this.el.rouletteModal.classList.add('active');
+  }
+
+  closeRouletteModal() {
+    if (!this.el.rouletteModal) return;
+    if (this.rouletteLandedTimer) { clearTimeout(this.rouletteLandedTimer); this.rouletteLandedTimer = null; }
+    if (this.rouletteCloseTimer) { clearTimeout(this.rouletteCloseTimer); this.rouletteCloseTimer = null; }
+    this.el.rouletteModal.classList.remove('active');
+    this.el.rouletteWheelFrame?.classList.remove('spinning-free');
+    this.isRouletteInteractive = false;
+    this.isRouletteDecelerating = false;
+    if (this.rouletteAutoSpinTimer) {
+      clearTimeout(this.rouletteAutoSpinTimer);
+      this.rouletteAutoSpinTimer = null;
+    }
+  }
+
+  handleRouletteSpinClick() {
+    if (!this.isRouletteInteractive) return;
+    this.isRouletteInteractive = false;
+    if (this.rouletteAutoSpinTimer) {
+      clearTimeout(this.rouletteAutoSpinTimer);
+      this.rouletteAutoSpinTimer = null;
+    }
+
+    if (this.el.rouletteActionBtn) {
+      this.el.rouletteActionBtn.classList.remove('clickable');
+      if (this.el.rouletteSpinnerIcon) this.el.rouletteSpinnerIcon.style.display = 'inline-block';
+      this.el.rouletteStatusText.textContent = 'Spinning...';
+    }
+    if (this.el.rouletteSubtitle) {
+      this.el.rouletteSubtitle.textContent = 'Spinning to choose the next color...';
+    }
+    this.el.rouletteWheelFrame?.classList.add('spinning-free');
+
+    const colors = ['red', 'yellow', 'green', 'blue'];
+    const chosenColor = colors[Math.floor(Math.random() * colors.length)];
+    this.send({
+      type: 'choose_color',
+      data: { chosenColor },
+    });
+  }
+
+  displayRouletteResult(roulette, onComplete) {
+    if (!this.el.rouletteModal) {
+      if (typeof onComplete === 'function') onComplete();
+      return;
+    }
+
+    if (!this.el.rouletteModal.classList.contains('active')) {
+      this.openRouletteModal(false);
+    }
+
+    this.isRouletteDecelerating = true;
+    this.isRouletteInteractive = false;
+    if (this.rouletteAutoSpinTimer) {
+      clearTimeout(this.rouletteAutoSpinTimer);
+      this.rouletteAutoSpinTimer = null;
+    }
+
+    const color = roulette.color;
+    const targetBaseAngle = UnoArenaApp.ROULETTE_ANGLES[color] ?? 45;
+
+    const currentAngle = this.getCurrentWheelAngle();
+    const normalizedCurrent = ((currentAngle % 360) + 360) % 360;
+
+    if (this.el.rouletteWheelFrame) {
+      this.el.rouletteWheelFrame.classList.remove('spinning-free');
+      this.el.rouletteWheelFrame.style.transition = 'none';
+      this.el.rouletteWheelFrame.style.transform = `rotate(${normalizedCurrent}deg)`;
+      void this.el.rouletteWheelFrame.offsetHeight; // force reflow
+
+      let diff = targetBaseAngle - normalizedCurrent;
+      if (diff <= 0) diff += 360;
+      const totalRotation = normalizedCurrent + 1440 + diff;
+      this.currentRouletteAngle = totalRotation;
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const duration = prefersReducedMotion ? 400 : 2200;
+
+      this.el.rouletteWheelFrame.style.transition = `transform ${duration}ms cubic-bezier(0.15, 0.9, 0.25, 1)`;
+      this.el.rouletteWheelFrame.style.transform = `rotate(${totalRotation}deg)`;
+
+      if (this.rouletteLandedTimer) clearTimeout(this.rouletteLandedTimer);
+      if (this.rouletteCloseTimer) clearTimeout(this.rouletteCloseTimer);
+
+      this.rouletteLandedTimer = setTimeout(() => {
+        const winningQuadrant = this.el.rouletteWheelSvg?.querySelector(`.roulette-quadrant[data-color="${color}"]`);
+        if (winningQuadrant) winningQuadrant.classList.add('is-winner');
+
+        if (this.el.rouletteActionBtn) {
+          this.el.rouletteActionBtn.classList.remove('clickable');
+          this.el.rouletteActionBtn.classList.add('landed');
+          if (this.el.rouletteSpinnerIcon) this.el.rouletteSpinnerIcon.style.display = 'none';
+          this.el.rouletteStatusText.textContent = `Landed on ${color.toUpperCase()}!`;
+        }
+        if (this.el.rouletteSubtitle) {
+          this.el.rouletteSubtitle.textContent = `Color chosen: ${color.toUpperCase()}`;
+        }
+
+        this.rouletteCloseTimer = setTimeout(() => {
+          this.closeRouletteModal();
+          if (typeof onComplete === 'function') onComplete();
+        }, 1400);
+      }, duration);
+    } else {
+      if (typeof onComplete === 'function') onComplete();
+    }
   }
 
   openSwapPicker() {
