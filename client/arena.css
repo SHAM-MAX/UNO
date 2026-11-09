@@ -727,12 +727,35 @@ body.in-arena::after {
 }
 
 .in-arena .classic-face-image,
-.in-arena .classic-back-image {
+.in-arena .classic-back-image,
+.in-arena .flip-face-image,
+.in-arena .flip-back-image,
+.in-arena .nm-face-image,
+.in-arena .nm-back-image {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: fill;
+  border-radius: 10px;
   image-rendering: -webkit-optimize-contrast;
   display: block;
+}
+
+.in-arena .opponent-fan-card .game-card {
+  width: 100% !important;
+  height: 100% !important;
+  box-shadow: none !important;
+  border-radius: 5px !important;
+  background: transparent !important;
+  border: 0 !important;
+  aspect-ratio: auto !important;
+}
+
+.in-arena .opponent-fan-card img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: fill !important;
+  border-radius: 5px !important;
+  display: block !important;
 }
 
 .in-arena #drawCountBadge,
@@ -2607,4 +2630,163 @@ body.no-mercy-arena .table-action-bar:not(:has(#btnViewVictory:not([style*="disp
   transform: scale(0.96) !important;
   box-shadow: 0 0 0 3px #ffffff, 0 0 30px rgba(255, 255, 255, 0.9) !important;
   filter: brightness(1.25);
+}
+
+/* ============================================================
+   SOCIAL & PARITY ENHANCEMENTS: REACTION EMOTES, HOVER & BOTS
+   ============================================================ */
+
+/* 1. Reaction Picker in Table Action Bar */
+.reaction-picker-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-reaction {
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f1f5f9;
+  border-radius: 9999px;
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-reaction:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: rgba(245, 158, 11, 0.6);
+  transform: translateY(-2px);
+}
+
+.reaction-tray {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  backdrop-filter: blur(12px);
+  border-radius: 30px;
+  padding: 6px 10px;
+  display: flex;
+  gap: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(245, 158, 11, 0.2);
+  z-index: 500;
+  animation: popReactionTray 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes popReactionTray {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(0.92); }
+  100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+.reaction-item-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.45rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  line-height: 1;
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.15s ease;
+}
+
+.reaction-item-btn:hover {
+  transform: scale(1.32) translateY(-2px);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.reaction-item-btn:active {
+  transform: scale(0.95);
+}
+
+/* 2. Floating Reaction Emote Bubble on Avatars */
+.player-emote-bubble {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid #f59e0b;
+  border-radius: 9999px;
+  padding: 4px 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), 0 0 16px rgba(245, 158, 11, 0.5);
+  z-index: 1000;
+  pointer-events: none;
+  animation: emoteFloatFade 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.player-emote-bubble .emote-icon {
+  font-size: 1.6rem;
+  display: block;
+  line-height: 1;
+}
+
+@keyframes emoteFloatFade {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -10px) scale(1.25);
+  }
+  30% {
+    transform: translate(-50%, -16px) scale(1.05);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -32px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -48px) scale(0.85);
+  }
+}
+
+/* 3. Opponent Card Hover Sync Elevation */
+.opponent-fan-card.fan-card-hovered {
+  transform: translateY(-16px) scale(1.15) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.55), 0 0 14px rgba(245, 158, 11, 0.75) !important;
+  z-index: 35 !important;
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.15s ease !important;
+}
+
+/* 4. Mini Bot and Disconnect Badges */
+.mini-bot-tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.disconnect-countdown-badge {
+  display: inline-block;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 3px;
+  animation: pulseDisconnect 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseDisconnect {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; border-color: rgba(239, 68, 68, 0.9); }
 }

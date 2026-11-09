@@ -673,6 +673,39 @@ body::before {
   border-radius: 9px;
 }
 
+/* Authentic UNO Flip Card Faces */
+.game-card.flip-image-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  aspect-ratio: 327 / 505;
+  overflow: hidden;
+  border-radius: 9px;
+}
+
+.flip-card-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: -webkit-optimize-contrast;
+  user-select: none;
+  -webkit-user-drag: none;
+  border-radius: 9px;
+  pointer-events: none;
+}
+
+.flip-image-card.mini .flip-card-image {
+  border-radius: 7px;
+}
+
+.flip-image-back {
+  background: #111;
+  border-radius: 9px;
+}
+
+
 .game-card.flip-light { border-color: #fffdf5; }
 .game-card.flip-dark { border-color: #111218; box-shadow: 0 0 0 1px #fffdf5, 0 6px 16px rgba(0,0,0,.42); }
 

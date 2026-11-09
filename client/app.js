@@ -112,6 +112,10 @@ class UnoArenaApp {
       lobbyPlayersList: document.getElementById('lobbyPlayersList'),
       readyBtn: document.getElementById('readyBtn'),
       startGameBtn: document.getElementById('startGameBtn'),
+      addBotBtn: document.getElementById('addBotBtn'),
+      shuffleSeatsBtn: document.getElementById('shuffleSeatsBtn'),
+      playVsAiBtn: document.getElementById('playVsAiBtn'),
+      mobilePlayVsAiBtn: document.getElementById('mobilePlayVsAiBtn'),
 
       // Arena
       opponentsRow: document.getElementById('opponentsRow'),
@@ -134,6 +138,8 @@ class UnoArenaApp {
       turnTimerContainer: document.getElementById('turnTimerContainer'),
       timerRingProgress: document.getElementById('timerRingProgress'),
       turnTimerSeconds: document.getElementById('turnTimerSeconds'),
+      reactionToggleBtn: document.getElementById('reactionToggleBtn'),
+      reactionTray: document.getElementById('reactionTray'),
 
       // Player Controls
       btnDrawAction: document.getElementById('btnDrawAction'),
@@ -567,8 +573,8 @@ class UnoArenaApp {
     if (this.el.mobileCreateRoomBtn) {
       this.el.mobileCreateRoomBtn.addEventListener('click', () => {
         const name = (this.el.mobilePlayerNameInput?.value || '').trim() ||
-                     (this.el.playerNameInput?.value || '').trim() ||
-                     this.playerName || 'Player 1';
+          (this.el.playerNameInput?.value || '').trim() ||
+          this.playerName || 'Player 1';
         this.playerName = name;
         this.el.playerNameInput.value = name;
         if (this.el.mobilePlayerNameInput) this.el.mobilePlayerNameInput.value = name;
@@ -580,10 +586,10 @@ class UnoArenaApp {
     if (this.el.mobileJoinRoomBtn) {
       this.el.mobileJoinRoomBtn.addEventListener('click', () => {
         const name = (this.el.mobilePlayerNameInput?.value || '').trim() ||
-                     (this.el.playerNameInput?.value || '').trim() ||
-                     this.playerName || 'Guest';
+          (this.el.playerNameInput?.value || '').trim() ||
+          this.playerName || 'Guest';
         const code = (this.el.mobileRoomCodeInput?.value || '').trim().toUpperCase() ||
-                     (this.el.roomCodeInput?.value || '').trim().toUpperCase();
+          (this.el.roomCodeInput?.value || '').trim().toUpperCase();
         if (!code) {
           this.showToast('Please enter a room code');
           if (this.el.mobileRoomCodeInput) this.el.mobileRoomCodeInput.focus();
@@ -628,6 +634,61 @@ class UnoArenaApp {
       setTimeout(() => {
         this.isStartingGame = false;
       }, 2000);
+    });
+
+    const triggerPlayVsAi = () => {
+      const name = (this.el.playerNameInput?.value || '').trim() ||
+        (this.el.mobilePlayerNameInput?.value || '').trim() ||
+        this.playerName || 'Player 1';
+      this.playerName = name;
+      localStorage.setItem('uno_arena_name', name);
+      this.createBotRoom(name, this.preferredMode, 3, this.getSelectedHouseRules());
+    };
+
+    if (this.el.playVsAiBtn) {
+      this.el.playVsAiBtn.addEventListener('click', triggerPlayVsAi);
+    }
+    if (this.el.mobilePlayVsAiBtn) {
+      this.el.mobilePlayVsAiBtn.addEventListener('click', triggerPlayVsAi);
+    }
+
+    if (this.el.addBotBtn) {
+      this.el.addBotBtn.addEventListener('click', () => {
+        this.send({ type: 'add_bot' });
+      });
+    }
+
+    if (this.el.shuffleSeatsBtn) {
+      this.el.shuffleSeatsBtn.addEventListener('click', () => {
+        this.send({ type: 'shuffle_seats' });
+      });
+    }
+
+    if (this.el.reactionToggleBtn) {
+      this.el.reactionToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.el.reactionTray) {
+          const isShown = this.el.reactionTray.style.display === 'flex';
+          this.el.reactionTray.style.display = isShown ? 'none' : 'flex';
+        }
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (this.el.reactionTray && !this.el.reactionTray.contains(e.target) && e.target !== this.el.reactionToggleBtn) {
+        this.el.reactionTray.style.display = 'none';
+      }
+    });
+
+    document.querySelectorAll('.reaction-item-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const emote = e.currentTarget.getAttribute('data-emote');
+        if (emote) {
+          sounds.playSnap?.(520, 0.1);
+          this.send({ type: 'send_reaction', data: { emoteId: emote } });
+          if (this.el.reactionTray) this.el.reactionTray.style.display = 'none';
+        }
+      });
     });
 
     // In-game actions
@@ -713,9 +774,9 @@ class UnoArenaApp {
     // Rematch
     this.el.rematchBtn.addEventListener('click', () => {
       if (this.rematchRequestPending) return;
-      if (this.ws?.readyState!==WebSocket.OPEN) { this.showToast('Wait for the room to reconnect before requesting a rematch.'); return; }
-      this.rematchRequestPending=true;
-      this.send({ type: this.gameState.status === 'round_over' ? 'rematch' : 'rematch_propose', data:{matchId:this.gameState.matchId} });
+      if (this.ws?.readyState !== WebSocket.OPEN) { this.showToast('Wait for the room to reconnect before requesting a rematch.'); return; }
+      this.rematchRequestPending = true;
+      this.send({ type: this.gameState.status === 'round_over' ? 'rematch' : 'rematch_propose', data: { matchId: this.gameState.matchId } });
       if (this.gameState.status === 'round_over') this.el.gameOverModal.classList.remove('active');
     });
 
@@ -1036,6 +1097,47 @@ class UnoArenaApp {
     }
   }
 
+  async createBotRoom(hostName, mode = this.preferredMode, botCount = 3, houseRules = {}) {
+    if (this.isCreatingRoom) return;
+    this.isCreatingRoom = true;
+    if (this.el.createRoomBtn) this.el.createRoomBtn.disabled = true;
+    if (this.el.playVsAiBtn) this.el.playVsAiBtn.disabled = true;
+    if (this.el.mobilePlayVsAiBtn) this.el.mobilePlayVsAiBtn.disabled = true;
+
+    try {
+      const res = await fetch('/api/rooms/bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hostName, mode, botCount, houseRules }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data && data.success) {
+        this.roomId = data.roomId;
+        this.playerId = data.playerId;
+        this.sessionToken = data.sessionToken;
+        this.playerName = hostName;
+        localStorage.setItem(`session_${this.roomId}`, this.sessionToken);
+        localStorage.setItem(`player_${this.roomId}`, this.playerId);
+        localStorage.setItem('uno_arena_name', hostName);
+
+        const roomUrl = new URL(window.location.href);
+        roomUrl.searchParams.set('room', this.roomId);
+        window.history.replaceState({}, '', roomUrl);
+
+        this.connectWebSocket(data.roomId, data.playerId, data.sessionToken, hostName);
+      } else {
+        this.showToast(data?.error || 'Failed to start AI game');
+      }
+    } catch (e) {
+      this.showToast('Network error starting AI game');
+    } finally {
+      this.isCreatingRoom = false;
+      if (this.el.createRoomBtn) this.el.createRoomBtn.disabled = false;
+      if (this.el.playVsAiBtn) this.el.playVsAiBtn.disabled = false;
+      if (this.el.mobilePlayVsAiBtn) this.el.mobilePlayVsAiBtn.disabled = false;
+    }
+  }
+
   connectWebSocket(roomId, playerId, sessionToken, playerName) {
     if (this.pingInterval) {
       clearInterval(this.pingInterval);
@@ -1101,11 +1203,15 @@ class UnoArenaApp {
           window.history.replaceState({}, '', roomUrl);
         } else if (msg.type === 'room:state') {
           this.handleRoomState(msg.data);
+        } else if (msg.type === 'player_card_hovered') {
+          this.handleOpponentCardHover(msg.data);
+        } else if (msg.type === 'player_reaction') {
+          this.handlePlayerReaction(msg.data);
         } else if (msg.type === 'catch_failed') {
           this.catchRequestPending = false;
           this.showCaughtFailedModal(msg.data);
         } else if (msg.type === 'error') {
-          this.rematchRequestPending=false; this.rematchActionPending=false; this.rematchDismissAfterResponseId=null; this.unoRequestPending = false; this.catchRequestPending = false; this.pendingClassicMotion = null;
+          this.rematchRequestPending = false; this.rematchActionPending = false; this.rematchDismissAfterResponseId = null; this.unoRequestPending = false; this.catchRequestPending = false; this.pendingClassicMotion = null;
           this.clearClassicAnimations?.();
           this.isMoveInFlight = false;
           this.el.playerHandCards.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
@@ -1180,6 +1286,48 @@ class UnoArenaApp {
     }
   }
 
+  handleOpponentCardHover(data) {
+    const { playerId, cardIndex } = data || {};
+    const opponentBox = document.querySelector(`.opponent-box[data-player-id="${playerId}"]`);
+    if (!opponentBox) return;
+    const cardBacks = opponentBox.querySelectorAll('.opponent-card-back');
+    cardBacks.forEach((back, idx) => {
+      back.classList.toggle('fan-card-hovered', cardIndex !== null && idx === (cardIndex % Math.max(1, cardBacks.length)));
+    });
+  }
+
+  handlePlayerReaction(data) {
+    const { playerId, emoteId } = data || {};
+    const EMOTE_MAP = {
+      laugh: '😄',
+      shocked: '😱',
+      fire: '🔥',
+      lightning: '⚡',
+      skull: '💀',
+    };
+    const emoji = EMOTE_MAP[emoteId] || '😄';
+
+    let avatarEl = null;
+    if (playerId === this.playerId) {
+      avatarEl = this.el.localPlayerProfile?.querySelector('.local-avatar') || document.querySelector('.player-bottom-area');
+    } else {
+      avatarEl = document.querySelector(`.opponent-box[data-player-id="${playerId}"] .opponent-avatar`) ||
+        document.querySelector(`.opponent-box[data-player-id="${playerId}"]`);
+    }
+    if (!avatarEl) return;
+
+    sounds.playSnap?.(560, 0.08);
+
+    const bubble = document.createElement('div');
+    bubble.className = 'player-emote-bubble';
+    bubble.innerHTML = `<span class="emote-icon">${emoji}</span>`;
+    avatarEl.appendChild(bubble);
+
+    setTimeout(() => {
+      if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
+    }, 2200);
+  }
+
   handleRoomState(view) {
     const previous = this.clientView;
     const classicGeometry = this.captureClassicGeometry();
@@ -1193,8 +1341,8 @@ class UnoArenaApp {
     this.clientView = view;
     this.gameState = view.gameState;
     if (view.myPlayerId) this.playerId = view.myPlayerId;
-    this.rematchRequestPending=false; this.rematchActionPending=false;
-    if (this.rematchDismissAfterResponseId && view.rematchProposal?.id===this.rematchDismissAfterResponseId && (view.rematchProposal.status==='cancelled' || view.rematchProposal.declinedPlayerIds.includes(this.playerId))) { this.dismissedRematchId=view.rematchProposal.id; this.rematchDismissAfterResponseId=null; }
+    this.rematchRequestPending = false; this.rematchActionPending = false;
+    if (this.rematchDismissAfterResponseId && view.rematchProposal?.id === this.rematchDismissAfterResponseId && (view.rematchProposal.status === 'cancelled' || view.rematchProposal.declinedPlayerIds.includes(this.playerId))) { this.dismissedRematchId = view.rematchProposal.id; this.rematchDismissAfterResponseId = null; }
     if (view.isSpectator) { this.renderRematchSpectator(); this.renderRematchProposal(); return; }
     const pendingStillPlayable = this.pendingPlayCard && view.canPlayCards.includes(this.pendingPlayCard.id);
     const openingChoice = view.isMyTurn && ['opening_color', 'color_roulette'].includes(view.gameState.pendingAction?.type);
@@ -1240,88 +1388,88 @@ class UnoArenaApp {
     this.renderRematchProposal();
   }
 
-  sendRematchAction(type,data={}) {
-    if (this.rematchActionPending || this.ws?.readyState!==WebSocket.OPEN) return;
-    this.rematchActionPending=true;
-    this.send({type,data:{proposalId:this.clientView.rematchProposal.id,...data}});
+  sendRematchAction(type, data = {}) {
+    if (this.rematchActionPending || this.ws?.readyState !== WebSocket.OPEN) return;
+    this.rematchActionPending = true;
+    this.send({ type, data: { proposalId: this.clientView.rematchProposal.id, ...data } });
   }
 
   closeRematchDialog() {
-    const p=this.clientView?.rematchProposal;
+    const p = this.clientView?.rematchProposal;
     if (!p) return;
-    if (['responding','voting','resolved'].includes(p.status)) {
-      if(this.rematchActionPending || this.ws?.readyState!==WebSocket.OPEN) return;
-      this.rematchDismissAfterResponseId=p.id;
-      if (p.initiatorPlayerId===this.playerId) this.sendRematchAction('rematch_cancel');
-      else if (p.pendingPlayerIds.includes(this.playerId)) this.sendRematchAction('rematch_respond',{accept:false});
-      else if (p.acceptedPlayerIds.includes(this.playerId)) this.sendRematchAction('rematch_respond',{accept:false,withdraw:true});
-      else this.dismissedRematchId=p.id;
-    } else this.dismissedRematchId=p.id;
+    if (['responding', 'voting', 'resolved'].includes(p.status)) {
+      if (this.rematchActionPending || this.ws?.readyState !== WebSocket.OPEN) return;
+      this.rematchDismissAfterResponseId = p.id;
+      if (p.initiatorPlayerId === this.playerId) this.sendRematchAction('rematch_cancel');
+      else if (p.pendingPlayerIds.includes(this.playerId)) this.sendRematchAction('rematch_respond', { accept: false });
+      else if (p.acceptedPlayerIds.includes(this.playerId)) this.sendRematchAction('rematch_respond', { accept: false, withdraw: true });
+      else this.dismissedRematchId = p.id;
+    } else this.dismissedRematchId = p.id;
     this.renderRematchProposal();
   }
 
   renderRematchSpectator() {
-    const p=this.clientView.rematchProposal;
-    const result=p?.previousResult;
+    const p = this.clientView.rematchProposal;
+    const result = p?.previousResult;
     if (result) {
-      const winner=result.scores.find(player=>player.id===result.winnerId);
+      const winner = result.scores.find(player => player.id === result.winnerId);
       if (this.el.victoryWinsBadge) {
         this.el.winnerNameText.textContent = winner?.name || 'Winner';
         this.el.victoryWinsBadge.textContent = 'WINS!';
       } else {
-        this.el.winnerNameText.textContent=`${winner?.name || 'Winner'} WINS!`;
+        this.el.winnerNameText.textContent = `${winner?.name || 'Winner'} WINS!`;
       }
-      this.el.winReasonText.textContent=`You are sitting out this rematch. ${result.winReason || ''}`;
+      this.el.winReasonText.textContent = `You are sitting out this rematch. ${result.winReason || ''}`;
     }
-    this.el.rematchBtn.style.display='none';
+    this.el.rematchBtn.style.display = 'none';
     this.el.gameOverModal.classList.add('active');
   }
 
   renderRematchProposal() {
-    const modal=document.getElementById('rematchProposalModal'),content=document.getElementById('rematchProposalContent');
-    const p=this.clientView.rematchProposal;
-    clearInterval(this.rematchCountdownInterval);this.rematchCountdownInterval=null;
-    if (!p || !p.originalParticipantIds.includes(this.playerId) || this.dismissedRematchId===p.id || (p.status==='started'&&!this.clientView.isSpectator)) {modal.classList.remove('active');return;}
-    const live=['responding','voting'].includes(p.status);
+    const modal = document.getElementById('rematchProposalModal'), content = document.getElementById('rematchProposalContent');
+    const p = this.clientView.rematchProposal;
+    clearInterval(this.rematchCountdownInterval); this.rematchCountdownInterval = null;
+    if (!p || !p.originalParticipantIds.includes(this.playerId) || this.dismissedRematchId === p.id || (p.status === 'started' && !this.clientView.isSpectator)) { modal.classList.remove('active'); return; }
+    const live = ['responding', 'voting'].includes(p.status);
     const isMeAccepted = this.playerId === p.initiatorPlayerId || p.acceptedPlayerIds.includes(this.playerId);
     const isMeDeclined = !isMeAccepted && p.declinedPlayerIds.includes(this.playerId);
     const isMePending = !isMeAccepted && !isMeDeclined && (p.pendingPlayerIds.includes(this.playerId) || live);
-    const initiator=p.participants.find(player=>player.id===p.initiatorPlayerId);
-    const titles={responding:'Rematch Requested!',voting:'Choose the next game',resolved:'The votes are in!',cancelled:'Rematch cancelled',started:'A new game has started'};
-    const labels={classic:'Classic UNO',flip:'UNO Flip',no_mercy:'UNO No Mercy'};
-    const artwork={classic:'classic-card',flip:'flip-card',no_mercy:'no-mercy-card'};
-    const counts=Object.fromEntries(Object.keys(labels).map(mode=>[mode,Object.entries(p.modeVotes).filter(([id,vote])=>p.acceptedPlayerIds.includes(id)&&vote===mode).length]));
-    const focusedMode=document.activeElement?.dataset?.rematchMode;
-    const focusedResponse=document.activeElement?.dataset?.rematchResponse;
+    const initiator = p.participants.find(player => player.id === p.initiatorPlayerId);
+    const titles = { responding: 'Rematch Requested!', voting: 'Choose the next game', resolved: 'The votes are in!', cancelled: 'Rematch cancelled', started: 'A new game has started' };
+    const labels = { classic: 'Classic UNO', flip: 'UNO Flip', no_mercy: 'UNO No Mercy' };
+    const artwork = { classic: 'classic-card', flip: 'flip-card', no_mercy: 'no-mercy-card' };
+    const counts = Object.fromEntries(Object.keys(labels).map(mode => [mode, Object.entries(p.modeVotes).filter(([id, vote]) => p.acceptedPlayerIds.includes(id) && vote === mode).length]));
+    const focusedMode = document.activeElement?.dataset?.rematchMode;
+    const focusedResponse = document.activeElement?.dataset?.rematchResponse;
     const acceptedVotedCount = p.acceptedPlayerIds.filter(id => p.modeVotes && p.modeVotes[id] && ['classic', 'flip', 'no_mercy'].includes(p.modeVotes[id])).length;
     const totalAcceptedCount = p.acceptedPlayerIds.length;
 
-    content.innerHTML=`<div class="rematch-kicker">ONE MORE GAME?</div><h2 id="rematchProposalTitle">${titles[p.status] || 'Rematch'}</h2>
-      <div class="rematch-inviter"><span class="rematch-initials">${escapeHtml(initiator?.name.split(/\s+/).map(part=>part[0]).slice(0,2).join('')||'?')}</span><p><strong>${escapeHtml(initiator?.name)}</strong> wants to play another game.<br>${isMePending&&live?'Do you accept?':isMeAccepted?'You have ACCEPTED.':isMeDeclined?'You have DECLINED.':''}</p></div>
-      ${isMePending&&p.status==='responding'?'<div class="rematch-response-actions"><button data-rematch-response="accept">ACCEPT</button><button data-rematch-response="decline">DECLINE</button></div>':''}
-      ${isMeAccepted&&live?`<p class="rematch-vote-hint">Choose one mode. You can change your vote until voting closes. Uncast votes use the previous mode.</p><div class="rematch-mode-grid">${Object.keys(labels).map(mode=>`<button data-rematch-mode="${mode}" class="${p.modeVotes[this.playerId]===mode?'selected':''}" aria-pressed="${p.modeVotes[this.playerId]===mode}" ${mode!=='classic'&&p.acceptedPlayerIds.length>6?'disabled':''}><img src="/assets/game-modes/${artwork[mode]}.png" alt=""><strong>${labels[mode]}</strong><span>${counts[mode]} vote${counts[mode]===1?'':'s'}</span></button>`).join('')}</div><small>${p.acceptedPlayerIds.length>6?'More than six accepted players: Classic is the supported mode.':''}</small>`:''}
-      ${p.selectedMode?`<div class="rematch-result">${labels[p.selectedMode]} selected${p.status==='resolved'?' · Starting together…':''}</div>`:''}
-      ${p.reason?`<p class="rematch-reason">${escapeHtml(p.reason)}</p>`:''}
-      <ul class="rematch-roster">${p.participants.map(player=>{
-        const isAccepted = player.id === p.initiatorPlayerId || p.acceptedPlayerIds.includes(player.id) || player.status === 'accepted';
-        const isDeclined = !isAccepted && (p.declinedPlayerIds.includes(player.id) || player.status === 'declined');
-        const statusClass = isAccepted ? 'accepted' : isDeclined ? 'declined' : 'pending';
-        const statusLabel = isAccepted ? 'ACCEPTED' : isDeclined ? 'DECLINED' : 'PENDING';
-        return `<li><span>${escapeHtml(player.name)}</span><b class="${statusClass}">${statusLabel}</b></li>`;
-      }).join('')}</ul>
+    content.innerHTML = `<div class="rematch-kicker">ONE MORE GAME?</div><h2 id="rematchProposalTitle">${titles[p.status] || 'Rematch'}</h2>
+      <div class="rematch-inviter"><span class="rematch-initials">${escapeHtml(initiator?.name.split(/\s+/).map(part => part[0]).slice(0, 2).join('') || '?')}</span><p><strong>${escapeHtml(initiator?.name)}</strong> wants to play another game.<br>${isMePending && live ? 'Do you accept?' : isMeAccepted ? 'You have ACCEPTED.' : isMeDeclined ? 'You have DECLINED.' : ''}</p></div>
+      ${isMePending && p.status === 'responding' ? '<div class="rematch-response-actions"><button data-rematch-response="accept">ACCEPT</button><button data-rematch-response="decline">DECLINE</button></div>' : ''}
+      ${isMeAccepted && live ? `<p class="rematch-vote-hint">Choose one mode. You can change your vote until voting closes. Uncast votes use the previous mode.</p><div class="rematch-mode-grid">${Object.keys(labels).map(mode => `<button data-rematch-mode="${mode}" class="${p.modeVotes[this.playerId] === mode ? 'selected' : ''}" aria-pressed="${p.modeVotes[this.playerId] === mode}" ${mode !== 'classic' && p.acceptedPlayerIds.length > 6 ? 'disabled' : ''}><img src="/assets/game-modes/${artwork[mode]}.png" alt=""><strong>${labels[mode]}</strong><span>${counts[mode]} vote${counts[mode] === 1 ? '' : 's'}</span></button>`).join('')}</div><small>${p.acceptedPlayerIds.length > 6 ? 'More than six accepted players: Classic is the supported mode.' : ''}</small>` : ''}
+      ${p.selectedMode ? `<div class="rematch-result">${labels[p.selectedMode]} selected${p.status === 'resolved' ? ' · Starting together…' : ''}</div>` : ''}
+      ${p.reason ? `<p class="rematch-reason">${escapeHtml(p.reason)}</p>` : ''}
+      <ul class="rematch-roster">${p.participants.map(player => {
+      const isAccepted = player.id === p.initiatorPlayerId || p.acceptedPlayerIds.includes(player.id) || player.status === 'accepted';
+      const isDeclined = !isAccepted && (p.declinedPlayerIds.includes(player.id) || player.status === 'declined');
+      const statusClass = isAccepted ? 'accepted' : isDeclined ? 'declined' : 'pending';
+      const statusLabel = isAccepted ? 'ACCEPTED' : isDeclined ? 'DECLINED' : 'PENDING';
+      return `<li><span>${escapeHtml(player.name)}</span><b class="${statusClass}">${statusLabel}</b></li>`;
+    }).join('')}</ul>
       <footer><span>${acceptedVotedCount} / ${totalAcceptedCount} accepted players voted</span><span id="rematchCountdown"></span></footer>`;
-    document.getElementById('rematchCloseBtn').onclick=()=>this.closeRematchDialog();
-    content.querySelectorAll('[data-rematch-response]').forEach(button=>button.onclick=()=>this.sendRematchAction('rematch_respond',{accept:button.dataset.rematchResponse==='accept'}));
-    content.querySelectorAll('[data-rematch-mode]').forEach(button=>button.onclick=()=>this.sendRematchAction('rematch_vote',{mode:button.dataset.rematchMode}));
-    modal.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();this.closeRematchDialog();}};
-    const deadline=p.status==='responding'?p.responseDeadline:p.status==='voting'?p.votingDeadline:p.startAt;
-    const tick=()=>{const target=document.getElementById('rematchCountdown');if(target)target.textContent=live?`${p.status==='responding'?'Responses':'Voting'}: ${Math.max(0,Math.ceil((deadline-Date.now())/1000))}s`:'';};
-    tick();if(live)this.rematchCountdownInterval=setInterval(tick,250);
-    const wasOpen=modal.classList.contains('active');modal.classList.add('active');if(!wasOpen){
+    document.getElementById('rematchCloseBtn').onclick = () => this.closeRematchDialog();
+    content.querySelectorAll('[data-rematch-response]').forEach(button => button.onclick = () => this.sendRematchAction('rematch_respond', { accept: button.dataset.rematchResponse === 'accept' }));
+    content.querySelectorAll('[data-rematch-mode]').forEach(button => button.onclick = () => this.sendRematchAction('rematch_vote', { mode: button.dataset.rematchMode }));
+    modal.onkeydown = event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.closeRematchDialog(); } };
+    const deadline = p.status === 'responding' ? p.responseDeadline : p.status === 'voting' ? p.votingDeadline : p.startAt;
+    const tick = () => { const target = document.getElementById('rematchCountdown'); if (target) target.textContent = live ? `${p.status === 'responding' ? 'Responses' : 'Voting'}: ${Math.max(0, Math.ceil((deadline - Date.now()) / 1000))}s` : ''; };
+    tick(); if (live) this.rematchCountdownInterval = setInterval(tick, 250);
+    const wasOpen = modal.classList.contains('active'); modal.classList.add('active'); if (!wasOpen) {
       sounds.playSnap?.(520, 0.15);
       document.getElementById('rematchCloseBtn').focus();
     }
-    else if(focusedMode||focusedResponse)(content.querySelector(`[data-rematch-mode="${focusedMode}"]`) || content.querySelector('[data-rematch-mode]') || document.getElementById('rematchCloseBtn')).focus();
+    else if (focusedMode || focusedResponse) (content.querySelector(`[data-rematch-mode="${focusedMode}"]`) || content.querySelector('[data-rematch-mode]') || document.getElementById('rematchCloseBtn')).focus();
   }
 
   classicAvatarHTML(player, active) {
@@ -1330,7 +1478,7 @@ class UnoArenaApp {
   }
 
   renderClassicLocalProfile() {
-    const {gameState, myHand, isMyTurn, canCallUno} = this.clientView;
+    const { gameState, myHand, isMyTurn, canCallUno } = this.clientView;
     let controls = document.getElementById('classicLocalControls');
     if (!controls) { controls = document.createElement('div'); controls.id = 'classicLocalControls'; document.querySelector('.player-bottom-area').prepend(controls); }
     let profile = document.getElementById('classicLocalProfile');
@@ -1344,10 +1492,10 @@ class UnoArenaApp {
 
   captureClassicGeometry() {
     const hand = new Map();
-    this.el.playerHandCards.querySelectorAll('[data-card-id]').forEach(el => hand.set(el.dataset.cardId, {rect: el.getBoundingClientRect(), html: el.querySelector('.game-card')?.outerHTML}));
+    this.el.playerHandCards.querySelectorAll('[data-card-id]').forEach(el => hand.set(el.dataset.cardId, { rect: el.getBoundingClientRect(), html: el.querySelector('.game-card')?.outerHTML }));
     const opponents = new Map();
     this.el.opponentsRow.querySelectorAll('[data-profile-id]').forEach(el => opponents.set(el.dataset.profileId, el.getBoundingClientRect()));
-    return {hand, opponents, deck: this.el.drawPile.querySelector('.game-card')?.getBoundingClientRect(), pending: this.pendingClassicMotion};
+    return { hand, opponents, deck: this.el.drawPile.querySelector('.game-card')?.getBoundingClientRect(), pending: this.pendingClassicMotion };
   }
 
   clearClassicAnimations() {
@@ -1360,18 +1508,18 @@ class UnoArenaApp {
     const destination = target.getBoundingClientRect();
     if (destination.width <= 0 || destination.height <= 0) return;
     const ghost = document.createElement('div'); ghost.className = 'classic-motion-ghost'; ghost.setAttribute('aria-hidden', 'true'); ghost.innerHTML = html;
-    Object.assign(ghost.style, {left: `${source.left}px`, top: `${source.top}px`, width: `${source.width}px`, height: `${source.height}px`});
+    Object.assign(ghost.style, { left: `${source.left}px`, top: `${source.top}px`, width: `${source.width}px`, height: `${source.height}px` });
     document.body.appendChild(ghost);
     const originalVisibility = target.style.visibility;
     if (faceHTML) target.style.visibility = 'hidden';
-    const duration = Math.min(450, Math.max(300, Math.hypot(destination.left-source.left, destination.top-source.top) * .45));
-    const dx = destination.left-source.left, dy = destination.top-source.top;
-    const scaleX = destination.width/source.width, scaleY = destination.height/source.height;
-    const animation = ghost.animate([{transform:'translate(0,0) rotate(-5deg)'}, {transform:`translate(${dx*.55}px,${dy*.55-18}px) rotate(4deg) scale(${(1+scaleX)/2},${(1+scaleY)/2})`,offset:.55}, {transform:`translate(${dx}px,${dy}px) rotate(0deg) scale(${scaleX},${scaleY})`}], {duration, delay, easing:'cubic-bezier(.22,.65,.3,1)',fill:'both'});
+    const duration = Math.min(450, Math.max(300, Math.hypot(destination.left - source.left, destination.top - source.top) * .45));
+    const dx = destination.left - source.left, dy = destination.top - source.top;
+    const scaleX = destination.width / source.width, scaleY = destination.height / source.height;
+    const animation = ghost.animate([{ transform: 'translate(0,0) rotate(-5deg)' }, { transform: `translate(${dx * .55}px,${dy * .55 - 18}px) rotate(4deg) scale(${(1 + scaleX) / 2},${(1 + scaleY) / 2})`, offset: .55 }, { transform: `translate(${dx}px,${dy}px) rotate(0deg) scale(${scaleX},${scaleY})` }], { duration, delay, easing: 'cubic-bezier(.22,.65,.3,1)', fill: 'both' });
     let reveal;
     if (faceHTML && faceHTML !== html) {
       const front = document.createElement('div'); front.className = 'classic-motion-front'; front.innerHTML = faceHTML; ghost.appendChild(front);
-      reveal = front.animate([{opacity:0,offset:0},{opacity:0,offset:.72},{opacity:1,offset:.86},{opacity:1,offset:1}], {duration,delay,fill:'both'});
+      reveal = front.animate([{ opacity: 0, offset: 0 }, { opacity: 0, offset: .72 }, { opacity: 1, offset: .86 }, { opacity: 1, offset: 1 }], { duration, delay, fill: 'both' });
     }
     const dispose = () => { reveal?.cancel(); animation.cancel(); ghost.remove(); target.style.visibility = originalVisibility; this.classicAnimationCleanups.delete(dispose); };
     this.classicAnimationCleanups.add(dispose);
@@ -1389,24 +1537,24 @@ class UnoArenaApp {
         const a = destination(event.playerId), b = destination(event.targetPlayerId);
         if (a && b) { this.travelClassicCard(a.getBoundingClientRect(), b, back); this.travelClassicCard(b.getBoundingClientRect(), a, back, null, 120); }
       }
-      if (event.type === 'number' && state.topDiscard?.value === 0) active.forEach((p,i) => {
+      if (event.type === 'number' && state.topDiscard?.value === 0) active.forEach((p, i) => {
         const a = destination(p.id), b = destination(active[(i + event.direction + active.length) % active.length].id);
-        if (a && b) this.travelClassicCard(a.getBoundingClientRect(), b, back, null, i*80);
+        if (a && b) this.travelClassicCard(a.getBoundingClientRect(), b, back, null, i * 80);
       });
-      if (event.type === 'discard_all') event.discardedIds.forEach((id,i) => {
-        const source = geometry.hand.get(id); if (source) this.travelClassicCard(source.rect, this.el.discardPile, source.html, null, i*70);
+      if (event.type === 'discard_all') event.discardedIds.forEach((id, i) => {
+        const source = geometry.hand.get(id); if (source) this.travelClassicCard(source.rect, this.el.discardPile, source.html, null, i * 70);
       });
-      if (event.type === 'skip_everyone') destination(event.playerId)?.animate([{filter:'brightness(2)'},{filter:'none'}],{duration:500});
+      if (event.type === 'skip_everyone') destination(event.playerId)?.animate([{ filter: 'brightness(2)' }, { filter: 'none' }], { duration: 500 });
     }
     const roulette = state.rouletteResult;
     if (roulette && roulette.id !== previous.gameState.rouletteResult?.id) {
       const target = destination(roulette.targetPlayerId);
-      roulette.revealed.forEach((card,i) => this.travelClassicCard(geometry.deck, target, renderCardHTML(card,{mode:'no_mercy'}),null,i*160));
+      roulette.revealed.forEach((card, i) => this.travelClassicCard(geometry.deck, target, renderCardHTML(card, { mode: 'no_mercy' }), null, i * 160));
       this.showToast(`Roulette: ${roulette.color.toUpperCase()} · ${roulette.revealed.length} cards`);
     }
     state.players.filter(p => p.isEliminated && !previous.gameState.players.find(old => old.id === p.id)?.isEliminated).forEach(p => {
       this.showToast(`${p.name} — MERCY KNOCKOUT`);
-      destination(p.id)?.animate([{transform:'scale(1.15)',opacity:1},{transform:'scale(.9)',opacity:.4}],{duration:650});
+      destination(p.id)?.animate([{ transform: 'scale(1.15)', opacity: 1 }, { transform: 'scale(.9)', opacity: .4 }], { duration: 650 });
     });
   }
 
@@ -1430,24 +1578,24 @@ class UnoArenaApp {
     const roulette = current.gameState.mode === 'no_mercy' && current.gameState.rouletteResult?.id !== previous.gameState.rouletteResult?.id;
     if (current.gameState.mode === 'no_mercy' && newTop?.id !== previous.gameState.topDiscard?.id && !geometry.hand.has(newTop?.id)) {
       const source = geometry.opponents.get(action?.playerId);
-      if (source) this.travelClassicCard(source, this.el.discardPile.querySelector('.game-card'), renderCardBackHTML(false, false, 'no_mercy'), renderCardHTML(newTop, {mode:'no_mercy'}));
+      if (source) this.travelClassicCard(source, this.el.discardPile.querySelector('.game-card'), renderCardBackHTML(false, false, 'no_mercy'), renderCardHTML(newTop, { mode: 'no_mercy' }));
     }
     const oldIds = new Set(previous.myHand.map(c => c.id));
     current.myHand.filter(c => !transfer && !roulette && !oldIds.has(c.id)).forEach((card, index) => {
       const target = this.el.playerHandCards.querySelector(`[data-card-id="${card.id}"] .game-card`);
-      this.travelClassicCard(geometry.pending?.type === 'draw_card' ? geometry.pending.rect : geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), renderCardHTML(card, {mode:current.gameState.mode}), index*65);
+      this.travelClassicCard(geometry.pending?.type === 'draw_card' ? geometry.pending.rect : geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), renderCardHTML(card, { mode: current.gameState.mode }), index * 65);
     });
     for (const player of current.gameState.players.filter(p => p.id !== this.playerId)) {
       const before = previous.gameState.players.find(p => p.id === player.id);
       const fan = this.el.opponentsRow.querySelector(`[data-profile-id="${player.id}"] .opponent-fan-card:last-child img`);
       const target = fan?.getClientRects().length ? fan : this.el.opponentsRow.querySelector(`[data-profile-id="${player.id}"] .opponent-avatar`);
-      for (let i=0; !transfer && !roulette && i<Math.min(current.gameState.mode === 'no_mercy' ? 25 : 10, Math.max(0, player.cardCount-(before?.cardCount ?? player.cardCount))); i++) this.travelClassicCard(geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), null, i*65);
+      for (let i = 0; !transfer && !roulette && i < Math.min(current.gameState.mode === 'no_mercy' ? 25 : 10, Math.max(0, player.cardCount - (before?.cardCount ?? player.cardCount))); i++) this.travelClassicCard(geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), null, i * 65);
     }
     // Move retained cards into their new fan positions without a layout snap.
     this.el.playerHandCards.querySelectorAll('[data-card-id]').forEach(el => {
       const old = geometry.hand.get(el.dataset.cardId); if (!old) return;
       const now = el.getBoundingClientRect();
-      if (Math.abs(old.rect.left-now.left)>1) el.animate([{transform:`translate(${old.rect.left-now.left}px,${old.rect.top-now.top}px) ${el.style.transform}`},{transform:el.style.transform}], {duration:350,easing:'ease-out'});
+      if (Math.abs(old.rect.left - now.left) > 1) el.animate([{ transform: `translate(${old.rect.left - now.left}px,${old.rect.top - now.top}px) ${el.style.transform}` }, { transform: el.style.transform }], { duration: 350, easing: 'ease-out' });
     });
   }
 
@@ -1518,19 +1666,33 @@ class UnoArenaApp {
         (p) => `
         <div class="lobby-player-row">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span>${p.isHost ? '👑' : '👤'}</span>
+            <span>${p.isHost ? '👑' : (p.isBot ? '🤖' : '👤')}</span>
             <strong>${escapeHtml(p.name)}</strong>
+            ${p.isBot ? '<span class="bot-badge" style="font-size: 0.7rem; background: #3B82F6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 800;">BOT</span>' : ''}
             ${p.id === this.playerId ? '<span style="font-size: 0.75rem; color: #F59E0B;">(You)</span>' : ''}
           </div>
-          <div>
+          <div style="display: flex; align-items: center; gap: 6px;">
             <span class="ready-pill ${p.isReady ? 'ready' : 'waiting'}">
               ${p.isReady ? '✓ READY' : 'WAITING'}
             </span>
+            ${isHost && p.isBot ? `<button class="remove-bot-btn" data-bot-id="${p.id}" type="button" title="Remove bot" style="background: none; border: none; color: #EF4444; font-size: 1rem; cursor: pointer; padding: 2px 6px;">✕</button>` : ''}
           </div>
         </div>
       `
       )
       .join('');
+
+    this.el.lobbyPlayersList.querySelectorAll('.remove-bot-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const botId = e.currentTarget.dataset.botId;
+        if (botId) this.send({ type: 'remove_bot', data: { botId } });
+      });
+    });
+
+    const hostControls = document.getElementById('lobbyHostControls');
+    if (hostControls) {
+      hostControls.style.display = isHost ? 'flex' : 'none';
+    }
 
     // Host controls
     if (isHost) {
@@ -1614,13 +1776,14 @@ class UnoArenaApp {
         const avatarColor = avatarPalettes[idx % avatarPalettes.length];
         const canCatchThis = (this.clientView?.canCatchUnoTargets?.includes(p.id) || this.clientView?.canCatchUno === p.id) || (p.cardCount === 1 && !p.hasCalledUno && !p.isEliminated);
 
-        const remainingMs = (gameState.turnDeadline && gameState.turnDeadline > Date.now()) ? Math.max(0, gameState.turnDeadline - Date.now()) : 20000;
+        const durationMs = gameState.turnDurationMs || 30000;
+        const remainingMs = (gameState.turnDeadline && gameState.turnDeadline > Date.now()) ? Math.max(0, gameState.turnDeadline - Date.now()) : durationMs;
         const initialSec = Math.ceil(remainingMs / 1000);
-        const initialFraction = Math.max(0, Math.min(1, remainingMs / 20000));
+        const initialFraction = Math.max(0, Math.min(1, remainingMs / durationMs));
         const initialOffset = (87.96 * (1 - initialFraction)).toFixed(2);
 
-        const activeTimerHtml = (gameState.mode === 'no_mercy' && isCurrent && gameState.status === 'playing' && gameState.turnDeadline)
-          ? `<div class="active-player-turn-timer active ${initialSec <= 5 ? 'critical' : (initialSec <= 10 ? 'warning' : '')}" aria-label="Turn timer">
+        const activeTimerHtml = (isCurrent && gameState.status === 'playing' && gameState.turnDeadline)
+          ? `<div class="active-player-turn-timer active ${initialSec <= 7 ? 'critical' : (initialSec <= 15 ? 'warning' : '')}" aria-label="Turn timer">
                <svg class="mini-timer-ring" viewBox="0 0 34 34">
                  <circle class="mini-timer-bg" cx="17" cy="17" r="14"></circle>
                  <circle class="mini-timer-prog" cx="17" cy="17" r="14" stroke-dasharray="87.96" stroke-dashoffset="${initialOffset}"></circle>
@@ -1628,6 +1791,13 @@ class UnoArenaApp {
                <span class="mini-timer-text">${initialSec}</span>
              </div>`
           : '';
+
+        let disconnectBadge = '';
+        if (!p.isConnected && p.disconnectedAt) {
+          const elapsedSec = Math.floor((Date.now() - p.disconnectedAt) / 1000);
+          const leftSec = Math.max(0, 60 - elapsedSec);
+          disconnectBadge = `<span class="disconnect-countdown-badge" data-disconnected-at="${p.disconnectedAt}" title="Disconnect grace period">DISCONNECTED (${leftSec}s)</span>`;
+        }
 
         let unoStatusHtml = '';
         if (unoActive && !p.isEliminated) {
@@ -1647,36 +1817,33 @@ class UnoArenaApp {
           fanHtml = '<div class="opponent-cards-fan" aria-hidden="true">';
           const spread = fanCardsCount > 1 ? Math.min(30 / (fanCardsCount - 1), 5.5) : 0;
           const startAngle = -((fanCardsCount - 1) * spread) / 2;
-          const backSrc = (gameState.mode === 'flip' && gameState.flipSide === 'dark')
-            ? './assets/flip-dark-back.png'
-            : './assets/uno-classic-back.png';
-
           for (let c = 0; c < fanCardsCount; c++) {
             const rot = startAngle + c * spread;
             const xOffset = (c - (fanCardsCount - 1) / 2) * 17;
-            fanHtml += `<div class="opponent-fan-card" style="transform: translateX(${xOffset.toFixed(1)}px) rotate(${rot.toFixed(1)}deg); z-index: ${c + 1};">
-              ${gameState.mode === 'no_mercy' ? renderCardBackHTML(false, true, 'no_mercy') : `<img src="${backSrc}" alt="" class="fan-card-img" draggable="false">`}
+            fanHtml += `<div class="opponent-fan-card opponent-card-back" data-card-index="${c}" style="transform: translateX(${xOffset.toFixed(1)}px) rotate(${rot.toFixed(1)}deg); z-index: ${c + 1};">
+              ${renderCardBackHTML(gameState.flipSide === 'dark', true, gameState.mode)}
             </div>`;
           }
           fanHtml += '</div>';
         }
 
         return `
-          <div class="opponent-wrapper" data-profile-id="${p.id}">
+          <div class="opponent-wrapper opponent-box" data-profile-id="${p.id}" data-player-id="${p.id}">
             <div class="opponent-card-badge ${isCurrent ? 'active-turn' : ''} ${p.isEliminated ? 'eliminated' : ''}">
               <div class="opponent-avatar" style="background: ${isCurrent ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : avatarColor};">
-                ${gameState.mode === 'classic' ? this.classicAvatarHTML(p, isCurrent && gameState.status === 'playing' && !!gameState.turnDeadline) : escapeHtml(p.name.charAt(0).toUpperCase())}
+                ${p.isBot ? '🤖' : (gameState.mode === 'classic' ? this.classicAvatarHTML(p, isCurrent && gameState.status === 'playing' && !!gameState.turnDeadline) : escapeHtml(p.name.charAt(0).toUpperCase()))}
               </div>
               <div class="opponent-info">
                 <div class="opponent-name">
-                  ${escapeHtml(p.name)}
+                  ${escapeHtml(p.name)} ${p.isBot ? '<span class="mini-bot-tag" title="AI Bot">BOT</span>' : ''}
                 </div>
                 <div class="opponent-cards-count">
                   ${p.isEliminated ? 'KNOCKED OUT' : `${p.cardCount} card${p.cardCount === 1 ? '' : 's'}${gameState.mode === 'classic' ? ` · ${p.score || 0} pts` : ''}`}
                 </div>
+                ${disconnectBadge}
               </div>
               ${gameState.mode === 'no_mercy' ? unoStatusHtml : (unoActive && !p.isEliminated ? `<span class="uno-alert-badge">${gameState.mode !== 'classic' || p.hasCalledUno ? 'UNO!' : '1 CARD'}</span>` : '')}
-              ${gameState.mode === 'no_mercy' ? activeTimerHtml : ''}
+              ${activeTimerHtml}
               ${gameState.mode === 'classic' && unoActive && p.hasCalledUno ? '<span class="classic-caught-failed" role="status">CAUGHT FAILED</span>' : ''}
             </div>
             ${fanHtml}
@@ -1779,19 +1946,20 @@ class UnoArenaApp {
       if (this.el.btnUnoAction.parentElement.id === 'classicLocalControls') this.el.btnDrawAction.parentElement.appendChild(this.el.btnUnoAction);
       this.el.btnUnoAction.style.display = '';
     }
-    // Render Local Player Profile Bar in No Mercy
+    // Render Local Player Profile Bar in No Mercy and Flip
     const me = gameState.players.find(p => p.id === this.playerId);
     if (this.el.localPlayerProfile) {
-      if (gameState.mode === 'no_mercy' && gameState.status === 'playing') {
+      if ((gameState.mode === 'no_mercy' || gameState.mode === 'flip') && gameState.status === 'playing') {
         this.el.localPlayerProfile.style.display = 'flex';
         this.el.localPlayerProfile.classList.toggle('active-turn', isMyTurn);
-        const remainingMs = (gameState.turnDeadline && gameState.turnDeadline > Date.now()) ? Math.max(0, gameState.turnDeadline - Date.now()) : 20000;
+        const durationMs = gameState.turnDurationMs || 30000;
+        const remainingMs = (gameState.turnDeadline && gameState.turnDeadline > Date.now()) ? Math.max(0, gameState.turnDeadline - Date.now()) : durationMs;
         const initialSec = Math.ceil(remainingMs / 1000);
-        const initialFraction = Math.max(0, Math.min(1, remainingMs / 20000));
+        const initialFraction = Math.max(0, Math.min(1, remainingMs / durationMs));
         const initialOffset = (87.96 * (1 - initialFraction)).toFixed(2);
 
         const localTimerHtml = (isMyTurn && gameState.turnDeadline)
-          ? `<div class="active-player-turn-timer active ${initialSec <= 5 ? 'critical' : (initialSec <= 10 ? 'warning' : '')}" aria-label="Turn timer">
+          ? `<div class="active-player-turn-timer active ${initialSec <= 7 ? 'critical' : (initialSec <= 15 ? 'warning' : '')}" aria-label="Turn timer">
                <svg class="mini-timer-ring" viewBox="0 0 34 34">
                  <circle class="mini-timer-bg" cx="17" cy="17" r="14"></circle>
                  <circle class="mini-timer-prog" cx="17" cy="17" r="14" stroke-dasharray="87.96" stroke-dashoffset="${initialOffset}"></circle>
@@ -1941,6 +2109,16 @@ class UnoArenaApp {
           this.onCardInteraction(card, wrapper, isPlayable);
         }
       });
+      wrapper.addEventListener('mouseenter', () => {
+        if (this.clientView?.isMyTurn) {
+          this.send({ type: 'player_card_hovered', data: { cardIndex: globalIdx } });
+        }
+      });
+      wrapper.addEventListener('mouseleave', () => {
+        if (this.clientView?.isMyTurn) {
+          this.send({ type: 'player_card_hovered', data: { cardIndex: null } });
+        }
+      });
 
       if (mode !== 'flip') this.bindCardPointer(wrapper, card, isPlayable);
       rowEl.appendChild(wrapper);
@@ -2047,8 +2225,32 @@ class UnoArenaApp {
       }
 
       const now = Date.now();
+      const durationMs = this.gameState?.turnDurationMs || 30000;
       const remainingMs = Math.max(0, this.activeTurnDeadline - now);
       const remainingSec = Math.ceil(remainingMs / 1000);
+
+      const miniTimers = document.querySelectorAll('.active-player-turn-timer');
+      const miniCircumference = 87.96;
+      const fraction = Math.max(0, Math.min(1, remainingMs / durationMs));
+      const offset = (miniCircumference * (1 - fraction)).toFixed(2);
+
+      miniTimers.forEach(timer => {
+        const txt = timer.querySelector('.mini-timer-text');
+        const prog = timer.querySelector('.mini-timer-prog');
+        if (txt) txt.textContent = String(remainingSec);
+        if (prog) prog.style.strokeDashoffset = offset;
+        timer.classList.toggle('warning', remainingSec <= 15 && remainingSec > 7);
+        timer.classList.toggle('critical', remainingSec <= 7);
+      });
+
+      // Update disconnect badges live
+      document.querySelectorAll('.disconnect-countdown-badge').forEach(badge => {
+        const discAt = Number(badge.dataset.disconnectedAt);
+        if (discAt) {
+          const leftSec = Math.max(0, 60 - Math.floor((now - discAt) / 1000));
+          badge.textContent = `DISCONNECTED (${leftSec}s)`;
+        }
+      });
 
       if (this.gameState?.mode === 'classic') {
         if (this.el.turnTimerContainer) this.el.turnTimerContainer.style.display = 'none';
@@ -2056,28 +2258,15 @@ class UnoArenaApp {
         if (ring) {
           const circle = ring.querySelector('circle');
           const seconds = ring.parentElement?.querySelector('.classic-profile-seconds');
-          if (circle) circle.style.strokeDashoffset = String(138.23 * (1 - Math.min(1, remainingMs / 20000)));
+          if (circle) circle.style.strokeDashoffset = String(138.23 * (1 - Math.min(1, remainingMs / durationMs)));
           if (seconds) seconds.textContent = `${remainingSec}s`;
-          ring.classList.toggle('timer-critical', remainingMs <= 5000);
+          ring.classList.toggle('timer-critical', remainingMs <= 7000);
         }
         return;
       }
 
       if (this.gameState?.mode === 'no_mercy') {
         if (this.el.turnTimerContainer) this.el.turnTimerContainer.style.display = 'none';
-        const miniTimers = document.querySelectorAll('.active-player-turn-timer');
-        const miniCircumference = 87.96;
-        const fraction = Math.max(0, Math.min(1, remainingMs / 20000));
-        const offset = (miniCircumference * (1 - fraction)).toFixed(2);
-
-        miniTimers.forEach(timer => {
-          const txt = timer.querySelector('.mini-timer-text');
-          const prog = timer.querySelector('.mini-timer-prog');
-          if (txt) txt.textContent = String(remainingSec);
-          if (prog) prog.style.strokeDashoffset = offset;
-          timer.classList.toggle('warning', remainingSec <= 10 && remainingSec > 5);
-          timer.classList.toggle('critical', remainingSec <= 5);
-        });
         return;
       }
 
@@ -2089,13 +2278,12 @@ class UnoArenaApp {
       container.style.display = 'flex';
       container.classList.toggle('my-turn', this.activeTurnIsMyTurn);
       secondsEl.textContent = String(remainingSec);
-      const fraction = Math.max(0, Math.min(1, remainingMs / 20000));
-      const offset = (138.23 * (1 - fraction)).toFixed(2);
-      progressRing.style.strokeDashoffset = offset;
+      const ringOffset = (138.23 * (1 - fraction)).toFixed(2);
+      progressRing.style.strokeDashoffset = ringOffset;
 
       container.classList.remove('timer-normal', 'timer-warning', 'timer-critical', 'timer-expired');
-      if (remainingSec > 10) container.classList.add('timer-normal');
-      else if (remainingSec > 5) container.classList.add('timer-warning');
+      if (remainingSec > 15) container.classList.add('timer-normal');
+      else if (remainingSec > 7) container.classList.add('timer-warning');
       else if (remainingSec > 0) container.classList.add('timer-critical');
       else container.classList.add('timer-expired');
     };

@@ -35,6 +35,8 @@ export class RoomManager {
     this.rooms = new Map();
     this.store = store;
     this.turnTimers = new Map();
+    this.botTimers = new Map();
+    this.botCatchTimers = new Map();
     this.rematchTimers = new Map();
     this.onStateChange = null;
     this.loadFromStorage();
@@ -233,6 +235,7 @@ export class RoomManager {
     if (!player) return false;
     player.socket = socket;
     player.isConnected = true;
+    player.disconnectedAt = null;
     return true;
   }
 
@@ -241,6 +244,7 @@ export class RoomManager {
       const player = [...room.players, ...(room.spectators || [])].find((p) => p.socket === socket);
       if (player) {
         player.isConnected = false;
+        player.disconnectedAt = Date.now();
         player.socket = null;
         this.addLog(room, `${player.name} disconnected.`);
         this.persist(roomId);
@@ -248,6 +252,90 @@ export class RoomManager {
       }
     }
     return null;
+  }
+
+  addBot(roomId, botNameInput = null) {
+    const cleanCode = (roomId || '').trim().toUpperCase();
+    const room = this.rooms.get(cleanCode);
+    if (!room) return { success: false, error: 'Room not found' };
+    if (room.status !== 'lobby') return { success: false, error: 'Cannot add bot once game has started' };
+    const maxPlayers = room.mode === 'classic' ? 10 : 6;
+    if (room.players.length >= maxPlayers) return { success: false, error: `Room is full (${maxPlayers} players maximum)` };
+
+    const BOT_NAMES = ['RoboMax', 'CardBot 3000', 'UnoDroid', 'BytePlayer', 'MatrixMaster', 'CyberAce', 'PixelPro', 'CircuitChampion'];
+    const usedNames = new Set(room.players.map((p) => p.name));
+    const botName = botNameInput || BOT_NAMES.find((n) => !usedNames.has(n)) || `Bot ${room.players.length + 1}`;
+    const botId = `bot-${randomUUID().slice(0, 8)}`;
+
+    const bot = {
+      id: botId,
+      name: botName,
+      isHost: false,
+      isReady: true,
+      isConnected: true,
+      isBot: true,
+      socket: null,
+      cardCount: 0,
+      hasCalledUno: false,
+      isUnoArmed: false,
+      isEliminated: false,
+      eliminatedReason: null,
+      score: 0,
+      disconnectedAt: null,
+    };
+
+    room.players.push(bot);
+    room.playerHands[botId] = [];
+    this.addLog(room, `🤖 ${bot.name} (Bot) joined the lobby.`);
+    this.persist(cleanCode);
+    return { success: true, botId };
+  }
+
+  removeBot(roomId, botId) {
+    const cleanCode = (roomId || '').trim().toUpperCase();
+    const room = this.rooms.get(cleanCode);
+    if (!room) return { success: false, error: 'Room not found' };
+    if (room.status !== 'lobby') return { success: false, error: 'Cannot remove bot once game has started' };
+
+    const idx = room.players.findIndex((p) => p.id === botId && p.isBot);
+    if (idx === -1) return { success: false, error: 'Bot not found in lobby' };
+
+    const [removed] = room.players.splice(idx, 1);
+    delete room.playerHands[botId];
+    this.addLog(room, `${removed.name} was removed from the lobby.`);
+    this.persist(cleanCode);
+    return { success: true };
+  }
+
+  createBotRoom(hostName, mode = 'classic', botCount = 3, houseRulesInput = {}) {
+    const created = this.createRoom(hostName, mode, houseRulesInput);
+    const count = Math.max(1, Math.min(mode === 'classic' ? 5 : 5, botCount));
+    for (let i = 0; i < count; i++) {
+      this.addBot(created.roomId);
+    }
+    this.setReady(created.roomId, created.playerId, true);
+    this.startGame(created.roomId, created.playerId);
+    return created;
+  }
+
+  shuffleSeats(roomId, playerId) {
+    const cleanCode = (roomId || '').trim().toUpperCase();
+    const room = this.rooms.get(cleanCode);
+    if (!room) return { success: false, error: 'Room not found' };
+    if (room.status !== 'lobby') return { success: false, error: 'Can only shuffle seats in the lobby' };
+    const requester = room.players.find((p) => p.id === playerId);
+    if (!requester || !requester.isHost) return { success: false, error: 'Only the host can shuffle player seating' };
+    if (room.players.length < 2) return { success: false, error: 'Need at least 2 players to shuffle seats' };
+
+    for (let i = room.players.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [room.players[i], room.players[j]] = [room.players[j], room.players[i]];
+    }
+    room.players.forEach((p) => { p.isHost = (p.id === playerId); });
+
+    this.addLog(room, `${requester.name} shuffled the player seating order.`);
+    this.persist(cleanCode);
+    return { success: true };
   }
 
   setReady(roomId, playerId, isReady) {
@@ -633,14 +721,22 @@ export class RoomManager {
       clearTimeout(this.turnTimers.get(room.roomId));
       this.turnTimers.delete(room.roomId);
     }
+    if (this.botTimers.has(room.roomId)) {
+      clearTimeout(this.botTimers.get(room.roomId));
+      this.botTimers.delete(room.roomId);
+    }
 
     if (room.status !== 'playing') {
       room.turnDeadline = null;
       return;
     }
 
-    if (room.pendingAction && ['opening_color', 'color_roulette'].includes(room.pendingAction.type)) { room.turnDeadline = null; return; }
-    const DURATION = 20000; // 20 seconds
+    if (room.pendingAction && ['opening_color', 'color_roulette'].includes(room.pendingAction.type)) {
+      room.turnDeadline = null;
+      this.scheduleBotTurn(room);
+      return;
+    }
+    const DURATION = 30000; // 30 seconds
     room.turnDeadline = Date.now() + DURATION;
 
     const currentTurnAtSchedule = room.currentTurn;
@@ -652,6 +748,7 @@ export class RoomManager {
     if (timer.unref) timer.unref();
 
     this.turnTimers.set(room.roomId, timer);
+    this.scheduleBotTurn(room);
   }
 
   handleTurnTimeout(roomId, expectedTurn, expectedActionVersion, expectedGeneration) {
@@ -700,8 +797,8 @@ export class RoomManager {
     if (room.turnDrawnCard) {
       // Player already drew, so pass their turn
       this.passTurn(roomId, currentPlayer.id);
-      this.addLog(room, `⏱️ ${currentPlayer.name}'s turn timed out (20s). Turn passed.`);
-      room.lastActionMessage = `⏱️ ${currentPlayer.name}'s turn timed out (20s).`;
+      this.addLog(room, `⏱️ ${currentPlayer.name}'s turn timed out (30s). Turn passed.`);
+      room.lastActionMessage = `⏱️ ${currentPlayer.name}'s turn timed out (30s).`;
     } else {
       // Player took no action: automatically apply penalty/draw and pass
       if (room.pendingDrawPenalty > 0) {
@@ -713,8 +810,8 @@ export class RoomManager {
         if (room.turnDrawnCard) {
           this.passTurn(roomId, currentPlayer.id);
         }
-        this.addLog(room, `⏱️ ${currentPlayer.name}'s turn timed out (20s). Drew card & passed.`);
-        room.lastActionMessage = `⏱️ ${currentPlayer.name}'s turn timed out (20s). Drew card & passed.`;
+        this.addLog(room, `⏱️ ${currentPlayer.name}'s turn timed out (30s). Drew card & passed.`);
+        room.lastActionMessage = `⏱️ ${currentPlayer.name}'s turn timed out (30s). Drew card & passed.`;
       }
     }
 
@@ -727,6 +824,234 @@ export class RoomManager {
     if (this.onStateChange) {
       this.onStateChange(roomId);
     }
+  }
+
+  scheduleBotTurn(room) {
+    if (!room || room.status !== 'playing') return;
+    if (this.botTimers.has(room.roomId)) {
+      clearTimeout(this.botTimers.get(room.roomId));
+      this.botTimers.delete(room.roomId);
+    }
+
+    let targetBotId = null;
+    if (room.pendingAction) {
+      const targetId = room.pendingAction.targetPlayerId;
+      const targetPlayer = room.players.find((p) => p.id === targetId);
+      if (targetPlayer?.isBot && !targetPlayer.isEliminated) {
+        targetBotId = targetId;
+      } else {
+        return;
+      }
+    } else {
+      const currentPlayer = room.players[room.currentTurn];
+      if (currentPlayer?.isBot && !currentPlayer.isEliminated) {
+        targetBotId = currentPlayer.id;
+      } else {
+        return;
+      }
+    }
+
+    const currentTurnAtSchedule = room.currentTurn;
+    const actionVersionAtSchedule = room.actionVersion;
+    const generationAtSchedule = room.turnTimerGeneration;
+    const delay = 850 + Math.floor(Math.random() * 400); // 850ms - 1250ms natural delay
+
+    const timer = setTimeout(() => {
+      this.executeBotTurn(room.roomId, targetBotId, currentTurnAtSchedule, actionVersionAtSchedule, generationAtSchedule);
+    }, delay);
+    if (timer.unref) timer.unref();
+    this.botTimers.set(room.roomId, timer);
+  }
+
+  executeBotTurn(roomId, botId, expectedTurn, expectedActionVersion, expectedGeneration) {
+    const room = this.rooms.get(roomId);
+    if (!room || room.status !== 'playing') return;
+    if (expectedGeneration !== undefined && expectedGeneration !== room.turnTimerGeneration) return;
+    if (!room.pendingAction && room.currentTurn !== expectedTurn) return;
+
+    const bot = room.players.find((p) => p.id === botId);
+    if (!bot || !bot.isBot || bot.isEliminated) return;
+
+    const hand = room.playerHands[botId] || [];
+
+    const pickBestColor = () => {
+      const counts = {};
+      const validColors = (room.mode === 'flip' && room.flipSide === 'dark')
+        ? ['pink', 'teal', 'orange', 'purple']
+        : ['red', 'blue', 'green', 'yellow'];
+      for (const c of validColors) counts[c] = 0;
+      for (const c of hand) {
+        const face = getActiveFace(c, room.mode, room.flipSide);
+        if (face && validColors.includes(face.color)) counts[face.color]++;
+      }
+      let best = validColors[0];
+      let max = -1;
+      for (const [col, cnt] of Object.entries(counts)) {
+        if (cnt > max) { max = cnt; best = col; }
+      }
+      return best;
+    };
+
+    // A. Pending Action Handling
+    if (room.pendingAction) {
+      if (room.pendingAction.targetPlayerId !== botId) return;
+      if (room.pendingAction.type === 'opening_color') {
+        this.chooseOpeningColor(roomId, botId, pickBestColor());
+        if (this.onStateChange) this.onStateChange(roomId);
+        return;
+      }
+      if (room.pendingAction.type === 'color_roulette') {
+        this.resolveRoulette(roomId, botId, pickBestColor());
+        if (this.onStateChange) this.onStateChange(roomId);
+        return;
+      }
+      if (room.pendingAction.type === 'draw4_challenge') {
+        const challenge = Math.random() < 0.25; // 25% challenge, 75% accept
+        this.resolveDrawFour(roomId, botId, challenge);
+        if (this.onStateChange) this.onStateChange(roomId);
+        return;
+      }
+      return;
+    }
+
+    // B. Normal Turn (only if current turn is this bot)
+    if (room.players[room.currentTurn]?.id !== botId) return;
+
+    // Check penalty stacking
+    if (room.pendingDrawPenalty > 0) {
+      const stackingCards = hand.filter((c) => {
+        return isCardPlayable(c, room.topDiscard, room.activeColor, room.mode, room.flipSide, room.pendingDrawPenalty, room.houseRules);
+      });
+      if (stackingCards.length > 0) {
+        const cardToPlay = stackingCards[0];
+        const face = getActiveFace(cardToPlay, room.mode, room.flipSide);
+        const playPayload = { cardId: cardToPlay.id };
+        if (face.color === 'wild') playPayload.chosenColor = pickBestColor();
+        this.playCard(roomId, botId, playPayload);
+        if (this.onStateChange) this.onStateChange(roomId);
+        return;
+      } else {
+        this.drawCard(roomId, botId);
+        if (this.onStateChange) this.onStateChange(roomId);
+        return;
+      }
+    }
+
+    // Check playable cards in hand
+    const playableCards = hand.filter((c) => {
+      return isCardPlayable(c, room.topDiscard, room.activeColor, room.mode, room.flipSide, room.pendingDrawPenalty, room.houseRules);
+    });
+
+    if (playableCards.length > 0) {
+      // If holding 2 cards, call UNO before playing!
+      if (hand.length === 2) {
+        this.callUno(roomId, botId);
+      }
+
+      const topFace = getActiveFace(room.topDiscard, room.mode, room.flipSide);
+      const scoreCard = (c) => {
+        const f = getActiveFace(c, room.mode, room.flipSide);
+        if (!f) return 0;
+        if (f.color === 'wild') return 1;
+        if (f.color === room.activeColor) return 10;
+        if (topFace && f.value !== undefined && f.value === topFace.value) return 8;
+        if (topFace && f.type === topFace.type) return 7;
+        return 5;
+      };
+      playableCards.sort((a, b) => scoreCard(b) - scoreCard(a));
+
+      const cardToPlay = playableCards[0];
+      const face = getActiveFace(cardToPlay, room.mode, room.flipSide);
+      const playPayload = { cardId: cardToPlay.id };
+      if (face.color === 'wild') playPayload.chosenColor = pickBestColor();
+
+      // If playing a 7 in No Mercy, select opponent with fewest cards
+      if (room.mode === 'no_mercy' && face.type === 'number' && face.value === 7) {
+        const opponents = room.players.filter((p) => p.id !== botId && !p.isEliminated);
+        opponents.sort((a, b) => a.cardCount - b.cardCount);
+        if (opponents.length > 0) playPayload.targetPlayerId = opponents[0].id;
+      }
+
+      this.playCard(roomId, botId, playPayload);
+      if (this.onStateChange) this.onStateChange(roomId);
+      return;
+    }
+
+    // No playable card in hand: draw 1 card
+    if (!room.turnDrawnCard) {
+      const drawRes = this.drawCard(roomId, botId);
+      if (this.onStateChange) this.onStateChange(roomId);
+      if (drawRes.success && drawRes.card) {
+        const drawnCard = drawRes.card;
+        const canPlayDrawn = isCardPlayable(drawnCard, room.topDiscard, room.activeColor, room.mode, room.flipSide, room.pendingDrawPenalty, room.houseRules);
+        if (canPlayDrawn) {
+          const postDrawTimer = setTimeout(() => {
+            const currentHand = room.playerHands[botId] || [];
+            if (currentHand.length === 2) this.callUno(roomId, botId);
+            const drawnFace = getActiveFace(drawnCard, room.mode, room.flipSide);
+            const payload = { cardId: drawnCard.id };
+            if (drawnFace.color === 'wild') payload.chosenColor = pickBestColor();
+            if (room.mode === 'no_mercy' && drawnFace.type === 'number' && drawnFace.value === 7) {
+              const opps = room.players.filter((p) => p.id !== botId && !p.isEliminated);
+              opps.sort((a, b) => a.cardCount - b.cardCount);
+              if (opps.length > 0) payload.targetPlayerId = opps[0].id;
+            }
+            this.playCard(roomId, botId, payload);
+            if (this.onStateChange) this.onStateChange(roomId);
+          }, 550);
+          if (postDrawTimer.unref) postDrawTimer.unref();
+          return;
+        } else {
+          // If newly drawn card cannot be played: pass turn
+          const postPassTimer = setTimeout(() => {
+            this.passTurn(roomId, botId);
+            if (this.onStateChange) this.onStateChange(roomId);
+          }, 450);
+          if (postPassTimer.unref) postPassTimer.unref();
+          return;
+        }
+      }
+    } else {
+      this.passTurn(roomId, botId);
+      if (this.onStateChange) this.onStateChange(roomId);
+    }
+  }
+
+  scheduleBotCatch(room) {
+    if (!room || room.status !== 'playing') return;
+    const vulnerableTargets = room.mode === 'no_mercy'
+      ? (room.unoChallengeTargets || [])
+      : (room.unoChallengeWindow?.targetPlayerId ? [room.unoChallengeWindow.targetPlayerId] : []);
+    if (!vulnerableTargets.length) return;
+
+    const availableBots = room.players.filter((p) => p.isBot && !p.isEliminated && !vulnerableTargets.includes(p.id));
+    if (!availableBots.length) return;
+
+    // 75% chance a bot reacts to catch
+    if (Math.random() > 0.75) return;
+
+    const chosenBot = availableBots[Math.floor(Math.random() * availableBots.length)];
+    const targetId = vulnerableTargets[0];
+    const catchDelay = 1600 + Math.floor(Math.random() * 1000); // 1.6s - 2.6s
+
+    if (this.botCatchTimers.has(room.roomId)) {
+      clearTimeout(this.botCatchTimers.get(room.roomId));
+      this.botCatchTimers.delete(room.roomId);
+    }
+
+    const timer = setTimeout(() => {
+      const activeRoom = this.rooms.get(room.roomId);
+      if (!activeRoom || activeRoom.status !== 'playing') return;
+      const stillVulnerable = activeRoom.mode === 'no_mercy'
+        ? activeRoom.unoChallengeTargets?.includes(targetId)
+        : activeRoom.unoChallengeWindow?.targetPlayerId === targetId;
+      if (stillVulnerable) {
+        this.catchUno(activeRoom.roomId, chosenBot.id, targetId);
+        if (this.onStateChange) this.onStateChange(activeRoom.roomId);
+      }
+    }, catchDelay);
+    if (timer.unref) timer.unref();
+    this.botCatchTimers.set(room.roomId, timer);
   }
 
   playCard(roomId, playerId, payload) {
@@ -865,6 +1190,7 @@ export class RoomManager {
 
     if (room.mode === 'flip' && face.type === 'flip') {
       room.flipSide = room.flipSide === 'light' ? 'dark' : 'light';
+      room.drawPile.reverse();
       const flippedFace = getActiveFace(card, room.mode, room.flipSide);
       room.activeColor =
         flippedFace.color === 'wild'
@@ -948,7 +1274,7 @@ export class RoomManager {
         const drawn = room.drawPile.shift();
         drawnCards.push(drawn);
         const dFace = getActiveFace(drawn, room.mode, room.flipSide);
-        if (dFace.color === chosenColor) {
+        if (dFace.color === chosenColor || dFace.color === 'wild') {
           found = true;
         }
         const knockoutLimit = Number(room.houseRules?.mercyKnockoutLimit) || NO_MERCY_MAX_CARDS;
@@ -999,6 +1325,7 @@ export class RoomManager {
       room.unoChallengeTargets = room.players.filter(p => (p.id === playerId || (face.type === 'number' && [0, 7].includes(face.value))) && !p.isEliminated && room.playerHands[p.id].length === 1 && !p.hasCalledUno).map(p => p.id);
       room.unoChallengeWindow = room.unoChallengeTargets.length ? { targetPlayerId: room.unoChallengeTargets[0], expiresAt: null } : null;
     }
+    this.scheduleBotCatch(room);
     const win = checkWinCondition(room.players, room.playerHands, room.mode);
     if (win.winnerId && !(room.mode === 'no_mercy' && (room.pendingAction || (face.type === 'wild_reverse_draw4' && step === 0)))) {
       if (room.mode === 'classic') {
@@ -1481,6 +1808,8 @@ export class RoomManager {
       isHost: p.isHost,
       isReady: p.isReady,
       isConnected: p.isConnected,
+      isBot: Boolean(p.isBot),
+      disconnectedAt: p.disconnectedAt || null,
       cardCount: p.cardCount,
       hasCalledUno: p.hasCalledUno,
       isUnoArmed: p.isUnoArmed || false,
@@ -1521,7 +1850,7 @@ export class RoomManager {
       turnDrawnCount: room.turnDrawnCount || 0,
       turnDrawnPlayable: Boolean(room.turnDrawnPlayable),
       turnDeadline: room.turnDeadline || null,
-      turnDurationMs: 20000,
+      turnDurationMs: 30000,
       eventLogs: room.eventLogs.slice(0, 20),
     };
 

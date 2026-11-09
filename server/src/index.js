@@ -113,6 +113,23 @@ app.post('/api/rooms', (req, res) => {
   }
 });
 
+// Create AI Bot Room REST endpoint
+app.post('/api/rooms/bot', (req, res) => {
+  const { hostName, mode, botCount, houseRules } = req.body;
+  try {
+    const count = Math.max(1, Math.min(5, Number(botCount) || 3));
+    const result = roomManager.createBotRoom(hostName, mode, count, houseRules);
+    res.status(201).json({
+      success: true,
+      roomId: result.roomId,
+      playerId: result.playerId,
+      sessionToken: result.sessionToken,
+    });
+  } catch (err) {
+    res.status(409).json({ success: false, error: err.message });
+  }
+});
+
 // Join Room REST endpoint
 app.post('/api/rooms/join', (req, res) => {
   const { roomId, playerName, sessionToken } = req.body;
@@ -192,6 +209,25 @@ wss.on('connection', (ws, req) => {
           broadcastRoomState(created.roomId);
         } catch (err) {
           sendError(ws, err.message || 'Could not create room.');
+        }
+        return;
+      }
+
+      if (type === 'create_bot_room') {
+        if (clientSockets.has(ws)) {
+          sendError(ws, 'This connection has already joined a room.');
+          return;
+        }
+        try {
+          const botCount = Math.max(1, Math.min(5, Number(data?.botCount) || 3));
+          const created = roomManager.createBotRoom(playerName || 'Player', data?.mode || 'classic', botCount, data?.houseRules);
+          playerId = created.playerId;
+          roomManager.attachSocket(created.roomId, playerId, ws);
+          clientSockets.set(ws, { roomId: created.roomId, playerId });
+          ws.send(JSON.stringify({ type: 'joined', data: created }));
+          broadcastRoomState(created.roomId);
+        } catch (err) {
+          sendError(ws, err.message || 'Could not start AI game.');
         }
         return;
       }
@@ -321,6 +357,62 @@ wss.on('connection', (ws, req) => {
         case 'set_rules': {
           roomManager.setHouseRules(cleanRoomId, playerId, data?.houseRules);
           broadcastRoomState(cleanRoomId);
+          break;
+        }
+
+        case 'add_bot': {
+          const res = roomManager.addBot(cleanRoomId, data?.name);
+          if (!res.success) sendError(ws, res.error);
+          else broadcastRoomState(cleanRoomId);
+          break;
+        }
+
+        case 'remove_bot': {
+          const res = roomManager.removeBot(cleanRoomId, data?.botId);
+          if (!res.success) sendError(ws, res.error);
+          else broadcastRoomState(cleanRoomId);
+          break;
+        }
+
+        case 'shuffle_seats': {
+          const res = roomManager.shuffleSeats(cleanRoomId, playerId);
+          if (!res.success) sendError(ws, res.error);
+          else broadcastRoomState(cleanRoomId);
+          break;
+        }
+
+        case 'player_card_hovered': {
+          const cardIndex = typeof data?.cardIndex === 'number' ? data.cardIndex : null;
+          const msg = JSON.stringify({
+            type: 'player_card_hovered',
+            data: { playerId, cardIndex },
+          });
+          for (const [otherWs, meta] of clientSockets.entries()) {
+            if (meta.roomId === cleanRoomId && meta.playerId !== playerId && otherWs.readyState === WebSocket.OPEN) {
+              otherWs.send(msg);
+            }
+          }
+          break;
+        }
+
+        case 'send_reaction': {
+          const validEmotes = ['laugh', 'shocked', 'fire', 'lightning', 'skull'];
+          const emoteId = String(data?.emoteId || '').toLowerCase();
+          if (!validEmotes.includes(emoteId)) break;
+          const now = Date.now();
+          if (authenticated.lastReactionAt && now - authenticated.lastReactionAt < 1500) {
+            break; // Rate limit 1.5s
+          }
+          authenticated.lastReactionAt = now;
+          const msg = JSON.stringify({
+            type: 'player_reaction',
+            data: { playerId, emoteId, timestamp: now },
+          });
+          for (const [otherWs, meta] of clientSockets.entries()) {
+            if (meta.roomId === cleanRoomId && otherWs.readyState === WebSocket.OPEN) {
+              otherWs.send(msg);
+            }
+          }
           break;
         }
 

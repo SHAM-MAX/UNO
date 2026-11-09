@@ -30,7 +30,7 @@ test('Turn Timer & Direction Behavior', async (t) => {
   rm.setReady(roomId, p2, true);
   rm.setReady(roomId, p3, true);
 
-  await t.test('Game start sets authoritative 20-second turn deadline and default direction', () => {
+  await t.test('Game start sets authoritative 30-second turn deadline and default direction', () => {
     const started = rm.startGame(roomId, p1);
     assert.equal(started.success, true);
 
@@ -39,8 +39,8 @@ test('Turn Timer & Direction Behavior', async (t) => {
     const view = rm.getClientView(roomId, p1);
     assert.ok(view.gameState.turnDeadline, 'turnDeadline should be set on game start');
     const remaining = view.gameState.turnDeadline - Date.now();
-    assert.ok(remaining > 18000 && remaining <= 20100, `Remaining ms (${remaining}) should be ~20s`);
-    assert.equal(view.gameState.turnDurationMs, 20000);
+    assert.ok(remaining > 28000 && remaining <= 30100, `Remaining ms (${remaining}) should be ~30s`);
+    assert.equal(view.gameState.turnDurationMs, 30000);
     assert.ok(view.gameState.direction === 1 || view.gameState.direction === -1);
   });
 

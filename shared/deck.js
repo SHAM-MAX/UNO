@@ -66,76 +66,78 @@ export function createClassicDeck() {
 }
 
 export function createFlipDeck() {
-  const lightFaces = [];
-  const darkFaces = [];
+  const lightColors = [];
+  const darkColors = [];
 
-  // Generate 112 Light Faces
+  // Generate 104 Light Colored Faces
   for (const color of CLASSIC_COLORS) {
     // 2x each '1'..'9' (no '0' in Flip)
     for (let val = 1; val <= 9; val++) {
-      lightFaces.push({ color, type: 'number', value: val });
-      lightFaces.push({ color, type: 'number', value: val });
+      lightColors.push({ color, type: 'number', value: val });
+      lightColors.push({ color, type: 'number', value: val });
     }
     // 2x draw1
-    lightFaces.push({ color, type: 'draw1' });
-    lightFaces.push({ color, type: 'draw1' });
+    lightColors.push({ color, type: 'draw1' });
+    lightColors.push({ color, type: 'draw1' });
     // 2x skip
-    lightFaces.push({ color, type: 'skip' });
-    lightFaces.push({ color, type: 'skip' });
+    lightColors.push({ color, type: 'skip' });
+    lightColors.push({ color, type: 'skip' });
     // 2x reverse
-    lightFaces.push({ color, type: 'reverse' });
-    lightFaces.push({ color, type: 'reverse' });
+    lightColors.push({ color, type: 'reverse' });
+    lightColors.push({ color, type: 'reverse' });
     // 2x flip
-    lightFaces.push({ color, type: 'flip' });
-    lightFaces.push({ color, type: 'flip' });
-  }
-  // 4x wild
-  for (let i = 0; i < 4; i++) {
-    lightFaces.push({ color: 'wild', type: 'wild' });
-  }
-  // 4x wild_draw2
-  for (let i = 0; i < 4; i++) {
-    lightFaces.push({ color: 'wild', type: 'wild_draw2' });
+    lightColors.push({ color, type: 'flip' });
+    lightColors.push({ color, type: 'flip' });
   }
 
-  // Generate 112 Dark Faces
+  // Generate 104 Dark Colored Faces
   for (const color of FLIP_DARK_COLORS) {
     // 2x each '1'..'9'
     for (let val = 1; val <= 9; val++) {
-      darkFaces.push({ color, type: 'number', value: val });
-      darkFaces.push({ color, type: 'number', value: val });
+      darkColors.push({ color, type: 'number', value: val });
+      darkColors.push({ color, type: 'number', value: val });
     }
     // 2x draw5
-    darkFaces.push({ color, type: 'draw5' });
-    darkFaces.push({ color, type: 'draw5' });
+    darkColors.push({ color, type: 'draw5' });
+    darkColors.push({ color, type: 'draw5' });
     // 2x skip_everyone
-    darkFaces.push({ color, type: 'skip_everyone' });
-    darkFaces.push({ color, type: 'skip_everyone' });
+    darkColors.push({ color, type: 'skip_everyone' });
+    darkColors.push({ color, type: 'skip_everyone' });
     // 2x reverse
-    darkFaces.push({ color, type: 'reverse' });
-    darkFaces.push({ color, type: 'reverse' });
+    darkColors.push({ color, type: 'reverse' });
+    darkColors.push({ color, type: 'reverse' });
     // 2x flip
-    darkFaces.push({ color, type: 'flip' });
-    darkFaces.push({ color, type: 'flip' });
-  }
-  // 4x wild
-  for (let i = 0; i < 4; i++) {
-    darkFaces.push({ color: 'wild', type: 'wild' });
-  }
-  // 4x wild_draw_color
-  for (let i = 0; i < 4; i++) {
-    darkFaces.push({ color: 'wild', type: 'wild_draw_color' });
+    darkColors.push({ color, type: 'flip' });
+    darkColors.push({ color, type: 'flip' });
   }
 
-  // Shuffle dark faces for diverse pairing
-  const shuffledDark = shuffleDeck(darkFaces);
+  // Shuffle dark colored faces for diverse pairing with light colored faces
+  const shuffledDarkColors = shuffleDeck(darkColors);
 
   const deck = [];
-  for (let i = 0; i < lightFaces.length; i++) {
+  for (let i = 0; i < 104; i++) {
     deck.push({
       id: `f-${i + 1}`,
-      light: lightFaces[i],
-      dark: shuffledDark[i],
+      light: lightColors[i],
+      dark: shuffledDarkColors[i],
+    });
+  }
+
+  // 4x Wild / Wild (Wild on both sides)
+  for (let i = 0; i < 4; i++) {
+    deck.push({
+      id: `f-${105 + i}`,
+      light: { color: 'wild', type: 'wild' },
+      dark: { color: 'wild', type: 'wild' },
+    });
+  }
+
+  // 4x Wild Draw 2 / Wild Draw Color
+  for (let i = 0; i < 4; i++) {
+    deck.push({
+      id: `f-${109 + i}`,
+      light: { color: 'wild', type: 'wild_draw2' },
+      dark: { color: 'wild', type: 'wild_draw_color' },
     });
   }
 
