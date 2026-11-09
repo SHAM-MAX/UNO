@@ -26,6 +26,7 @@ function setupRoom(mode = 'classic') {
   rm.setReady(roomId, p3, true);
   rm.startGame(roomId, p1);
   const room = rm.getRoom(roomId);
+  room.pendingAction = null; // Clear opening card pending action for deterministic test state
   return { rm, room, roomId, p1, p2, p3 };
 }
 
