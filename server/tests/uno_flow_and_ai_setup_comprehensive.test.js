@@ -201,3 +201,60 @@ test('Play vs AI Setup: User-specified bots across all 3 game modes', () => {
     mercyBots
   );
 });
+
+test('AI Gameplay Stability: Bot timer management and isolation during human actions', () => {
+  const rm = new RoomManager(createMockStore());
+  const { roomId, playerId: hostId } = rm.createBotRoom('HumanHost', 'classic', 1, {}, ['TestBot']);
+  const room = rm.getRoom(roomId);
+  const botPlayer = room.players.find(p => p.isBot);
+  assert.ok(botPlayer, 'Bot player must exist');
+
+  // Manually attach timers to simulate active bot decision and secondary timers
+  const primaryTimer = setTimeout(() => {}, 5000);
+  const secondaryTimer = setTimeout(() => {}, 5000);
+  rm.botTimers.set(roomId, primaryTimer);
+  rm.botSecondaryTimers.set(roomId, secondaryTimer);
+
+  assert.equal(rm.botTimers.has(roomId), true);
+  assert.equal(rm.botSecondaryTimers.has(roomId), true);
+
+  // Directly clear bot timers: both maps must be cleared atomically
+  rm.clearBotTimers(roomId);
+  assert.equal(rm.botTimers.has(roomId), false, 'Primary bot timer cleared');
+  assert.equal(rm.botSecondaryTimers.has(roomId), false, 'Secondary bot timer cleared');
+
+  // Verify secondary timers are never left dangling when human acts
+  rm.botSecondaryTimers.set(roomId, setTimeout(() => {}, 5000));
+  room.currentTurn = 0; // human turn
+  rm.drawCard(roomId, hostId);
+  assert.equal(rm.botSecondaryTimers.has(roomId), false, 'Secondary bot timer must be cleared on human action');
+});
+
+test('AI Gameplay Stability: Invalid card play does not lock player or corrupt subsequent valid play', () => {
+  const { rm, room, roomId, p1 } = setupRoom('classic');
+  room.currentTurn = 0;
+  room.activeColor = 'blue';
+  room.topDiscard = card('top', 'blue', 'number', 7);
+
+  // P1 has 1 invalid card (red 3) and 1 valid card (blue 3)
+  room.playerHands[p1] = [
+    card('inv_c1', 'red', 'number', 3),
+    card('val_c2', 'blue', 'number', 3)
+  ];
+
+  // 1. Attempt invalid card play
+  const res1 = rm.playCard(roomId, p1, { cardId: 'inv_c1' });
+  assert.equal(res1.success, false, 'Invalid card play must be rejected');
+  assert.equal(room.playerHands[p1].length, 2, 'Hand length must be unchanged after rejection');
+  assert.equal(room.topDiscard.id, 'top', 'Top discard must remain unchanged');
+
+  // Verify client view still reports valid card as playable
+  const viewAfterFail = rm.getClientView(roomId, p1);
+  assert.deepEqual(viewAfterFail.canPlayCards, ['val_c2'], 'Playable card must still be playable');
+
+  // 2. Immediate valid card play succeeds cleanly
+  const res2 = rm.playCard(roomId, p1, { cardId: 'val_c2' });
+  assert.equal(res2.success, true, 'Valid card play must succeed immediately');
+  assert.equal(room.topDiscard.id, 'val_c2', 'Top discard must be updated to played card');
+  assert.equal(room.playerHands[p1].length, 1, 'Hand must reflect played card');
+});

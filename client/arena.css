@@ -440,123 +440,74 @@ body.in-arena::after {
   display: block;
 }
 
-/* Turn Status & 20-Second Circular Countdown Timer */
-.in-arena .turn-status-row {
-  position: relative;
-  z-index: 15;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  width: min(92%, 560px);
-  margin: 2px auto 8px;
-}
-
-.in-arena .action-banner {
-  flex: 1;
-  text-align: center;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #f8fafc;
-  padding: 6px 18px;
-  background: rgba(15, 23, 42, 0.86);
-  border: 1.5px solid #d4b982;
-  border-radius: 20px;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-}
-
-.in-arena .turn-timer-container {
-  position: relative;
-  width: 46px;
-  height: 46px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at 35% 35%, #2a3447 0%, #0f172a 100%);
-  border-radius: 50%;
-  border: 2px solid rgba(245, 197, 24, 0.5);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.25);
-  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s;
-}
-
-.in-arena .turn-timer-container.my-turn {
-  border-color: #fbbf24;
-  box-shadow: 0 0 18px rgba(251, 191, 36, 0.75), inset 0 0 8px rgba(251, 191, 36, 0.35);
-  transform: scale(1.08);
-}
-
-.in-arena .timer-ring-svg {
+/* ==========================================================================
+   Universal Single Turn Timer Attached to Active Avatar (Priority 4)
+   ========================================================================== */
+.avatar-turn-timer-wrap {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: -6px;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.avatar-turn-ring {
+  position: absolute;
   width: 100%;
   height: 100%;
-  transform: rotate(-90deg); /* 12 o'clock start */
-  pointer-events: none;
+  left: 0;
+  top: 0;
+  transform: rotate(-90deg);
 }
 
-.in-arena .timer-ring-bg {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.12);
-  stroke-width: 4;
+.avatar-turn-bg {
+  stroke: rgba(255, 255, 255, 0.18);
 }
 
-.in-arena .timer-ring-progress {
-  fill: none;
-  stroke: #10b981; /* Green normal */
-  stroke-width: 4.2;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.25s linear, stroke 0.3s;
+.avatar-turn-circle {
+  stroke: #f0ba28;
+  transition: stroke-dashoffset 0.12s linear, stroke 0.25s ease;
 }
 
-.in-arena .timer-inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  z-index: 2;
-}
-
-.in-arena .timer-seconds {
-  font-family: 'Arial Black', Impact, sans-serif;
-  font-size: 1.15rem;
-  font-weight: 900;
-  color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-}
-
-/* Timer state styles */
-.in-arena .turn-timer-container.timer-warning .timer-ring-progress {
-  stroke: #f97316;
-}
-.in-arena .turn-timer-container.timer-warning {
-  border-color: #f97316;
-  animation: timerWarningPulse 1.2s ease-in-out infinite;
-}
-
-.in-arena .turn-timer-container.timer-critical .timer-ring-progress {
+.avatar-turn-ring.timer-critical .avatar-turn-circle {
   stroke: #ef4444;
 }
-.in-arena .turn-timer-container.timer-critical {
-  border-color: #ef4444;
-  animation: timerCriticalPulse 0.6s ease-in-out infinite;
+
+.avatar-turn-seconds {
+  position: absolute;
+  right: -10px;
+  bottom: -6px;
+  background: #111c1e;
+  color: #ffd700;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 16px;
+  min-width: 22px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  border: 1px solid #d4af37;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  z-index: 25;
 }
 
-.in-arena .turn-timer-container.timer-expired {
-  border-color: #dc2626;
-  background: rgba(220, 38, 38, 0.4);
+.opponent-avatar,
+.local-avatar {
+  position: relative !important;
+  overflow: visible !important;
 }
 
-@keyframes timerWarningPulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(249, 115, 22, 0.45); }
-  50% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.85); }
+.opponent-flight-ghost {
+  position: fixed;
+  z-index: 10020;
+  pointer-events: none;
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.65));
+  will-change: transform;
 }
-
-@keyframes timerCriticalPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); transform: scale(1.08); }
-  50% { box-shadow: 0 0 24px rgba(239, 68, 68, 0.95); transform: scale(1.18); }
+.opponent-flight-ghost .game-card,
+.opponent-flight-ghost img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
 }
 
 /* 6. Central Playing Table (Large Oval Table with Wooden Rail & Golden Trim) */
@@ -1203,33 +1154,7 @@ body.in-arena::after {
     height: 30px !important;
   }
 
-  /* 3. Turn Notification & 20s Circular Timer */
-  .in-arena .turn-status-row {
-    margin: 1px auto 2px !important;
-    gap: 8px !important;
-    width: 98% !important;
-    flex-shrink: 0;
-  }
 
-  .in-arena .action-banner {
-    font-size: 0.74rem !important;
-    padding: 3px 10px !important;
-    margin: 0 !important;
-    border-radius: 14px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  .in-arena .turn-timer-container {
-    width: 34px !important;
-    height: 34px !important;
-    border-width: 1.5px !important;
-  }
-
-  .in-arena .timer-seconds {
-    font-size: 0.88rem !important;
-  }
 
   /* 4. Central Playing Table: Proper Horizontal Oval (Requirement 2) */
   .in-arena .center-table {
@@ -1373,7 +1298,7 @@ body.in-arena::after {
 /* Classic pointer interactions preserve the original card artwork. */
 .in-arena .classic-image-card { aspect-ratio: 100 / 151; }
 .in-arena .classic-face-image, .in-arena .classic-back-image { object-fit: contain; }
-.in-arena .card-wrapper:has(.classic-image-card) { touch-action: none; }
+.in-arena .card-wrapper:has(.classic-image-card) { touch-action: manipulation; }
 .classic-drag-ghost { position: fixed; z-index: 10000; pointer-events: none; filter: drop-shadow(0 18px 14px #0009); will-change: transform; }
 .classic-drag-ghost .game-card { width: 100%; height: 100%; }
 .classic-drag-ghost img { width: 100%; height: 100%; object-fit: contain; }
@@ -1382,8 +1307,7 @@ body.in-arena::after {
 .in-arena:has(.classic-image-card) .opponent-wrapper { flex: 0 1 auto; }
 @media (prefers-reduced-motion: reduce) { .in-arena:has(.classic-image-card) * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 
-.classic-arena #classicTableStatus { color: #fff9e6; font-size: 12px; text-align: center; padding: 4px 8px; border-bottom: 3px solid var(--active-colour); background: #171923cc; border-radius: 8px; }
-body:not(.classic-arena) #classicTableStatus, body:not(.classic-arena) #classicChallenge { display: none; }
+body:not(.classic-arena) #classicChallenge { display: none; }
 .classic-many-players .opponents-row { display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); width: min(900px, 94vw); margin-inline: auto; min-height: 100px; }
 .classic-many-players .opponent-cards-fan { display: none; }
 .classic-many-players .opponent-card-badge { max-width: 100%; padding: 4px 6px; }
@@ -1397,10 +1321,6 @@ body:not(.classic-arena) #classicTableStatus, body:not(.classic-arena) #classicC
  .classic-many-players .opponent-cards-count { font-size: 10px; }
 }
 
-.classic-arena .turn-status-row { flex-wrap: wrap; }
-.classic-arena #actionBanner { flex: 1 1 70%; }
-.classic-arena #classicTableStatus { flex: 0 0 100%; box-sizing: border-box; }
-
 .classic-draw4-response #btnUnoAction, .classic-draw4-response #btnPassAction { display: none !important; }
 .classic-draw4-response .table-action-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 6px !important; width: min(350px, 92vw); bottom: -70px !important; }
 .classic-draw4-response #btnCatchAction { grid-column: 1 / -1; font-size: 11px !important; min-height: 34px !important; padding: 6px 8px !important; }
@@ -1412,9 +1332,7 @@ body:not(.classic-arena) #classicTableStatus, body:not(.classic-arena) #classicC
 
 .classic-arena #classicChallenge[hidden] { display: none !important; }
 /* Targeted Classic interaction refinements. Other modes retain their controls. */
-body.classic-arena #btnDrawAction,
-body.classic-arena #actionBanner,
-body.classic-arena #turnTimerContainer { display: none !important; }
+body.classic-arena #btnDrawAction { display: none !important; }
 #classicAcceptDrawFour[hidden] { display: none !important; }
 body:not(.classic-arena) #classicAcceptDrawFour,
 body:not(.classic-arena) #classicLocalControls { display: none !important; }
@@ -1506,7 +1424,6 @@ body.no-mercy-arena .table-action-bar {
 }
 body.no-mercy-arena .table-action-bar .action-btn { padding:8px 14px; min-height:44px; font-size:12px; }
 #noMercyStatus { padding:4px 10px; border-left:5px solid; border-radius:5px; background:#12372a; color:#fff4d4; font-size:12px; font-weight:800; }
-body.no-mercy-arena .turn-status-row { flex-wrap:wrap; }
 body.no-mercy-arena .opponent-card-badge.eliminated { opacity:.45; }
 @media (max-width:760px) { body.no-mercy-arena .table-action-bar .action-btn { flex:1 1 auto; } }
 body.no-mercy-arena .hand-cards .card-wrapper.unplayable { filter:brightness(0.55) contrast(0.9); opacity:0.65; transition:filter 0.15s ease, opacity 0.15s ease; }
@@ -2110,9 +2027,6 @@ body.no-mercy-arena .direction-indicator { top:-12px !important; }
 }
 
 /* 2. Remove Unnecessary Clutter Elements from No Mercy */
-body.no-mercy-arena #actionBanner {
-  display: none !important;
-}
 body.no-mercy-arena #noMercyStatus {
   display: none !important;
 }
@@ -2120,12 +2034,6 @@ body.no-mercy-arena .direction-indicator {
   display: none !important;
 }
 body.no-mercy-arena #btnDrawAction {
-  display: none !important;
-}
-body.no-mercy-arena .turn-status-row {
-  display: none !important;
-}
-body.no-mercy-arena #turnTimerContainer {
   display: none !important;
 }
 body.no-mercy-arena #btnUnoAction {

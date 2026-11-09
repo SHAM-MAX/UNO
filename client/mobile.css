@@ -262,8 +262,6 @@
   .in-arena .opponent-name { max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
   .in-arena .opponents-row:has(.opponent-wrapper:nth-child(4)) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px !important; }
   .in-arena .opponents-row:has(.opponent-wrapper:nth-child(4)) .opponent-cards-fan { display: none; }
-  .in-arena .turn-status-row { width: 100% !important; flex-shrink: 0; }
-  .in-arena .action-banner { white-space: normal !important; line-height: 1.4; min-height: 32px; }
   .in-arena .penalty-tag { top: -24px; padding: 3px 7px; font-size: 10px; white-space: nowrap; border-radius: 8px; box-shadow: 0 2px 6px #0003; }
   .in-arena .center-table { min-height: 240px !important; flex: 1 0 240px !important; margin: 0 auto !important; max-width: 520px !important; }
   .in-arena .table-felt { width: min(94vw, 440px) !important; height: 205px !important; max-height: none !important; }
@@ -292,7 +290,6 @@
     align-items: center;
   }
   .in-arena .opponents-row { grid-column: 1; grid-row: 1; }
-  .in-arena .turn-status-row { grid-column: 1; grid-row: 2; }
   .in-arena .center-table { grid-column: 2; grid-row: 1 / 3; width: 100%; min-height: 230px !important; }
   .in-arena .table-felt { width: min(100%, 440px) !important; }
   .in-arena .player-bottom-area { grid-column: 1 / -1; grid-row: 3; }
@@ -381,9 +378,6 @@
  body.classic-arena .opponent-avatar, body.classic-arena .opponent-cards-fan { display: none; }
  body.classic-arena .opponent-name { font-size: 11px; }
  body.classic-arena .opponent-cards-count { font-size: 10px; }
- body.classic-arena .turn-status-row { width: 100%; gap: 3px; }
- body.classic-arena #actionBanner { font-size: 10px; min-height: 20px; padding: 3px; }
- body.classic-arena #classicTableStatus { font-size: 10px; padding: 2px; }
  body.classic-arena .center-table { min-height: 190px !important; padding: 0 !important; }
  body.classic-arena .table-felt { min-height: 160px !important; height: 160px !important; }
  body.classic-arena .player-bottom-area { margin-top: 0; padding: 0; }

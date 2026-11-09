@@ -142,10 +142,6 @@ class UnoArenaApp {
       localPlayerProfile: document.getElementById('localPlayerProfile'),
       caughtFailedModal: document.getElementById('caughtFailedModal'),
       caughtFailedMsg: document.getElementById('caughtFailedMsg'),
-      actionBanner: document.getElementById('actionBanner'),
-      turnTimerContainer: document.getElementById('turnTimerContainer'),
-      timerRingProgress: document.getElementById('timerRingProgress'),
-      turnTimerSeconds: document.getElementById('turnTimerSeconds'),
       reactionToggleBtn: document.getElementById('reactionToggleBtn'),
       reactionTray: document.getElementById('reactionTray'),
 
@@ -1588,8 +1584,14 @@ class UnoArenaApp {
     this.el.playerHandCards.removeAttribute('inert');
     this.clientView = view;
     this.gameState = view.gameState;
+    this.isPlayInFlight = false;
+    this.isMoveInFlight = false;
     if (this.inFlightCardId) {
       if (view.gameState.topDiscard?.id === this.inFlightCardId || !view.myHand.some(c => c.id === this.inFlightCardId)) {
+        this.inFlightCardId = null;
+      } else {
+        const el = this.handCardElements.get(this.inFlightCardId);
+        if (el) el.style.opacity = '1';
         this.inFlightCardId = null;
       }
     }
@@ -1622,12 +1624,47 @@ class UnoArenaApp {
       this.showToast(evidence.hadMatchingColor ? `Challenge successful: the player held ${evidence.matchingColorCount ?? 'a'} ${evidence.activeColorBeforePlay || 'matching-colour'} card(s). You play next.` : `Challenge failed: the player held no ${evidence.activeColorBeforePlay || 'matching-colour'} cards. Draw six and miss your turn.`);
     }
     this.unoRequestPending = false; this.catchRequestPending = false;
-    this.isMoveInFlight = false;
     this.isStartingGame = false;
     this.isJoiningRoom = false;
     if (this.el.joinRoomBtn) this.el.joinRoomBtn.disabled = false;
     if (this.el.setupJoinRoomBtn) this.el.setupJoinRoomBtn.disabled = false;
     if (this.el.flipJoinRoomBtn) this.el.flipJoinRoomBtn.disabled = false;
+
+    // Opponent card play flight animation
+    const prevDiscardId = previous?.gameState?.topDiscard?.id;
+    const newDiscardId = view.gameState?.topDiscard?.id;
+    if (previous && newDiscardId && newDiscardId !== prevDiscardId) {
+      const prevTurnPlayer = previous.gameState.players[previous.gameState.currentTurn];
+      if (prevTurnPlayer && prevTurnPlayer.id !== this.playerId && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const opponentBox = document.querySelector(`.opponent-box[data-player-id="${prevTurnPlayer.id}"]`);
+        const avatarEl = opponentBox?.querySelector('.opponent-avatar') || opponentBox;
+        if (avatarEl && this.el.discardPile) {
+          const sourceRect = avatarEl.getBoundingClientRect();
+          const targetRect = this.el.discardPile.getBoundingClientRect();
+          if (sourceRect.width > 0 && targetRect.width > 0) {
+            const ghost = document.createElement('div');
+            ghost.className = 'card-departure-motion opponent-flight-ghost';
+            ghost.innerHTML = renderCardHTML(view.gameState.topDiscard, { mode: view.gameState.mode, flipSide: view.gameState.flipSide });
+            Object.assign(ghost.style, {
+              left: `${sourceRect.left}px`,
+              top: `${sourceRect.top}px`,
+              width: `${Math.min(70, targetRect.width)}px`,
+              height: `${Math.min(100, targetRect.height)}px`,
+              transform: 'translate3d(0, 0, 0) scale(0.6)',
+              opacity: '0.9',
+            });
+            document.body.appendChild(ghost);
+            const dx = targetRect.left + (targetRect.width - 70) / 2 - sourceRect.left;
+            const dy = targetRect.top + (targetRect.height - 100) / 2 - sourceRect.top;
+            requestAnimationFrame(() => {
+              ghost.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(1) rotate(0deg)`;
+              ghost.style.opacity = '1';
+            });
+            setTimeout(() => { ghost.remove(); }, 240);
+          }
+        }
+      }
+    }
 
     // Update Top Bar
     this.el.navRoomCode.textContent = `ROOM: ${this.gameState.roomId}`;
@@ -2028,18 +2065,6 @@ class UnoArenaApp {
     if (['red', 'blue', 'green', 'yellow'].includes(feltColor)) {
       this.el.tableFelt?.classList.add(`felt-${feltColor}`);
     }
-    // Action banner
-    this.el.actionBanner.textContent = gameState.lastActionMessage || 'Game in progress';
-    if (gameState.mode === 'classic') {
-      let status = document.getElementById('classicTableStatus');
-      if (!status) { status = document.createElement('div'); status.id = 'classicTableStatus'; status.setAttribute('role', 'status'); this.el.actionBanner.parentElement.appendChild(status); }
-      const current = gameState.players[gameState.currentTurn];
-      status.textContent = `Round ${gameState.roundNumber} · ${gameState.activeColor || 'Choose colour'} · ${isMyTurn ? (gameState.pendingAction?.type === 'draw4_challenge' ? 'Accept +4 or challenge' : 'Your turn') : current?.name + "'s turn"} · ${gameState.players.find(p => p.id === this.playerId)?.score || 0}/500`;
-      status.style.setProperty('--active-colour', COLOR_METADATA[gameState.activeColor]?.bgHex || '#fff');
-      this.el.actionBanner.setAttribute('role', 'status');
-    }
-
-
     // Arena Table theme (Flip Light vs Dark)
     if (gameState.mode === 'flip' && gameState.flipSide === 'dark') {
       this.el.tableFelt.classList.add('dark-side');
@@ -2071,22 +2096,6 @@ class UnoArenaApp {
         const unoActive = p.cardCount === 1;
         const avatarColor = avatarPalettes[idx % avatarPalettes.length];
         const canCatchThis = ((this.clientView?.canCatchUnoTargets?.includes(p.id) || this.clientView?.canCatchUno === p.id) || (p.cardCount === 1 && !p.hasCalledUno && !p.isEliminated)) && p.id !== this.playerId;
-
-        const durationMs = gameState.turnDurationMs || 30000;
-        const remainingMs = (gameState.turnDeadline && gameState.turnDeadline > Date.now()) ? Math.max(0, gameState.turnDeadline - Date.now()) : durationMs;
-        const initialSec = Math.ceil(remainingMs / 1000);
-        const initialFraction = Math.max(0, Math.min(1, remainingMs / durationMs));
-        const initialOffset = (87.96 * (1 - initialFraction)).toFixed(2);
-
-        const activeTimerHtml = (isCurrent && gameState.status === 'playing' && gameState.turnDeadline)
-          ? `<div class="active-player-turn-timer active ${initialSec <= 7 ? 'critical' : (initialSec <= 15 ? 'warning' : '')}" aria-label="Turn timer">
-               <svg class="mini-timer-ring" viewBox="0 0 34 34">
-                 <circle class="mini-timer-bg" cx="17" cy="17" r="14"></circle>
-                 <circle class="mini-timer-prog" cx="17" cy="17" r="14" stroke-dasharray="87.96" stroke-dashoffset="${initialOffset}"></circle>
-               </svg>
-               <span class="mini-timer-text">${initialSec}</span>
-             </div>`
-          : '';
 
         let disconnectBadge = '';
         if (!p.isConnected && p.disconnectedAt) {
@@ -2127,7 +2136,16 @@ class UnoArenaApp {
           <div class="opponent-wrapper opponent-box" data-profile-id="${p.id}" data-player-id="${p.id}">
             <div class="opponent-card-badge ${isCurrent ? 'active-turn' : ''} ${p.isEliminated ? 'eliminated' : ''}">
               <div class="opponent-avatar" style="background: ${isCurrent ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : avatarColor};">
-                ${p.isBot ? '🤖' : (gameState.mode === 'classic' ? this.classicAvatarHTML(p, isCurrent && gameState.status === 'playing' && !!gameState.turnDeadline) : escapeHtml(p.name.charAt(0).toUpperCase()))}
+                ${p.isBot ? '🤖' : escapeHtml(p.name.charAt(0).toUpperCase())}
+                ${isCurrent && gameState.status === 'playing' && !!gameState.turnDeadline ? `
+                  <div class="avatar-turn-timer-wrap" aria-label="Turn timer">
+                    <svg class="avatar-turn-ring" viewBox="0 0 54 54">
+                      <circle class="avatar-turn-bg" cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="4"></circle>
+                      <circle class="avatar-turn-circle" cx="27" cy="27" r="22" fill="none" stroke="#f0ba28" stroke-width="4" stroke-dasharray="138.23" stroke-dashoffset="0"></circle>
+                    </svg>
+                    <span class="avatar-turn-seconds"></span>
+                  </div>
+                ` : ''}
               </div>
               <div class="opponent-info">
                 <div class="opponent-name">
@@ -2139,7 +2157,6 @@ class UnoArenaApp {
                 ${disconnectBadge}
               </div>
               ${unoStatusHtml}
-              ${activeTimerHtml}
               ${gameState.mode === 'classic' && unoActive && p.hasCalledUno ? '<span class="classic-caught-failed" role="status">CAUGHT FAILED</span>' : ''}
             </div>
             ${fanHtml}
@@ -2229,54 +2246,43 @@ class UnoArenaApp {
       challenge.hidden = !(isMyTurn && pending?.type === 'draw4_challenge');
       challenge.textContent = 'Challenge Draw Four';
       if (isMyTurn && pending?.type === 'draw4_challenge') this.el.btnDrawAction.textContent = 'Accept +4';
-      challenge.onclick = () => { if (this.isMoveInFlight) return; this.isMoveInFlight = true; this.send({ type: 'challenge_draw4' }); };
+      challenge.onclick = () => { if (this.isPlayInFlight) return; this.isPlayInFlight = true; this.send({ type: 'challenge_draw4' }); };
       let accept = document.getElementById('classicAcceptDrawFour');
       if (!accept) { accept = document.createElement('button'); accept.id = 'classicAcceptDrawFour'; accept.className = 'action-btn btn-draw'; accept.textContent = 'ACCEPT +4'; challenge.before(accept); }
       accept.hidden = challenge.hidden;
-      accept.onclick = () => { if (this.isMoveInFlight) return; this.isMoveInFlight = true; this.send({ type: 'draw_card' }); };
-      this.renderClassicLocalProfile();
-      this.updateTurnTimer(gameState.turnDeadline, isMyTurn, gameState.status);
+      accept.onclick = () => { if (this.isPlayInFlight) return; this.isPlayInFlight = true; this.send({ type: 'draw_card' }); };
       if (isMyTurn && pending?.type === 'opening_color' && !this.el.colorPickerModal.classList.contains('active')) this.openColorPicker();
     }
-    if (gameState.mode !== 'classic') {
-      if (this.el.btnUnoAction.parentElement.id === 'classicLocalControls') this.el.btnDrawAction.parentElement.appendChild(this.el.btnUnoAction);
-      this.el.btnUnoAction.style.display = '';
-    }
-    // Render Local Player Profile Bar in No Mercy and Flip
+    // Render Local Player Profile Bar (Unified across all modes)
     const me = gameState.players.find(p => p.id === this.playerId);
     if (this.el.localPlayerProfile) {
-      if ((gameState.mode === 'no_mercy' || gameState.mode === 'flip') && gameState.status === 'playing') {
+      if (gameState.status === 'playing') {
         this.el.localPlayerProfile.style.display = 'flex';
         this.el.localPlayerProfile.classList.toggle('active-turn', isMyTurn);
-        const durationMs = gameState.turnDurationMs || 30000;
-        const remainingMs = (gameState.turnDeadline && gameState.turnDeadline > Date.now()) ? Math.max(0, gameState.turnDeadline - Date.now()) : durationMs;
-        const initialSec = Math.ceil(remainingMs / 1000);
-        const initialFraction = Math.max(0, Math.min(1, remainingMs / durationMs));
-        const initialOffset = (87.96 * (1 - initialFraction)).toFixed(2);
-
-        const localTimerHtml = (isMyTurn && gameState.turnDeadline)
-          ? `<div class="active-player-turn-timer active ${initialSec <= 7 ? 'critical' : (initialSec <= 15 ? 'warning' : '')}" aria-label="Turn timer">
-               <svg class="mini-timer-ring" viewBox="0 0 34 34">
-                 <circle class="mini-timer-bg" cx="17" cy="17" r="14"></circle>
-                 <circle class="mini-timer-prog" cx="17" cy="17" r="14" stroke-dasharray="87.96" stroke-dashoffset="${initialOffset}"></circle>
-               </svg>
-               <span class="mini-timer-text">${initialSec}</span>
-             </div>`
-          : '';
         const localUnoDeclaredHtml = (myHand.length === 1 && (me?.hasCalledUno || this.isUnoArmed))
           ? '<span class="uno-declared-badge" style="margin-left: 8px;">✓ UNO DECLARED</span>'
           : '';
 
         this.el.localPlayerProfile.innerHTML = `
           <div class="local-profile-left">
-            <div class="local-avatar">${escapeHtml(me?.name?.charAt(0)?.toUpperCase() || 'P')}</div>
+            <div class="local-avatar">
+              ${escapeHtml(me?.name?.charAt(0)?.toUpperCase() || 'P')}
+              ${isMyTurn && gameState.status === 'playing' && !!gameState.turnDeadline ? `
+                <div class="avatar-turn-timer-wrap" aria-label="Turn timer">
+                  <svg class="avatar-turn-ring" viewBox="0 0 54 54">
+                    <circle class="avatar-turn-bg" cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="4"></circle>
+                    <circle class="avatar-turn-circle" cx="27" cy="27" r="22" fill="none" stroke="#f0ba28" stroke-width="4" stroke-dasharray="138.23" stroke-dashoffset="0"></circle>
+                  </svg>
+                  <span class="avatar-turn-seconds"></span>
+                </div>
+              ` : ''}
+            </div>
             <div class="local-info">
               <div class="local-name">${escapeHtml(me?.name || 'Player')}</div>
-              <div class="local-cards-count">${myHand.length} card${myHand.length === 1 ? '' : 's'}</div>
+              <div class="local-cards-count">${myHand.length} card${myHand.length === 1 ? '' : 's'}${gameState.mode === 'classic' ? ` · ${me?.score || 0} pts` : ''}</div>
             </div>
           </div>
           ${localUnoDeclaredHtml}
-          ${localTimerHtml}
         `;
       } else {
         this.el.localPlayerProfile.style.display = 'none';
@@ -2305,9 +2311,7 @@ class UnoArenaApp {
     }
 
     // Synchronized Turn Timer (invoked after all DOM elements are mounted)
-    if (gameState.mode !== 'classic') {
-      this.updateTurnTimer(gameState.turnDeadline, isMyTurn, gameState.status);
-    }
+    this.updateTurnTimer(gameState.turnDeadline, isMyTurn, gameState.status);
 
     // Player Hand Cards
     this.renderPlayerHand(myHand, canPlayCards, gameState.mode, gameState.flipSide);
@@ -2404,14 +2408,14 @@ class UnoArenaApp {
         wrapper.innerHTML = renderCardHTML(card, { mode, flipSide });
 
         wrapper.addEventListener('click', (e) => {
+          e.preventDefault();
           e.stopPropagation();
-          if (wrapper._suppressClick) { wrapper._suppressClick = false; return; }
-          this.onCardInteraction(card, wrapper, canPlayIds.includes(card.id));
+          this.handleCardClick(card, wrapper);
         });
         wrapper.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            this.onCardInteraction(card, wrapper, canPlayIds.includes(card.id));
+            this.handleCardClick(card, wrapper);
           }
         });
         wrapper.addEventListener('mouseenter', () => {
@@ -2425,7 +2429,6 @@ class UnoArenaApp {
           }
         });
 
-        if (mode !== 'flip') this.bindCardPointer(wrapper, card, isPlayable);
         this.handCardElements.set(card.id, wrapper);
       } else {
         if (wrapper.dataset.flipSide !== (flipSide || 'light')) {
@@ -2454,92 +2457,11 @@ class UnoArenaApp {
     });
   }
 
-  bindCardPointer(wrapper, card, playable) {
-    let drag = null;
-    const cleanup = () => {
-      if (!drag) return;
-      cancelAnimationFrame(drag.frame);
-      drag.ghost?.remove();
-      this.el.discardPile.classList.remove('valid-drop');
-      if (wrapper.hasPointerCapture(drag.id)) wrapper.releasePointerCapture(drag.id);
-      drag = null;
-      document.removeEventListener('pointermove', move, true);
-      document.removeEventListener('pointerup', up, true);
-    };
-    wrapper.addEventListener('pointerdown', e => {
-      if (!playable || this.ws?.readyState !== WebSocket.OPEN || !this.clientView?.isMyTurn || this.isMoveInFlight || e.button !== 0) return;
-      this.cancelCardDrag?.();
-      e.preventDefault();
-      this.cancelCardDrag = cleanup;
-      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, rect: wrapper.getBoundingClientRect(), target: this.el.discardPile.getBoundingClientRect() };
-      wrapper.setPointerCapture(e.pointerId);
-      document.addEventListener('pointermove', move, true);
-      document.addEventListener('pointerup', up, true);
-    });
-    const move = e => {
-      if (!drag || e.pointerId !== drag.id) return;
-      if (!drag.ghost && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 7) return;
-      if (!drag.ghost) {
-        drag.ghost = wrapper.cloneNode(true);
-        drag.ghost.className = 'classic-drag-ghost';
-        drag.ghost.setAttribute('aria-hidden', 'true');
-        drag.ghost.removeAttribute('tabindex');
-        Object.assign(drag.ghost.style, { width: `${drag.rect.width}px`, height: `${drag.rect.height}px`, left: `${drag.rect.left}px`, top: `${drag.rect.top}px` });
-        document.body.appendChild(drag.ghost);
-      }
-      drag.dx = e.clientX - drag.x; drag.dy = e.clientY - drag.y;
-      drag.over = e.clientX >= drag.target.left - 20 && e.clientX <= drag.target.right + 20 && e.clientY >= drag.target.top - 20 && e.clientY <= drag.target.bottom + 20;
-      this.el.discardPile.classList.toggle('valid-drop', drag.over);
-      if (!drag.frame) drag.frame = requestAnimationFrame(() => {
-        if (drag?.ghost) { drag.ghost.style.transform = `translate3d(${drag.dx}px,${drag.dy}px,0) scale(1.08)`; drag.frame = null; }
-      });
-    };
-    const up = e => {
-      if (!drag || drag.id !== e.pointerId) return;
-      const moved = !!drag.ghost, accepted = drag.over, ghost = drag.ghost;
-      cleanup();
-      if (moved && !accepted && ghost && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        ghost.classList.add('classic-returning-card'); document.body.appendChild(ghost);
-        const animation = ghost.animate([{ transform: ghost.style.transform }, { transform: 'none', opacity: .4 }], { duration: 160, easing: 'ease-out' });
-        animation.onfinish = () => ghost.remove();
-      }
-      if (moved) { wrapper._suppressClick = true; if (accepted && wrapper.isConnected) this.handleCardClick(card, wrapper); else wrapper.animate([{ opacity: .45 }, { opacity: 1 }], { duration: 180 }); }
-    };
-    wrapper.addEventListener('pointercancel', cleanup);
-    wrapper.addEventListener('lostpointercapture', cleanup);
-  }
-
-  onCardInteraction(card, wrapperEl, isPlayable) {
-    if (this.gameState.mode !== 'flip') {
-      if (this.ws?.readyState !== WebSocket.OPEN) return;
-      if (isPlayable && this.clientView?.isMyTurn && !this.isMoveInFlight) this.handleCardClick(card, wrapperEl);
-      return;
-    }
-    if (this.selectedCardId === card.id) {
-      // Second tap on selected card -> play it!
-      if (isPlayable && !this.isMoveInFlight) {
-        this.handleCardClick(card, wrapperEl);
-      }
-    } else {
-      // First tap -> select it with golden highlight and raise it
-      this.selectedCardId = card.id;
-      document.querySelectorAll('#playerHandCards .card-wrapper.is-selected').forEach((el) => {
-        el.classList.remove('is-selected');
-        el.style.zIndex = '';
-        el.style.transform = `rotate(${el.style.getPropertyValue('--card-rot') || '0deg'})`;
-      });
-      wrapperEl.classList.add('is-selected');
-      wrapperEl.style.zIndex = '200';
-      wrapperEl.style.transform = 'translateY(-18px) scale(1.08)';
-
-      // On desktop fine pointer, allow single-click play if desired
-      if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && isPlayable && !this.isMoveInFlight) {
-        this.handleCardClick(card, wrapperEl);
-      }
-    }
-  }
-
   updateTurnTimer(deadline, isMyTurn, status) {
+    if (this.turnTimerInterval) {
+      clearInterval(this.turnTimerInterval);
+      this.turnTimerInterval = null;
+    }
     this.activeTurnDeadline = deadline;
     this.activeTurnStatus = status;
     this.activeTurnIsMyTurn = Boolean(isMyTurn);
@@ -2554,25 +2476,13 @@ class UnoArenaApp {
       }
 
       const now = Date.now();
-      const durationMs = this.gameState?.turnDurationMs || 30000;
       const remainingMs = Math.max(0, this.activeTurnDeadline - now);
-      const remainingSec = Math.ceil(remainingMs / 1000);
-
-      const miniTimers = document.querySelectorAll('.active-player-turn-timer');
-      const miniCircumference = 87.96;
+      const durationMs = 30000;
       const fraction = Math.max(0, Math.min(1, remainingMs / durationMs));
-      const offset = (miniCircumference * (1 - fraction)).toFixed(2);
+      const remainingSec = Math.ceil(remainingMs / 1000);
+      const ringOffset = (138.23 * (1 - fraction)).toFixed(2);
 
-      miniTimers.forEach(timer => {
-        const txt = timer.querySelector('.mini-timer-text');
-        const prog = timer.querySelector('.mini-timer-prog');
-        if (txt) txt.textContent = String(remainingSec);
-        if (prog) prog.style.strokeDashoffset = offset;
-        timer.classList.toggle('warning', remainingSec <= 15 && remainingSec > 7);
-        timer.classList.toggle('critical', remainingSec <= 7);
-      });
-
-      // Update disconnect badges live
+      // Update disconnect countdown badges
       document.querySelectorAll('.disconnect-countdown-badge').forEach(badge => {
         const discAt = Number(badge.dataset.disconnectedAt);
         if (discAt) {
@@ -2581,58 +2491,48 @@ class UnoArenaApp {
         }
       });
 
-      if (this.gameState?.mode === 'classic') {
-        if (this.el.turnTimerContainer) this.el.turnTimerContainer.style.display = 'none';
-        const ring = document.querySelector('.classic-profile-ring');
-        if (ring) {
-          const circle = ring.querySelector('circle');
-          const seconds = ring.parentElement?.querySelector('.classic-profile-seconds');
-          if (circle) circle.style.strokeDashoffset = String(138.23 * (1 - Math.min(1, remainingMs / durationMs)));
-          if (seconds) seconds.textContent = `${remainingSec}s`;
-          ring.classList.toggle('timer-critical', remainingMs <= 7000);
-        }
-        return;
-      }
-
-      if (this.gameState?.mode === 'no_mercy') {
-        if (this.el.turnTimerContainer) this.el.turnTimerContainer.style.display = 'none';
-        return;
-      }
-
-      const container = this.el.turnTimerContainer;
-      const progressRing = this.el.timerRingProgress;
-      const secondsEl = this.el.turnTimerSeconds;
-
-      if (!container || !progressRing || !secondsEl) return;
-      container.style.display = 'flex';
-      container.classList.toggle('my-turn', this.activeTurnIsMyTurn);
-      secondsEl.textContent = String(remainingSec);
-      const ringOffset = (138.23 * (1 - fraction)).toFixed(2);
-      progressRing.style.strokeDashoffset = ringOffset;
-
-      container.classList.remove('timer-normal', 'timer-warning', 'timer-critical', 'timer-expired');
-      if (remainingSec > 15) container.classList.add('timer-normal');
-      else if (remainingSec > 7) container.classList.add('timer-warning');
-      else if (remainingSec > 0) container.classList.add('timer-critical');
-      else container.classList.add('timer-expired');
+      // Update the single active player's avatar turn ring
+      const ringCircles = document.querySelectorAll('.avatar-turn-circle');
+      ringCircles.forEach(circle => {
+        circle.style.strokeDashoffset = ringOffset;
+      });
+      const ringSvgs = document.querySelectorAll('.avatar-turn-ring');
+      ringSvgs.forEach(svg => {
+        svg.classList.toggle('timer-critical', remainingMs <= 7000);
+      });
+      const secondsEls = document.querySelectorAll('.avatar-turn-seconds');
+      secondsEls.forEach(el => {
+        el.textContent = `${remainingSec}s`;
+      });
     };
 
     tick();
 
     if (status === 'playing' && deadline > Date.now()) {
-      if (!this.turnTimerInterval) {
-        this.turnTimerInterval = setInterval(tick, 100);
-      }
-    } else {
-      if (this.turnTimerInterval) {
-        clearInterval(this.turnTimerInterval);
-        this.turnTimerInterval = null;
-      }
+      this.turnTimerInterval = setInterval(tick, 100);
     }
   }
 
   handleCardClick(card, wrapperEl) {
-    if (this.isMoveInFlight) return;
+    if (!this.clientView?.isMyTurn) {
+      if (wrapperEl) {
+        wrapperEl.animate([{ transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'none' }], { duration: 160 });
+      }
+      return;
+    }
+
+    const canPlayIds = this.clientView.canPlayCards || [];
+    const isPlayable = canPlayIds.includes(card.id);
+
+    if (!isPlayable) {
+      if (wrapperEl) {
+        wrapperEl.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'none' }], { duration: 180 });
+      }
+      sounds.playSnap?.(300, 0.05);
+      return;
+    }
+
+    if (this.isPlayInFlight) return;
 
     const face = card.color ? card : (this.gameState.flipSide === 'dark' ? card.dark : card.light);
 
@@ -2653,9 +2553,9 @@ class UnoArenaApp {
     }
 
     // Regular Card Play
-    this.isMoveInFlight = true;
-    clearTimeout(this.moveFlightTimer);
-    this.moveFlightTimer = setTimeout(() => { this.isMoveInFlight = false; }, 800);
+    this.isPlayInFlight = true;
+    clearTimeout(this.playFlightTimer);
+    this.playFlightTimer = setTimeout(() => { this.isPlayInFlight = false; }, 350);
 
     sounds.playSnap();
 
@@ -2692,8 +2592,7 @@ class UnoArenaApp {
         }, 240);
       }
       this.inFlightCardId = card.id;
-      wrapperEl.style.opacity = '0';
-      wrapperEl.style.pointerEvents = 'none';
+      wrapperEl.style.opacity = '0.35';
     }
 
     if (wrapperEl && this.gameState.mode === 'flip') {

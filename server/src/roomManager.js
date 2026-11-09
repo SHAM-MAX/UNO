@@ -36,6 +36,7 @@ export class RoomManager {
     this.store = store;
     this.turnTimers = new Map();
     this.botTimers = new Map();
+    this.botSecondaryTimers = new Map();
     this.botCatchTimers = new Map();
     this.rematchTimers = new Map();
     this.onStateChange = null;
@@ -727,10 +728,7 @@ export class RoomManager {
       clearTimeout(this.turnTimers.get(room.roomId));
       this.turnTimers.delete(room.roomId);
     }
-    if (this.botTimers.has(room.roomId)) {
-      clearTimeout(this.botTimers.get(room.roomId));
-      this.botTimers.delete(room.roomId);
-    }
+    this.clearBotTimers(room.roomId);
 
     if (room.status !== 'playing') {
       room.turnDeadline = null;
@@ -832,12 +830,20 @@ export class RoomManager {
     }
   }
 
+  clearBotTimers(roomId) {
+    if (this.botTimers.has(roomId)) {
+      clearTimeout(this.botTimers.get(roomId));
+      this.botTimers.delete(roomId);
+    }
+    if (this.botSecondaryTimers && this.botSecondaryTimers.has(roomId)) {
+      clearTimeout(this.botSecondaryTimers.get(roomId));
+      this.botSecondaryTimers.delete(roomId);
+    }
+  }
+
   scheduleBotTurn(room) {
     if (!room || room.status !== 'playing') return;
-    if (this.botTimers.has(room.roomId)) {
-      clearTimeout(this.botTimers.get(room.roomId));
-      this.botTimers.delete(room.roomId);
-    }
+    this.clearBotTimers(room.roomId);
 
     let targetBotId = null;
     if (room.pendingAction) {
@@ -860,7 +866,7 @@ export class RoomManager {
     const currentTurnAtSchedule = room.currentTurn;
     const actionVersionAtSchedule = room.actionVersion;
     const generationAtSchedule = room.turnTimerGeneration;
-    const delay = 850 + Math.floor(Math.random() * 400); // 850ms - 1250ms natural delay
+    const delay = 800 + Math.floor(Math.random() * 250); // 800ms - 1050ms natural AI thinking interval
 
     const timer = setTimeout(() => {
       this.executeBotTurn(room.roomId, targetBotId, currentTurnAtSchedule, actionVersionAtSchedule, generationAtSchedule);
@@ -1004,16 +1010,18 @@ export class RoomManager {
             }
             this.playCard(roomId, botId, payload);
             if (this.onStateChange) this.onStateChange(roomId);
-          }, 550);
+          }, 750);
           if (postDrawTimer.unref) postDrawTimer.unref();
+          this.botSecondaryTimers.set(room.roomId, postDrawTimer);
           return;
         } else {
           // If newly drawn card cannot be played: pass turn
           const postPassTimer = setTimeout(() => {
             this.passTurn(roomId, botId);
             if (this.onStateChange) this.onStateChange(roomId);
-          }, 450);
+          }, 700);
           if (postPassTimer.unref) postPassTimer.unref();
+          this.botSecondaryTimers.set(room.roomId, postPassTimer);
           return;
         }
       }
@@ -1069,6 +1077,9 @@ export class RoomManager {
     const currentPlayer = room.players[room.currentTurn];
     if (currentPlayer.id !== playerId) {
       return { success: false, error: 'It is not your turn' };
+    }
+    if (!currentPlayer.isBot) {
+      this.clearBotTimers(roomId);
     }
 
     if (room.mode !== 'flip' && room.pendingAction) return { success: false, error: 'Resolve the pending colour or challenge first' };
@@ -1364,6 +1375,9 @@ export class RoomManager {
     if (currentPlayer.id !== playerId) {
       return { success: false, error: 'It is not your turn' };
     }
+    if (!currentPlayer.isBot) {
+      this.clearBotTimers(roomId);
+    }
 
     if (room.mode === 'classic') {
       if (room.pendingAction?.type === 'draw4_challenge') return this.resolveDrawFour(roomId, playerId, false);
@@ -1497,6 +1511,9 @@ export class RoomManager {
 
     const currentPlayer = room.players[room.currentTurn];
     if (currentPlayer.id !== playerId) return { success: false, error: 'Not your turn' };
+    if (!currentPlayer.isBot) {
+      this.clearBotTimers(roomId);
+    }
 
     if (room.mode !== 'flip' && room.pendingAction) return { success: false, error: 'Resolve pending action first' };
     if (room.pendingDrawPenalty > 0) return { success: false, error: 'Cannot pass: must resolve pending draw penalty' };
