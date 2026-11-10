@@ -460,43 +460,110 @@
     font-size: 0.65rem;
   }
 
-  /* Play vs AI Setup Modal on Mobile */
-  .ai-setup-card {
-    padding: 16px 14px 18px !important;
-    max-height: 94vh !important;
-    border-radius: 20px !important;
+  /* Play vs AI Integrated Form on Mobile */
+  .mobile-form-wrap {
+    transition: background 220ms ease, box-shadow 220ms ease;
   }
-  .ai-setup-title {
-    font-size: 1.25rem !important;
+  .mobile-form-wrap.show-ai-form {
+    background: #fbf6e8 !important;
+    border: 1.5px solid rgba(184, 150, 90, 0.4) !important;
+    box-shadow: 0 10px 28px rgba(18, 56, 36, 0.18) !important;
+    padding: 14px 10px !important;
   }
-  .ai-mode-grid {
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
+  .mobile-form-wrap.show-ai-form .mobile-form-controls {
+    display: none !important;
   }
-  .ai-mode-option {
-    flex-direction: row !important;
-    text-align: left !important;
-    gap: 12px !important;
-    padding: 10px 14px !important;
+  .mobile-ai-form {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0;
+    gap: 10px;
   }
-  .ai-mode-icon {
-    font-size: 1.8rem !important;
-    margin-bottom: 0 !important;
+  .mobile-form-wrap.show-ai-form .mobile-ai-form {
+    display: flex;
+    animation: mobileAiFadeIn 220ms ease forwards;
   }
-  .ai-bots-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 6px !important;
+  @keyframes mobileAiFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
   }
-  .ai-player-count-pills {
-    gap: 6px !important;
+  .mobile-ai-form .ai-form-header {
+    margin-bottom: 4px;
   }
-  .ai-count-pill {
-    padding: 6px 12px !important;
-    font-size: 0.74rem !important;
+  .mobile-ai-form .ai-form-title {
+    font-size: 22px;
   }
-  .ai-setup-summary-bar {
-    flex-direction: column !important;
-    gap: 4px !important;
-    padding: 8px 12px !important;
+  .mobile-ai-form .ai-form-subtitle {
+    font-size: 11px;
+    margin-top: 2px;
+  }
+  .mobile-ai-form .ai-doodle-crown {
+    width: 24px;
+    height: 18px;
+  }
+  .mobile-ai-form .ai-doodle-rays {
+    width: 24px;
+    height: 18px;
+  }
+  .mobile-ai-form .ai-mode-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .mobile-ai-form .ai-mode-card {
+    padding: 8px 4px;
+    min-height: 98px;
+    border-radius: 12px;
+  }
+  .mobile-ai-form .ai-card-art-wrap {
+    height: 38px;
+    margin-bottom: 4px;
+  }
+  .mobile-ai-form .ai-card-title {
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+  .mobile-ai-form .ai-card-desc {
+    font-size: 8px;
+    line-height: 1.2;
+  }
+  .mobile-ai-form .ai-players-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .mobile-ai-form .ai-players-row.row-1 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .mobile-ai-form .ai-players-row.row-2 {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+  .mobile-ai-form .ai-player-pill {
+    font-size: 9.5px;
+    padding: 6px 4px;
+  }
+  .mobile-ai-form .ai-players-row.row-2 .ai-player-pill {
+    flex: 1 1 auto;
+    max-width: 130px;
+  }
+  .mobile-ai-form .ai-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .mobile-ai-form .ai-cancel-btn {
+    padding: 8px 18px;
+    font-size: 11px;
+  }
+  .mobile-ai-form .ai-start-btn {
+    padding: 8px 22px;
+    font-size: 11px;
   }
 }

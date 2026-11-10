@@ -122,6 +122,8 @@ class UnoArenaApp {
       startGameBtn: document.getElementById('startGameBtn'),
       addBotBtn: document.getElementById('addBotBtn'),
       shuffleSeatsBtn: document.getElementById('shuffleSeatsBtn'),
+      homePlaybox: document.getElementById('homePlaybox'),
+      mobileFormWrap: document.getElementById('mobileFormWrap'),
       playVsAiBtn: document.getElementById('playVsAiBtn'),
       mobilePlayVsAiBtn: document.getElementById('mobilePlayVsAiBtn'),
 
@@ -672,7 +674,7 @@ class UnoArenaApp {
     });
 
     const triggerPlayVsAi = () => {
-      this.openAiSetupModal();
+      this.openAiSetup();
     };
 
     if (this.el.playVsAiBtn) {
@@ -682,46 +684,50 @@ class UnoArenaApp {
       this.el.mobilePlayVsAiBtn.addEventListener('click', triggerPlayVsAi);
     }
 
-    if (this.el.aiSetupCloseBtn) {
-      this.el.aiSetupCloseBtn.addEventListener('click', () => this.closeAiSetupModal());
-    }
-    if (this.el.aiSetupCancelBtn) {
-      this.el.aiSetupCancelBtn.addEventListener('click', () => this.closeAiSetupModal());
-    }
-    if (this.el.aiSetupStartBtn) {
-      this.el.aiSetupStartBtn.addEventListener('click', () => this.startAiGame());
-    }
-    if (this.el.aiSetupModal) {
-      this.el.aiSetupModal.addEventListener('click', (e) => {
-        if (e.target === this.el.aiSetupModal) this.closeAiSetupModal();
-      });
-    }
+    const cancelAiSetup = () => this.closeAiSetup();
+    document.querySelectorAll('.ai-cancel-btn, #aiSetupCancelBtn, #mobileAiCancelBtn').forEach((btn) => {
+      btn.addEventListener('click', cancelAiSetup);
+    });
 
-    // AI Setup Mode selections (Required, none preselected)
-    this.el.aiModeGrid?.querySelectorAll('.ai-mode-option').forEach((btn) => {
+    const startAiGameHandler = () => this.startAiGame();
+    document.querySelectorAll('.ai-start-btn, #aiSetupStartBtn, #mobileAiStartBtn').forEach((btn) => {
+      btn.addEventListener('click', startAiGameHandler);
+    });
+
+    // AI Setup Mode selections
+    document.querySelectorAll('.ai-mode-card, .ai-mode-option').forEach((btn) => {
       btn.addEventListener('click', () => {
         const mode = btn.dataset.mode;
         this.aiSetup.mode = mode;
-        this.el.aiModeGrid.querySelectorAll('.ai-mode-option').forEach((b) => b.classList.toggle('selected', b.dataset.mode === mode));
+        document.querySelectorAll('.ai-mode-card, .ai-mode-option').forEach((b) => {
+          b.classList.toggle('selected', b.dataset.mode === mode);
+        });
         sounds.playSnap?.(440, 0.08);
         this.updateAiSetupState();
       });
     });
 
-    // AI Setup Player Count pills (Required, none preselected)
-    this.el.aiPlayerCountPills?.querySelectorAll('.ai-count-pill').forEach((btn) => {
+    // AI Setup Player Count pills
+    document.querySelectorAll('.ai-player-pill, .ai-count-pill').forEach((btn) => {
       btn.addEventListener('click', () => {
         const count = Number(btn.dataset.count);
         this.aiSetup.totalPlayers = count;
-        this.el.aiPlayerCountPills.querySelectorAll('.ai-count-pill').forEach((b) => b.classList.toggle('selected', Number(b.dataset.count) === count));
+        document.querySelectorAll('.ai-player-pill, .ai-count-pill').forEach((b) => {
+          b.classList.toggle('selected', Number(b.dataset.count) === count);
+        });
         sounds.playSnap?.(480, 0.08);
-        const maxBots = count - 1;
-        if (this.aiSetup.selectedBots.length > maxBots) {
-          this.aiSetup.selectedBots = this.aiSetup.selectedBots.slice(0, maxBots);
-        }
-        this.renderAiSetupBots();
         this.updateAiSetupState();
       });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const playbox = document.getElementById('homePlaybox');
+        const mobileWrap = document.getElementById('mobileFormWrap');
+        if (playbox?.classList.contains('show-ai-form') || mobileWrap?.classList.contains('show-ai-form')) {
+          this.closeAiSetup();
+        }
+      }
     });
 
     if (this.el.addBotBtn) {
@@ -1169,167 +1175,66 @@ class UnoArenaApp {
     }
   }
 
-  openAiSetupModal() {
+  openAiSetup() {
     this.aiSetup = {
       mode: null,
       totalPlayers: null,
       selectedBots: [],
     };
-    if (this.el.aiModeGrid) {
-      this.el.aiModeGrid.querySelectorAll('.ai-mode-option').forEach(b => b.classList.remove('selected'));
-    }
-    if (this.el.aiPlayerCountPills) {
-      this.el.aiPlayerCountPills.querySelectorAll('.ai-count-pill').forEach(b => b.classList.remove('selected'));
-    }
-    this.renderAiSetupBots();
+    document.querySelectorAll('.ai-mode-card, .ai-mode-option, .ai-player-pill, .ai-count-pill').forEach((b) => {
+      b.classList.remove('selected');
+    });
     this.updateAiSetupState();
-    if (this.el.aiSetupModal) {
-      this.el.aiSetupModal.classList.add('active');
-    }
+
+    const homePlaybox = document.getElementById('homePlaybox') || this.el.homePlaybox;
+    if (homePlaybox) homePlaybox.classList.add('show-ai-form');
+
+    const mobileWrap = document.getElementById('mobileFormWrap') || this.el.mobileFormWrap;
+    if (mobileWrap) mobileWrap.classList.add('show-ai-form');
+
+    sounds.playSnap?.(440, 0.08);
+  }
+
+  closeAiSetup() {
+    const homePlaybox = document.getElementById('homePlaybox') || this.el.homePlaybox;
+    if (homePlaybox) homePlaybox.classList.remove('show-ai-form');
+
+    const mobileWrap = document.getElementById('mobileFormWrap') || this.el.mobileFormWrap;
+    if (mobileWrap) mobileWrap.classList.remove('show-ai-form');
+
+    sounds.playSnap?.(380, 0.08);
+  }
+
+  openAiSetupModal() {
+    this.openAiSetup();
   }
 
   closeAiSetupModal() {
-    if (this.el.aiSetupModal) {
-      this.el.aiSetupModal.classList.remove('active');
-    }
-  }
-
-  renderAiSetupBots() {
-    if (!this.el.aiBotsGrid) return;
-    this.el.aiBotsGrid.innerHTML = UnoArenaApp.BOT_ROSTER.map(bot => {
-      const isSelected = this.aiSetup.selectedBots.includes(bot.name);
-      return `
-        <div class="ai-bot-card ${isSelected ? 'selected' : ''}" data-bot-name="${escapeHtml(bot.name)}" role="button" tabindex="0" aria-pressed="${isSelected}">
-          <div class="ai-bot-avatar" aria-hidden="true">${bot.avatar}</div>
-          <div class="ai-bot-name" title="${escapeHtml(bot.name)}">${escapeHtml(bot.name)}</div>
-          <div class="ai-bot-tag">${escapeHtml(bot.tag)}</div>
-          <div class="ai-bot-check">${isSelected ? '✓ SELECTED' : '+ ADD'}</div>
-        </div>
-      `;
-    }).join('');
-
-    this.el.aiBotsGrid.querySelectorAll('.ai-bot-card').forEach(card => {
-      const handleToggle = () => {
-        const botName = card.dataset.botName;
-        const isSelected = this.aiSetup.selectedBots.includes(botName);
-        const required = this.aiSetup.totalPlayers ? this.aiSetup.totalPlayers - 1 : null;
-
-        if (isSelected) {
-          this.aiSetup.selectedBots = this.aiSetup.selectedBots.filter(n => n !== botName);
-          sounds.playSnap?.(400, 0.08);
-        } else {
-          if (!this.aiSetup.totalPlayers) {
-            this.showToast('Select total players count first! 👥');
-            return;
-          }
-          if (this.aiSetup.selectedBots.length >= required) {
-            this.showToast(`Already selected ${required} bot(s). Deselect one to swap!`);
-            return;
-          }
-          this.aiSetup.selectedBots.push(botName);
-          sounds.playSnap?.(520, 0.08);
-        }
-        this.renderAiSetupBots();
-        this.updateAiSetupState();
-      };
-
-      card.addEventListener('click', handleToggle);
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleToggle();
-        }
-      });
-    });
+    this.closeAiSetup();
   }
 
   updateAiSetupState() {
-    const modeNames = { classic: 'Classic UNO', flip: 'UNO Flip', no_mercy: 'No Mercy' };
-    const requiredBots = this.aiSetup.totalPlayers ? this.aiSetup.totalPlayers - 1 : null;
-
-    if (this.el.summaryModeVal) {
-      if (this.aiSetup.mode) {
-        this.el.summaryModeVal.textContent = modeNames[this.aiSetup.mode] || this.aiSetup.mode;
-        this.el.summaryModeVal.className = 'summary-val';
-      } else {
-        this.el.summaryModeVal.textContent = 'None selected';
-        this.el.summaryModeVal.className = 'summary-val pending';
-      }
-    }
-
-    if (this.el.summaryPlayersVal) {
-      if (this.aiSetup.totalPlayers) {
-        this.el.summaryPlayersVal.textContent = `${this.aiSetup.totalPlayers} Players (You + ${requiredBots} Bots)`;
-        this.el.summaryPlayersVal.className = 'summary-val';
-      } else {
-        this.el.summaryPlayersVal.textContent = 'None selected';
-        this.el.summaryPlayersVal.className = 'summary-val pending';
-      }
-    }
-
-    if (this.el.summaryBotsVal) {
-      const count = this.aiSetup.selectedBots.length;
-      this.el.summaryBotsVal.textContent = `${count} / ${requiredBots ?? '?'} selected`;
-      if (requiredBots !== null && count === requiredBots) {
-        this.el.summaryBotsVal.className = 'summary-val';
-      } else {
-        this.el.summaryBotsVal.className = 'summary-val pending';
-      }
-    }
-
-    if (this.el.aiBotSelectionHint) {
-      if (!this.aiSetup.totalPlayers) {
-        this.el.aiBotSelectionHint.textContent = 'Select player count above to see bot requirement.';
-      } else if (this.aiSetup.selectedBots.length < requiredBots) {
-        const remaining = requiredBots - this.aiSetup.selectedBots.length;
-        this.el.aiBotSelectionHint.textContent = `Select ${remaining} more bot(s) to match ${this.aiSetup.totalPlayers} total players.`;
-      } else {
-        this.el.aiBotSelectionHint.textContent = `✓ Exactly ${requiredBots} bot(s) selected for ${this.aiSetup.totalPlayers} total players.`;
-      }
-    }
-
-    const isValid = Boolean(
-      this.aiSetup.mode &&
-      this.aiSetup.totalPlayers &&
-      requiredBots !== null &&
-      this.aiSetup.selectedBots.length === requiredBots
-    );
-
-    if (this.el.aiSetupValidationMsg) {
-      if (!this.aiSetup.mode) {
-        this.el.aiSetupValidationMsg.textContent = 'Please choose a game mode (Classic, Flip, or No Mercy).';
-        this.el.aiSetupValidationMsg.className = 'ai-setup-validation-msg';
-      } else if (!this.aiSetup.totalPlayers) {
-        this.el.aiSetupValidationMsg.textContent = 'Please choose total player count (2 to 6 players).';
-        this.el.aiSetupValidationMsg.className = 'ai-setup-validation-msg';
-      } else if (this.aiSetup.selectedBots.length < requiredBots) {
-        const remaining = requiredBots - this.aiSetup.selectedBots.length;
-        this.el.aiSetupValidationMsg.textContent = `Please select ${remaining} more AI opponent(s).`;
-        this.el.aiSetupValidationMsg.className = 'ai-setup-validation-msg';
-      } else {
-        this.el.aiSetupValidationMsg.textContent = '✓ Ready! Click START GAME to enter the arena.';
-        this.el.aiSetupValidationMsg.className = 'ai-setup-validation-msg valid';
-      }
-    }
-
-    if (this.el.aiSetupStartBtn) {
-      this.el.aiSetupStartBtn.disabled = !isValid;
-    }
+    const isValid = Boolean(this.aiSetup.mode && this.aiSetup.totalPlayers);
+    document.querySelectorAll('.ai-start-btn, #aiSetupStartBtn, #mobileAiStartBtn').forEach((btn) => {
+      btn.disabled = !isValid;
+    });
   }
 
   startAiGame() {
-    const requiredBots = this.aiSetup.totalPlayers ? this.aiSetup.totalPlayers - 1 : null;
-    if (!this.aiSetup.mode || !this.aiSetup.totalPlayers || this.aiSetup.selectedBots.length !== requiredBots) {
-      return;
-    }
+    if (!this.aiSetup.mode || !this.aiSetup.totalPlayers) return;
+
+    const botCount = this.aiSetup.totalPlayers - 1;
+    const botNames = UnoArenaApp.BOT_ROSTER.slice(0, botCount).map((b) => b.name);
+    this.aiSetup.selectedBots = botNames;
 
     const name = (this.el.playerNameInput?.value || '').trim() ||
       (this.el.mobilePlayerNameInput?.value || '').trim() ||
       this.playerName || 'Player 1';
     this.playerName = name;
     localStorage.setItem('uno_arena_name', name);
-    this.closeAiSetupModal();
-    this.createBotRoom(name, this.aiSetup.mode, this.aiSetup.selectedBots.length, this.getSelectedHouseRules(), this.aiSetup.selectedBots);
+
+    this.closeAiSetup();
+    this.createBotRoom(name, this.aiSetup.mode, botCount, this.getSelectedHouseRules(), botNames);
   }
 
   async createBotRoom(hostName, mode = this.preferredMode, botCount = 3, houseRules = {}, botNames = null) {

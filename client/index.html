@@ -63,26 +63,131 @@
             <p class="home-subtitle">Pick a mode. Gather your crew. Let the chaos begin.</p>
             <div class="home-online"><span></span><strong>ROOMS OPEN</strong><small>Invite your friends to play</small></div>
           </div>
-            <div class="home-playbox">
-              <div class="home-create-row">
-                <label class="home-input-wrap">
-                  <span class="home-input-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                  </span>
-                  <input id="playerNameInput" type="text" placeholder="Player 1" maxlength="15" autocomplete="nickname" aria-label="Player name">
-                </label>
-                <div class="home-create-actions">
-                  <button id="createRoomBtn" class="home-button home-create">CREATE ROOM <span>→</span></button>
-                  <button id="playVsAiBtn" class="home-button home-ai" type="button" title="Play instantly against AI bots">PLAY VS AI 🤖</button>
+            <div id="homePlaybox" class="home-playbox">
+              <!-- Default Room Form (Create / Join) -->
+              <div id="homeDefaultForm" class="home-form-pane home-default-form">
+                <div class="home-create-row">
+                  <label class="home-input-wrap">
+                    <span class="home-input-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </span>
+                    <input id="playerNameInput" type="text" placeholder="Player 1" maxlength="15" autocomplete="nickname" aria-label="Player name">
+                  </label>
+                  <div class="home-create-actions">
+                    <button id="createRoomBtn" class="home-button home-create">CREATE ROOM <span>→</span></button>
+                    <button id="playVsAiBtn" class="home-button home-ai" type="button" title="Play instantly against AI bots">PLAY VS AI 🤖</button>
+                  </div>
+                </div>
+                <div class="home-divider"><span></span><b>OR JOIN FRIENDS</b><span></span></div>
+                <div class="home-create-row">
+                  <label class="home-input-wrap code-wrap">
+                    <span class="home-input-icon code-icon" aria-hidden="true">#</span>
+                    <input id="roomCodeInput" type="text" placeholder="6-CHARACTER CODE" maxlength="8" autocomplete="off" aria-label="Room code">
+                  </label>
+                  <button id="joinRoomBtn" class="home-button home-join">JOIN ROOM <span>→</span></button>
                 </div>
               </div>
-              <div class="home-divider"><span></span><b>OR JOIN FRIENDS</b><span></span></div>
-              <div class="home-create-row">
-                <label class="home-input-wrap code-wrap">
-                  <span class="home-input-icon code-icon" aria-hidden="true">#</span>
-                  <input id="roomCodeInput" type="text" placeholder="6-CHARACTER CODE" maxlength="8" autocomplete="off" aria-label="Room code">
-                </label>
-                <button id="joinRoomBtn" class="home-button home-join">JOIN ROOM <span>→</span></button>
+
+              <!-- Play vs AI Form (Embedded Form Replacement) -->
+              <div id="homeAiForm" class="home-form-pane home-ai-form" aria-label="Play vs AI Setup">
+                <div class="ai-form-header">
+                  <div class="ai-title-wrap">
+                    <svg class="ai-doodle-crown" viewBox="0 0 38 28" fill="none" stroke="#d43828" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M4 22 L7 8 L19 16 L31 8 L34 22 Z" />
+                    </svg>
+                    <h2 class="ai-form-title">PLAY VS AI</h2>
+                    <svg class="ai-doodle-rays" viewBox="0 0 40 28" fill="none" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                      <line x1="8" y1="20" x2="2" y2="24" stroke="#f59e0b" />
+                      <line x1="14" y1="12" x2="24" y2="4" stroke="#d43828" />
+                      <line x1="24" y1="16" x2="36" y2="10" stroke="#f59e0b" />
+                      <line x1="20" y1="22" x2="32" y2="22" stroke="#d43828" />
+                    </svg>
+                  </div>
+                  <p class="ai-form-subtitle">Configure your battle before starting the game.</p>
+                </div>
+
+                <!-- Section 1: Select Game Mode -->
+                <div class="ai-form-section">
+                  <div class="ai-section-heading">
+                    <span class="ai-num-badge">1</span>
+                    <span class="ai-section-title">SELECT GAME MODE <strong class="ai-req-tag">*REQUIRED</strong></span>
+                  </div>
+                  <p class="ai-section-hint">Choose which UNO ruleset you want to play:</p>
+                  <div class="ai-mode-cards-grid" id="aiModeGrid">
+                    <button class="ai-mode-card" type="button" data-mode="classic" aria-label="Classic UNO">
+                      <div class="ai-card-art-wrap">
+                        <svg class="ai-card-sparks left" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="2" y1="8" x2="6" y2="8"/><line x1="4" y1="3" x2="8" y2="6"/></svg>
+                        <img src="./assets/game-modes/classic-card.png" alt="" class="ai-card-img" draggable="false" />
+                        <svg class="ai-card-sparks right" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="10" y1="8" x2="14" y2="8"/><line x1="8" y1="6" x2="12" y2="3"/></svg>
+                      </div>
+                      <span class="ai-card-title">CLASSIC UNO</span>
+                      <span class="ai-card-desc">Standard 108 cards · Official rules</span>
+                      <span class="ai-check-badge" aria-hidden="true">✓</span>
+                    </button>
+
+                    <button class="ai-mode-card" type="button" data-mode="flip" aria-label="UNO Flip">
+                      <div class="ai-card-art-wrap">
+                        <img src="./assets/game-modes/flip-card.png" alt="" class="ai-card-img" draggable="false" />
+                      </div>
+                      <span class="ai-card-title">UNO FLIP</span>
+                      <span class="ai-card-desc">Dual-sided cards · Light &amp; Dark side</span>
+                      <span class="ai-check-badge" aria-hidden="true">✓</span>
+                    </button>
+
+                    <button class="ai-mode-card" type="button" data-mode="no_mercy" aria-label="No Mercy">
+                      <div class="ai-card-art-wrap">
+                        <img src="./assets/game-modes/no-mercy-card.png" alt="" class="ai-card-img" draggable="false" />
+                      </div>
+                      <span class="ai-card-title">NO MERCY</span>
+                      <span class="ai-card-desc">168 cards · Stacking &amp; 25-card Knockout</span>
+                      <span class="ai-check-badge" aria-hidden="true">✓</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Section 2: Total Players -->
+                <div class="ai-form-section">
+                  <div class="ai-section-heading">
+                    <span class="ai-num-badge">2</span>
+                    <span class="ai-section-title">TOTAL PLAYERS <strong class="ai-req-tag">*REQUIRED</strong></span>
+                  </div>
+                  <p class="ai-section-hint">Total seats at the table (Includes you + AI opponents):</p>
+                  <div class="ai-players-grid" id="aiPlayerCountPills">
+                    <div class="ai-players-row row-1">
+                      <button class="ai-player-pill" type="button" data-count="2">
+                        <span>2 Players (1 Bot)</span>
+                        <span class="ai-check-badge" aria-hidden="true">✓</span>
+                      </button>
+                      <button class="ai-player-pill" type="button" data-count="3">
+                        <span>3 Players (2 Bots)</span>
+                        <span class="ai-check-badge" aria-hidden="true">✓</span>
+                      </button>
+                      <button class="ai-player-pill" type="button" data-count="4">
+                        <span>4 Players (3 Bots)</span>
+                        <span class="ai-check-badge" aria-hidden="true">✓</span>
+                      </button>
+                    </div>
+                    <div class="ai-players-row row-2">
+                      <button class="ai-player-pill" type="button" data-count="5">
+                        <span>5 Players (4 Bots)</span>
+                        <span class="ai-check-badge" aria-hidden="true">✓</span>
+                      </button>
+                      <button class="ai-player-pill" type="button" data-count="6">
+                        <span>6 Players (5 Bots)</span>
+                        <span class="ai-check-badge" aria-hidden="true">✓</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Divider & Actions -->
+                <div class="ai-form-footer">
+                  <div class="ai-form-divider" aria-hidden="true"></div>
+                  <div class="ai-form-actions">
+                    <button id="aiSetupCancelBtn" class="ai-cancel-btn" type="button">CANCEL</button>
+                    <button id="aiSetupStartBtn" class="ai-start-btn" type="button" disabled>START GAME →</button>
+                  </div>
+                </div>
               </div>
             </div>
           <div class="home-art" aria-hidden="true">
@@ -137,14 +242,115 @@
 
             <!-- 3. Player Name & Room Setup Form -->
             <section class="mobile-form-section" aria-label="Room Setup">
-              <div class="mobile-form-wrap">
-                <div class="mobile-form-controls">
+              <div id="mobileFormWrap" class="mobile-form-wrap">
+                <div id="mobileDefaultForm" class="mobile-form-controls">
                   <label class="mobile-name-field"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><input id="mobilePlayerNameInput" class="mobile-control mobile-form-input-name" type="text" placeholder="Guest" maxlength="15" autocomplete="nickname" aria-label="Your player name" /></label>
                   <button id="mobileCreateRoomBtn" class="mobile-control mobile-form-btn-create" type="button">CREATE A ROOM <span aria-hidden="true">&#8594;</span></button>
                   <button id="mobilePlayVsAiBtn" class="mobile-control mobile-form-btn-ai" type="button" title="Play instantly against AI bots">PLAY VS AI 🤖</button>
                   <div class="mobile-form-divider"><span></span><b>OR JOIN FRIENDS</b><span></span></div>
                   <label class="mobile-code-field"><span aria-hidden="true">#</span><input id="mobileRoomCodeInput" class="mobile-control mobile-form-input-code" type="text" placeholder="6-CHARACTER CODE" maxlength="8" autocomplete="off" aria-label="Room code" /></label>
                   <button id="mobileJoinRoomBtn" class="mobile-control mobile-form-btn-join" type="button">JOIN ROOM <span aria-hidden="true">&#8594;</span></button>
+                </div>
+
+                <div id="mobileAiForm" class="mobile-ai-form" aria-label="Play vs AI Setup">
+                  <div class="ai-form-header">
+                    <div class="ai-title-wrap">
+                      <svg class="ai-doodle-crown" viewBox="0 0 38 28" fill="none" stroke="#d43828" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 22 L7 8 L19 16 L31 8 L34 22 Z" />
+                      </svg>
+                      <h2 class="ai-form-title">PLAY VS AI</h2>
+                      <svg class="ai-doodle-rays" viewBox="0 0 40 28" fill="none" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                        <line x1="8" y1="20" x2="2" y2="24" stroke="#f59e0b" />
+                        <line x1="14" y1="12" x2="24" y2="4" stroke="#d43828" />
+                        <line x1="24" y1="16" x2="36" y2="10" stroke="#f59e0b" />
+                        <line x1="20" y1="22" x2="32" y2="22" stroke="#d43828" />
+                      </svg>
+                    </div>
+                    <p class="ai-form-subtitle">Configure your battle before starting the game.</p>
+                  </div>
+
+                  <!-- Section 1: Select Game Mode -->
+                  <div class="ai-form-section">
+                    <div class="ai-section-heading">
+                      <span class="ai-num-badge">1</span>
+                      <span class="ai-section-title">SELECT GAME MODE <strong class="ai-req-tag">*REQUIRED</strong></span>
+                    </div>
+                    <p class="ai-section-hint">Choose which UNO ruleset you want to play:</p>
+                    <div class="ai-mode-cards-grid">
+                      <button class="ai-mode-card" type="button" data-mode="classic" aria-label="Classic UNO">
+                        <div class="ai-card-art-wrap">
+                          <svg class="ai-card-sparks left" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="2" y1="8" x2="6" y2="8"/><line x1="4" y1="3" x2="8" y2="6"/></svg>
+                          <img src="./assets/game-modes/classic-card.png" alt="" class="ai-card-img" draggable="false" />
+                          <svg class="ai-card-sparks right" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="10" y1="8" x2="14" y2="8"/><line x1="8" y1="6" x2="12" y2="3"/></svg>
+                        </div>
+                        <span class="ai-card-title">CLASSIC UNO</span>
+                        <span class="ai-card-desc">Standard 108 cards · Official rules</span>
+                        <span class="ai-check-badge" aria-hidden="true">✓</span>
+                      </button>
+
+                      <button class="ai-mode-card" type="button" data-mode="flip" aria-label="UNO Flip">
+                        <div class="ai-card-art-wrap">
+                          <img src="./assets/game-modes/flip-card.png" alt="" class="ai-card-img" draggable="false" />
+                        </div>
+                        <span class="ai-card-title">UNO FLIP</span>
+                        <span class="ai-card-desc">Dual-sided cards · Light &amp; Dark side</span>
+                        <span class="ai-check-badge" aria-hidden="true">✓</span>
+                      </button>
+
+                      <button class="ai-mode-card" type="button" data-mode="no_mercy" aria-label="No Mercy">
+                        <div class="ai-card-art-wrap">
+                          <img src="./assets/game-modes/no-mercy-card.png" alt="" class="ai-card-img" draggable="false" />
+                        </div>
+                        <span class="ai-card-title">NO MERCY</span>
+                        <span class="ai-card-desc">168 cards · Stacking &amp; 25-card Knockout</span>
+                        <span class="ai-check-badge" aria-hidden="true">✓</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Section 2: Total Players -->
+                  <div class="ai-form-section">
+                    <div class="ai-section-heading">
+                      <span class="ai-num-badge">2</span>
+                      <span class="ai-section-title">TOTAL PLAYERS <strong class="ai-req-tag">*REQUIRED</strong></span>
+                    </div>
+                    <p class="ai-section-hint">Total seats at the table (Includes you + AI opponents):</p>
+                    <div class="ai-players-grid">
+                      <div class="ai-players-row row-1">
+                        <button class="ai-player-pill" type="button" data-count="2">
+                          <span>2 Players (1 Bot)</span>
+                          <span class="ai-check-badge" aria-hidden="true">✓</span>
+                        </button>
+                        <button class="ai-player-pill" type="button" data-count="3">
+                          <span>3 Players (2 Bots)</span>
+                          <span class="ai-check-badge" aria-hidden="true">✓</span>
+                        </button>
+                        <button class="ai-player-pill" type="button" data-count="4">
+                          <span>4 Players (3 Bots)</span>
+                          <span class="ai-check-badge" aria-hidden="true">✓</span>
+                        </button>
+                      </div>
+                      <div class="ai-players-row row-2">
+                        <button class="ai-player-pill" type="button" data-count="5">
+                          <span>5 Players (4 Bots)</span>
+                          <span class="ai-check-badge" aria-hidden="true">✓</span>
+                        </button>
+                        <button class="ai-player-pill" type="button" data-count="6">
+                          <span>6 Players (5 Bots)</span>
+                          <span class="ai-check-badge" aria-hidden="true">✓</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Divider & Actions -->
+                  <div class="ai-form-footer">
+                    <div class="ai-form-divider" aria-hidden="true"></div>
+                    <div class="ai-form-actions">
+                      <button id="mobileAiCancelBtn" class="ai-cancel-btn" type="button">CANCEL</button>
+                      <button id="mobileAiStartBtn" class="ai-start-btn" type="button" disabled>START GAME →</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -528,93 +734,6 @@
             <span id="rouletteSpinnerIcon" class="roulette-spinner-icon" aria-hidden="true"></span>
             <span id="rouletteStatusText">Spinning...</span>
           </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ACTION MODAL: PLAY VS AI SETUP -->
-  <div id="aiSetupModal" class="modal-overlay ai-setup-overlay" role="dialog" aria-modal="true" aria-labelledby="aiSetupTitle">
-    <div class="ai-setup-wrapper">
-      <div class="modal-card ai-setup-card">
-        <div class="ai-setup-header">
-          <span class="ai-setup-badge">UNO ARENA</span>
-          <div class="ai-setup-title-row">
-            <span class="gold-decor-line left" aria-hidden="true"></span>
-            <h3 id="aiSetupTitle" class="modal-title ai-setup-title">PLAY VS AI</h3>
-            <span class="gold-decor-line right" aria-hidden="true"></span>
-          </div>
-          <p class="ai-setup-subtitle">Configure your battle before starting the game</p>
-          <button id="aiSetupCloseBtn" class="ai-setup-close-btn" type="button" aria-label="Close setup">&times;</button>
-        </div>
-
-        <div class="ai-setup-body">
-          <!-- Step 1: Game Mode (Required) -->
-          <div class="ai-setup-section">
-            <div class="ai-setup-section-label">
-              <span class="section-step-num">1</span>
-              <span class="section-title-text">SELECT GAME MODE <strong class="req-tag">*REQUIRED</strong></span>
-            </div>
-            <p class="section-hint">Choose which UNO ruleset you want to play:</p>
-            <div class="ai-mode-grid" id="aiModeGrid">
-              <button class="ai-mode-option" type="button" data-mode="classic">
-                <span class="ai-mode-icon">🎴</span>
-                <span class="ai-mode-name">Classic UNO</span>
-                <span class="ai-mode-desc">Standard 108 cards • Official rules</span>
-              </button>
-              <button class="ai-mode-option" type="button" data-mode="flip">
-                <span class="ai-mode-icon">🔄</span>
-                <span class="ai-mode-name">UNO Flip</span>
-                <span class="ai-mode-desc">Dual-sided cards • Light & Dark side</span>
-              </button>
-              <button class="ai-mode-option" type="button" data-mode="no_mercy">
-                <span class="ai-mode-icon">⚡</span>
-                <span class="ai-mode-name">No Mercy</span>
-                <span class="ai-mode-desc">168 cards • Stacking & 25-card Knockout</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Step 2: Total Player Count (Required) -->
-          <div class="ai-setup-section">
-            <div class="ai-setup-section-label">
-              <span class="section-step-num">2</span>
-              <span class="section-title-text">TOTAL PLAYERS <strong class="req-tag">*REQUIRED</strong></span>
-            </div>
-            <p class="section-hint">Total seats at the table (Includes you + AI opponents):</p>
-            <div class="ai-player-count-pills" id="aiPlayerCountPills">
-              <button class="ai-count-pill" type="button" data-count="2">2 Players (1 Bot)</button>
-              <button class="ai-count-pill" type="button" data-count="3">3 Players (2 Bots)</button>
-              <button class="ai-count-pill" type="button" data-count="4">4 Players (3 Bots)</button>
-              <button class="ai-count-pill" type="button" data-count="5">5 Players (4 Bots)</button>
-              <button class="ai-count-pill" type="button" data-count="6">6 Players (5 Bots)</button>
-            </div>
-          </div>
-
-          <!-- Step 3: Choose AI Opponents (Required) -->
-          <div class="ai-setup-section">
-            <div class="ai-setup-section-label">
-              <span class="section-step-num">3</span>
-              <span class="section-title-text">CHOOSE AI OPPONENTS <strong class="req-tag">*REQUIRED</strong></span>
-            </div>
-            <p id="aiBotSelectionHint" class="section-hint bot-hint">Select player count above to see bot requirement</p>
-            <div class="ai-bots-grid" id="aiBotsGrid">
-              <!-- Dynamically populated from bot roster with personality tags and selection state -->
-            </div>
-          </div>
-
-          <!-- Summary & Validation Notification -->
-          <div class="ai-setup-summary-bar" id="aiSetupSummaryBar">
-            <div class="summary-item"><span class="summary-label">Mode:</span> <span id="summaryModeVal" class="summary-val pending">None selected</span></div>
-            <div class="summary-item"><span class="summary-label">Players:</span> <span id="summaryPlayersVal" class="summary-val pending">None selected</span></div>
-            <div class="summary-item"><span class="summary-label">Bots:</span> <span id="summaryBotsVal" class="summary-val pending">0 selected</span></div>
-          </div>
-          <div id="aiSetupValidationMsg" class="ai-setup-validation-msg" role="status">Please choose a game mode and player count.</div>
-        </div>
-
-        <div class="ai-setup-actions">
-          <button id="aiSetupCancelBtn" class="ai-setup-btn ai-btn-cancel" type="button">CANCEL</button>
-          <button id="aiSetupStartBtn" class="ai-setup-btn ai-btn-start" type="button" disabled>START GAME ▶</button>
         </div>
       </div>
     </div>
