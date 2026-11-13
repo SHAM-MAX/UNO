@@ -39,6 +39,7 @@ export class RoomManager {
     this.botSecondaryTimers = new Map();
     this.botCatchTimers = new Map();
     this.rematchTimers = new Map();
+    this.quickMatchStartTimers = new Map();
     this.onStateChange = null;
     this.loadFromStorage();
   }
@@ -323,6 +324,74 @@ export class RoomManager {
     this.setReady(created.roomId, created.playerId, true);
     this.startGame(created.roomId, created.playerId);
     return created;
+  }
+
+  joinOrCreateQuickMatch(playerName, mode = 'classic') {
+    const validMode = ['classic', 'flip', 'no_mercy'].includes(mode) ? mode : 'classic';
+    const cleanName = String(playerName || '').trim().slice(0, 18) || 'Player';
+
+    // 1. Look for existing quick match room waiting for players in lobby
+    for (const [roomId, room] of this.rooms.entries()) {
+      if (room.isQuickMatch && room.mode === validMode && room.status === 'lobby' && room.players.length < 4) {
+        const joinResult = this.joinRoom(roomId, cleanName);
+        if (joinResult.success) {
+          const joinedPlayer = room.players.find((p) => p.id === joinResult.playerId);
+          if (joinedPlayer) joinedPlayer.isReady = true;
+
+          // If room now has >= 2 human players, start countdown
+          if (room.players.length >= 2) {
+            if (this.quickMatchStartTimers.has(roomId)) {
+              clearTimeout(this.quickMatchStartTimers.get(roomId));
+            }
+            const timer = setTimeout(() => {
+              this.quickMatchStartTimers.delete(roomId);
+              const curRoom = this.rooms.get(roomId);
+              if (curRoom && curRoom.status === 'lobby' && curRoom.players.length >= 2) {
+                const host = curRoom.players.find((p) => p.isHost);
+                if (host) {
+                  try {
+                    this.startGame(roomId, host.id);
+                  } catch (e) {
+                    console.error('Quick match start error:', e);
+                  }
+                }
+              }
+            }, 3000);
+            this.quickMatchStartTimers.set(roomId, timer);
+          }
+
+          this.persist(roomId);
+          if (this.onStateChange) this.onStateChange(roomId);
+          return { success: true, roomId, playerId: joinResult.playerId, sessionToken: joinResult.sessionToken };
+        }
+      }
+    }
+
+    // 2. Otherwise create a new quick match room
+    const created = this.createRoom(cleanName, validMode);
+    const room = this.rooms.get(created.roomId);
+    if (room) {
+      room.isQuickMatch = true;
+      room.players[0].isReady = true;
+
+      const autoBotTimer = setTimeout(() => {
+        this.quickMatchStartTimers.delete(created.roomId);
+        const curRoom = this.rooms.get(created.roomId);
+        if (curRoom && curRoom.status === 'lobby' && curRoom.players.length === 1) {
+          try {
+            this.addBot(created.roomId);
+            this.addBot(created.roomId);
+            const host = curRoom.players.find((p) => p.isHost);
+            if (host) this.startGame(created.roomId, host.id);
+          } catch (e) {
+            console.error('Quick match bot fill error:', e);
+          }
+        }
+      }, 5000);
+      this.quickMatchStartTimers.set(created.roomId, autoBotTimer);
+      this.persist(created.roomId);
+    }
+    return { success: true, roomId: created.roomId, playerId: created.playerId, sessionToken: created.sessionToken };
   }
 
   shuffleSeats(roomId, playerId) {

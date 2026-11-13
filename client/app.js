@@ -27,12 +27,28 @@ class UnoArenaApp {
       selectedBots: [],
     };
     this.handCardElements = new Map();
+    this.opponentElements = new Map();
     this.inFlightCardId = null;
+    this.lastRenderedDiscardKey = null;
+    this.lastRenderedDrawKey = null;
+    this.quickMatchTimerInterval = null;
+    this.quickMatchStartMs = 0;
 
     this.initElements();
     this.initEvents();
     this.initDialogAccessibility();
+    this.initPWA();
     this.checkUrlForRoomCode();
+  }
+
+  initPWA() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('[PWA] Service Worker registered:', reg.scope))
+          .catch((err) => console.warn('[PWA] Service Worker registration notice:', err));
+      });
+    }
   }
 
   initElements() {
@@ -189,6 +205,20 @@ class UnoArenaApp {
       btnViewVictory: document.getElementById('btnViewVictory'),
       rulesModal: document.getElementById('rulesModal'),
       rulesModalClose: document.getElementById('rulesModalClose'),
+
+      // Fullscreen controls
+      fullscreenToggleBtn: document.getElementById('fullscreenToggleBtn'),
+      fullscreenIcon: document.getElementById('fullscreenIcon'),
+      mobileNavFullscreenBtn: document.getElementById('mobileNavFullscreenBtn'),
+      arenaFullscreenBtn: document.getElementById('arenaFullscreenBtn'),
+
+      // Quick Match controls & modal
+      quickMatchBtn: document.getElementById('quickMatchBtn'),
+      mobileQuickMatchBtn: document.getElementById('mobileQuickMatchBtn'),
+      quickMatchModal: document.getElementById('quickMatchModal'),
+      quickMatchModeBadge: document.getElementById('quickMatchModeBadge'),
+      quickMatchTimer: document.getElementById('quickMatchTimer'),
+      cancelQuickMatchBtn: document.getElementById('cancelQuickMatchBtn'),
     };
   }
 
@@ -247,17 +277,28 @@ class UnoArenaApp {
       });
     }
 
+    // Fullscreen and Orientation controls
+    this.el.fullscreenToggleBtn?.addEventListener('click', () => this.toggleFullscreen());
+    this.el.mobileNavFullscreenBtn?.addEventListener('click', () => this.toggleFullscreen());
+    this.el.arenaFullscreenBtn?.addEventListener('click', () => this.toggleFullscreen());
+    document.addEventListener('fullscreenchange', () => this.syncFullscreenState());
+    document.addEventListener('webkitfullscreenchange', () => this.syncFullscreenState());
+    window.addEventListener('orientationchange', () => this.handleOrientationOrResize());
+    if (window.screen?.orientation) {
+      try {
+        window.screen.orientation.addEventListener('change', () => this.handleOrientationOrResize());
+      } catch (_) {}
+    }
+    this.syncFullscreenState();
+
+    // Quick Match controls
+    this.el.quickMatchBtn?.addEventListener('click', () => this.startQuickMatch());
+    this.el.mobileQuickMatchBtn?.addEventListener('click', () => this.startQuickMatch());
+    this.el.cancelQuickMatchBtn?.addEventListener('click', () => this.cancelQuickMatch());
+
     // Window resize handler: seamlessly recalculate card fan and hand overlap
     window.addEventListener('resize', () => {
-      if (this.gameState && this.gameState.status === 'playing' && this.clientView) {
-        const canPlayIds = this.clientView.canPlayCards || [];
-        this.renderPlayerHand(
-          this.clientView.myHand || [],
-          canPlayIds,
-          this.gameState.mode || 'classic',
-          this.gameState.flipSide || 'light'
-        );
-      }
+      this.handleOrientationOrResize();
     });
 
     this.el.backToModesBtn.addEventListener('click', () => this.showModePicker());
@@ -960,6 +1001,128 @@ class UnoArenaApp {
     });
   }
 
+  async toggleFullscreen() {
+    try {
+      const doc = document;
+      const isFull = Boolean(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
+      if (isFull) {
+        if (doc.exitFullscreen) await doc.exitFullscreen();
+        else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen();
+        else if (doc.mozCancelFullScreen) await doc.mozCancelFullScreen();
+        else if (doc.msExitFullscreen) await doc.msExitFullscreen();
+        if (window.screen?.orientation?.unlock) {
+          try { window.screen.orientation.unlock(); } catch (_) {}
+        }
+      } else {
+        const el = document.documentElement;
+        if (el.requestFullscreen) {
+          await el.requestFullscreen();
+        } else if (el.webkitRequestFullscreen) {
+          await el.webkitRequestFullscreen();
+        } else if (el.mozRequestFullScreen) {
+          await el.mozRequestFullScreen();
+        } else if (el.msRequestFullscreen) {
+          await el.msRequestFullscreen();
+        }
+        if (window.screen?.orientation?.lock && (navigator.maxTouchPoints > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent))) {
+          await window.screen.orientation.lock('landscape').catch((e) => {
+            console.warn('Orientation lock notice:', e);
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Fullscreen/Orientation request notice:', err);
+      this.showToast('Rotate your phone to landscape for the best arena experience! 🔄');
+    }
+    this.syncFullscreenState();
+  }
+
+  syncFullscreenState() {
+    const isFull = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+    document.body.classList.toggle('is-fullscreen', isFull);
+    const fsIcon = isFull ? '🗗' : '⛶';
+    if (this.el.fullscreenIcon) this.el.fullscreenIcon.textContent = fsIcon;
+    if (this.el.mobileNavFullscreenBtn) this.el.mobileNavFullscreenBtn.textContent = fsIcon;
+    const arenaFsText = this.el.arenaFullscreenBtn?.querySelector('.arena-fs-text');
+    if (arenaFsText) arenaFsText.textContent = isFull ? 'EXIT FULL' : 'FULLSCREEN';
+    const arenaFsIcon = this.el.arenaFullscreenBtn?.querySelector('.arena-fs-icon');
+    if (arenaFsIcon) arenaFsIcon.textContent = fsIcon;
+    this.syncLandscapeState();
+  }
+
+  syncLandscapeState() {
+    const isLandscape = window.matchMedia('(orientation: landscape)').matches || window.innerWidth > window.innerHeight;
+    document.body.classList.toggle('is-landscape', isLandscape);
+    const isMobile = window.innerWidth <= 800 || (isLandscape && window.innerHeight <= 540);
+    document.body.classList.toggle('mobile-viewport', isMobile);
+  }
+
+  handleOrientationOrResize() {
+    this.syncFullscreenState();
+    if (this.gameState && this.gameState.status === 'playing' && this.clientView) {
+      const canPlayIds = this.clientView.canPlayCards || [];
+      this.renderPlayerHand(
+        this.clientView.myHand || [],
+        canPlayIds,
+        this.gameState.mode || 'classic',
+        this.gameState.flipSide || 'light'
+      );
+    }
+  }
+
+  startQuickMatch(modeOverride) {
+    const mode = modeOverride || this.preferredMode || 'classic';
+    const rawName = (this.el.playerNameInput?.value || this.el.mobilePlayerNameInput?.value || this.playerName || '').trim();
+    const playerName = rawName.slice(0, 15) || `Player_${Math.floor(Math.random() * 900 + 100)}`;
+    this.playerName = playerName;
+    localStorage.setItem('uno_arena_name', playerName);
+
+    if (this.el.quickMatchModal) {
+      if (this.el.quickMatchModeBadge) {
+        this.el.quickMatchModeBadge.textContent = mode.replace('_', ' ').toUpperCase();
+      }
+      this.el.quickMatchModal.style.display = 'flex';
+    }
+
+    this.quickMatchStartMs = Date.now();
+    if (this.quickMatchTimerInterval) clearInterval(this.quickMatchTimerInterval);
+    this.quickMatchTimerInterval = setInterval(() => {
+      const sec = Math.floor((Date.now() - this.quickMatchStartMs) / 1000);
+      const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+      const ss = String(sec % 60).padStart(2, '0');
+      if (this.el.quickMatchTimer) this.el.quickMatchTimer.textContent = `${mm}:${ss}`;
+    }, 1000);
+
+    const action = {
+      type: 'quick_match',
+      playerName,
+      data: { mode },
+    };
+
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.send(action);
+    } else {
+      this.connectWebSocket(null, null, null, null, action);
+    }
+  }
+
+  cancelQuickMatch() {
+    this.cancelQuickMatchTimerOnly();
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.send({ type: 'cancel_quick_match' });
+    }
+  }
+
+  cancelQuickMatchTimerOnly() {
+    if (this.quickMatchTimerInterval) {
+      clearInterval(this.quickMatchTimerInterval);
+      this.quickMatchTimerInterval = null;
+    }
+    if (this.el.quickMatchModal) {
+      this.el.quickMatchModal.style.display = 'none';
+    }
+  }
+
   showToast(msg) {
     this.el.toast.textContent = msg;
     this.el.toast.classList.add('show');
@@ -1278,7 +1441,7 @@ class UnoArenaApp {
     }
   }
 
-  connectWebSocket(roomId, playerId, sessionToken, playerName) {
+  connectWebSocket(roomId, playerId, sessionToken, playerName, customAction) {
     if (this.pingInterval) {
       clearInterval(this.pingInterval);
       this.pingInterval = null;
@@ -1308,14 +1471,18 @@ class UnoArenaApp {
         }
       }, 20000);
 
-      // Send join message
-      this.send({
-        type: 'join',
-        roomId,
-        playerId,
-        sessionToken,
-        playerName: playerName || this.playerName,
-      });
+      // Send action or join message
+      if (customAction) {
+        this.send(customAction);
+      } else if (roomId) {
+        this.send({
+          type: 'join',
+          roomId,
+          playerId,
+          sessionToken,
+          playerName: playerName || this.playerName,
+        });
+      }
       // Flush any messages queued while connection was establishing
       if (this.pendingMessages && this.pendingMessages.length > 0) {
         while (this.pendingMessages.length > 0) {
@@ -1333,6 +1500,7 @@ class UnoArenaApp {
           return;
         }
         if (msg.type === 'joined') {
+          this.cancelQuickMatchTimerOnly();
           this.roomId = msg.data.roomId;
           this.playerId = msg.data.playerId;
           this.sessionToken = msg.data.sessionToken;
@@ -1341,7 +1509,10 @@ class UnoArenaApp {
           const roomUrl = new URL(window.location.href);
           roomUrl.searchParams.set('room', this.roomId);
           window.history.replaceState({}, '', roomUrl);
+        } else if (msg.type === 'quick_match_cancelled') {
+          this.cancelQuickMatchTimerOnly();
         } else if (msg.type === 'room:state') {
+          this.cancelQuickMatchTimerOnly();
           this.handleRoomState(msg.data);
         } else if (msg.type === 'player_card_hovered') {
           this.handleOpponentCardHover(msg.data);
@@ -1351,6 +1522,7 @@ class UnoArenaApp {
           this.catchRequestPending = false;
           this.showCaughtFailedModal(msg.data);
         } else if (msg.type === 'error') {
+          this.cancelQuickMatchTimerOnly();
           this.rematchRequestPending = false; this.rematchActionPending = false; this.rematchDismissAfterResponseId = null; this.unoRequestPending = false; this.catchRequestPending = false; this.pendingClassicMotion = null;
           this.clearClassicAnimations?.();
           this.isMoveInFlight = false;
@@ -1992,100 +2164,34 @@ class UnoArenaApp {
       this.el.directionText.style.display = 'none';
     }
 
-    // Opponents
+    // Opponents (Keyed DOM diffing to eliminate layout churn and micro-stutter)
     const opponents = gameState.players.filter((p) => p.id !== this.playerId);
-    const avatarPalettes = ['#1e3a8a', '#065f46', '#78350f', '#831843', '#4c1d95'];
-    this.el.opponentsRow.innerHTML = opponents
-      .map((p, idx) => {
-        const isCurrent = gameState.players[gameState.currentTurn]?.id === p.id;
-        const unoActive = p.cardCount === 1;
-        const avatarColor = avatarPalettes[idx % avatarPalettes.length];
-        const canCatchThis = ((this.clientView?.canCatchUnoTargets?.includes(p.id) || this.clientView?.canCatchUno === p.id) || (p.cardCount === 1 && !p.hasCalledUno && !p.isEliminated)) && p.id !== this.playerId;
+    this.renderOpponents(opponents, gameState);
 
-        let disconnectBadge = '';
-        if (!p.isConnected && p.disconnectedAt) {
-          const elapsedSec = Math.floor((Date.now() - p.disconnectedAt) / 1000);
-          const leftSec = Math.max(0, 60 - elapsedSec);
-          disconnectBadge = `<span class="disconnect-countdown-badge" data-disconnected-at="${p.disconnectedAt}" title="Disconnect grace period">DISCONNECTED (${leftSec}s)</span>`;
-        }
-
-        let unoStatusHtml = '';
-        if (unoActive && !p.isEliminated) {
-          if (p.hasCalledUno) {
-            unoStatusHtml = '<span class="uno-declared-badge" title="UNO Declared">UNO!</span>';
-          } else if (canCatchThis && gameState.status === 'playing') {
-            unoStatusHtml = `<button class="opponent-caught-btn" data-catch-target="${p.id}" type="button" title="Catch ${escapeHtml(p.name)}!">🚨 CAUGHT</button>`;
-          } else {
-            unoStatusHtml = '<span class="uno-alert-badge">1 CARD</span>';
-          }
-        }
-
-        // Realistic fan of actual UNO card backs underneath the badge (Screenshot 2)
-        let fanHtml = '';
-        if (!p.isEliminated && p.cardCount > 0) {
-          const fanCardsCount = Math.min(Math.max(p.cardCount, 1), 10);
-          fanHtml = '<div class="opponent-cards-fan" aria-hidden="true">';
-          const spread = fanCardsCount > 1 ? Math.min(30 / (fanCardsCount - 1), 5.5) : 0;
-          const startAngle = -((fanCardsCount - 1) * spread) / 2;
-          for (let c = 0; c < fanCardsCount; c++) {
-            const rot = startAngle + c * spread;
-            const xOffset = (c - (fanCardsCount - 1) / 2) * 17;
-            fanHtml += `<div class="opponent-fan-card opponent-card-back" data-card-index="${c}" style="transform: translateX(${xOffset.toFixed(1)}px) rotate(${rot.toFixed(1)}deg); z-index: ${c + 1};">
-              ${renderCardBackHTML(gameState.flipSide === 'dark', true, gameState.mode)}
-            </div>`;
-          }
-          fanHtml += '</div>';
-        }
-
-        return `
-          <div class="opponent-wrapper opponent-box" data-profile-id="${p.id}" data-player-id="${p.id}">
-            <div class="opponent-card-badge ${isCurrent ? 'active-turn' : ''} ${p.isEliminated ? 'eliminated' : ''}">
-              <div class="opponent-avatar" style="background: ${isCurrent ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : avatarColor};">
-                ${p.isBot ? '🤖' : escapeHtml(p.name.charAt(0).toUpperCase())}
-                ${isCurrent && gameState.status === 'playing' && !!gameState.turnDeadline ? `
-                  <div class="avatar-turn-timer-wrap" aria-label="Turn timer">
-                    <svg class="avatar-turn-ring" viewBox="0 0 54 54">
-                      <circle class="avatar-turn-bg" cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="4"></circle>
-                      <circle class="avatar-turn-circle" cx="27" cy="27" r="22" fill="none" stroke="#f0ba28" stroke-width="4" stroke-dasharray="138.23" stroke-dashoffset="0"></circle>
-                    </svg>
-                    <span class="avatar-turn-seconds"></span>
-                  </div>
-                ` : ''}
-              </div>
-              <div class="opponent-info">
-                <div class="opponent-name">
-                  ${escapeHtml(p.name)} ${p.isBot ? '<span class="mini-bot-tag" title="AI Bot">BOT</span>' : ''}
-                </div>
-                <div class="opponent-cards-count">
-                  ${p.isEliminated ? 'KNOCKED OUT' : `${p.cardCount} card${p.cardCount === 1 ? '' : 's'}${gameState.mode === 'classic' ? ` · ${p.score || 0} pts` : ''}`}
-                </div>
-                ${disconnectBadge}
-              </div>
-              ${unoStatusHtml}
-              ${gameState.mode === 'classic' && unoActive && p.hasCalledUno ? '<span class="classic-caught-failed" role="status">CAUGHT FAILED</span>' : ''}
-            </div>
-            ${fanHtml}
-          </div>
-        `;
-      })
-      .join('');
-
-    // Discard Pile
-    if (gameState.topDiscard) {
-      this.el.discardPile.innerHTML = renderCardHTML(gameState.topDiscard, {
-        mode: gameState.mode,
-        flipSide: gameState.flipSide,
-      });
-    } else {
-      this.el.discardPile.innerHTML = '';
+    // Keyed Discard Pile
+    const discardKey = gameState.topDiscard ? `${gameState.topDiscard.id}_${gameState.flipSide}_${gameState.mode}` : 'empty';
+    if (this.lastRenderedDiscardKey !== discardKey) {
+      this.lastRenderedDiscardKey = discardKey;
+      if (gameState.topDiscard) {
+        this.el.discardPile.innerHTML = renderCardHTML(gameState.topDiscard, {
+          mode: gameState.mode,
+          flipSide: gameState.flipSide,
+        });
+      } else {
+        this.el.discardPile.innerHTML = '';
+      }
     }
 
-    // Draw Pile
-    this.el.drawPile.innerHTML = renderCardBackHTML(
-      gameState.mode === 'flip' && gameState.flipSide === 'dark',
-      false,
-      gameState.mode,
-    );
+    // Keyed Draw Pile
+    const drawKey = `${gameState.mode}_${gameState.flipSide}`;
+    if (this.lastRenderedDrawKey !== drawKey) {
+      this.lastRenderedDrawKey = drawKey;
+      this.el.drawPile.innerHTML = renderCardBackHTML(
+        gameState.mode === 'flip' && gameState.flipSide === 'dark',
+        false,
+        gameState.mode,
+      );
+    }
     this.el.drawCountBadge.textContent = `${gameState.deckRemainingCount} CARDS`;
     this.el.drawPileBtn.disabled = !canDraw || (gameState.mode === 'classic' && !!gameState.pendingAction);
     this.el.drawPileBtn.setAttribute('aria-label', 'Draw one card from the deck');
@@ -2225,6 +2331,165 @@ class UnoArenaApp {
     if (gameState.status === 'game_over' || gameState.status === 'round_over') {
       this.showGameOver(gameState);
     }
+  }
+
+  renderOpponents(opponents, gameState) {
+    const avatarPalettes = ['#1e3a8a', '#065f46', '#78350f', '#831843', '#4c1d95'];
+    const activeIds = new Set(opponents.map((p) => p.id));
+
+    // 1. Prune removed opponents
+    for (const [id, el] of this.opponentElements.entries()) {
+      if (!activeIds.has(id)) {
+        el.remove();
+        this.opponentElements.delete(id);
+      }
+    }
+
+    // 2. Keyed update or creation
+    opponents.forEach((p, idx) => {
+      const isCurrent = gameState.players[gameState.currentTurn]?.id === p.id;
+      const unoActive = p.cardCount === 1;
+      const avatarColor = avatarPalettes[idx % avatarPalettes.length];
+      const canCatchThis =
+        ((this.clientView?.canCatchUnoTargets?.includes(p.id) || this.clientView?.canCatchUno === p.id) ||
+          (p.cardCount === 1 && !p.hasCalledUno && !p.isEliminated)) &&
+        p.id !== this.playerId;
+
+      let wrapper = this.opponentElements.get(p.id);
+      const isNew = !wrapper;
+      if (isNew) {
+        wrapper = document.createElement('div');
+        wrapper.className = 'opponent-wrapper opponent-box';
+        wrapper.dataset.profileId = p.id;
+        wrapper.dataset.playerId = p.id;
+        this.opponentElements.set(p.id, wrapper);
+        this.el.opponentsRow.appendChild(wrapper);
+      }
+
+      // Keep correct DOM child order
+      if (this.el.opponentsRow.children[idx] !== wrapper) {
+        this.el.opponentsRow.insertBefore(wrapper, this.el.opponentsRow.children[idx] || null);
+      }
+
+      let badge = wrapper.querySelector('.opponent-card-badge');
+      if (!badge) {
+        badge = document.createElement('div');
+        wrapper.appendChild(badge);
+      }
+      badge.className = `opponent-card-badge ${isCurrent ? 'active-turn' : ''} ${p.isEliminated ? 'eliminated' : ''}`;
+
+      // Avatar
+      let avatar = badge.querySelector('.opponent-avatar');
+      if (!avatar) {
+        avatar = document.createElement('div');
+        avatar.className = 'opponent-avatar';
+        badge.appendChild(avatar);
+      }
+      avatar.style.background = isCurrent ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : avatarColor;
+
+      const avatarChar = p.isBot ? '🤖' : escapeHtml(p.name.charAt(0).toUpperCase());
+      const needsTimer = isCurrent && gameState.status === 'playing' && !!gameState.turnDeadline;
+      let timerWrap = avatar.querySelector('.avatar-turn-timer-wrap');
+      if (needsTimer) {
+        if (!timerWrap) {
+          avatar.innerHTML = `${avatarChar}
+            <div class="avatar-turn-timer-wrap" aria-label="Turn timer">
+              <svg class="avatar-turn-ring" viewBox="0 0 54 54">
+                <circle class="avatar-turn-bg" cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="4"></circle>
+                <circle class="avatar-turn-circle" cx="27" cy="27" r="22" fill="none" stroke="#f0ba28" stroke-width="4" stroke-dasharray="138.23" stroke-dashoffset="0"></circle>
+              </svg>
+              <span class="avatar-turn-seconds"></span>
+            </div>`;
+        }
+      } else {
+        if (timerWrap) timerWrap.remove();
+        if (avatar.childNodes[0]?.nodeType === Node.TEXT_NODE) {
+          if (avatar.childNodes[0].textContent !== (p.isBot ? '🤖' : p.name.charAt(0).toUpperCase())) {
+            avatar.childNodes[0].textContent = p.isBot ? '🤖' : p.name.charAt(0).toUpperCase();
+          }
+        } else {
+          avatar.innerHTML = avatarChar;
+        }
+      }
+
+      // Info
+      let info = badge.querySelector('.opponent-info');
+      if (!info) {
+        info = document.createElement('div');
+        info.className = 'opponent-info';
+        badge.appendChild(info);
+      }
+      const countText = p.isEliminated
+        ? 'KNOCKED OUT'
+        : `${p.cardCount} card${p.cardCount === 1 ? '' : 's'}${gameState.mode === 'classic' ? ` · ${p.score || 0} pts` : ''}`;
+      const nameHtml = `${escapeHtml(p.name)} ${p.isBot ? '<span class="mini-bot-tag" title="AI Bot">BOT</span>' : ''}`;
+
+      let disconnectBadge = '';
+      if (!p.isConnected && p.disconnectedAt) {
+        const elapsedSec = Math.floor((Date.now() - p.disconnectedAt) / 1000);
+        const leftSec = Math.max(0, 60 - elapsedSec);
+        disconnectBadge = `<span class="disconnect-countdown-badge" data-disconnected-at="${p.disconnectedAt}" title="Disconnect grace period">DISCONNECTED (${leftSec}s)</span>`;
+      }
+      info.innerHTML = `
+        <div class="opponent-name">${nameHtml}</div>
+        <div class="opponent-cards-count">${countText}</div>
+        ${disconnectBadge}
+      `;
+
+      // UNO status
+      let unoStatusSlot = badge.querySelector('.uno-status-slot');
+      if (!unoStatusSlot) {
+        unoStatusSlot = document.createElement('div');
+        unoStatusSlot.className = 'uno-status-slot';
+        badge.appendChild(unoStatusSlot);
+      }
+      let unoStatusHtml = '';
+      if (unoActive && !p.isEliminated) {
+        if (p.hasCalledUno) {
+          unoStatusHtml = '<span class="uno-declared-badge" title="UNO Declared">UNO!</span>';
+        } else if (canCatchThis && gameState.status === 'playing') {
+          unoStatusHtml = `<button class="opponent-caught-btn" data-catch-target="${p.id}" type="button" title="Catch ${escapeHtml(p.name)}!">🚨 CAUGHT</button>`;
+        } else {
+          unoStatusHtml = '<span class="uno-alert-badge">1 CARD</span>';
+        }
+      }
+      if (gameState.mode === 'classic' && unoActive && p.hasCalledUno) {
+        unoStatusHtml += '<span class="classic-caught-failed" role="status">CAUGHT FAILED</span>';
+      }
+      if (unoStatusSlot.innerHTML !== unoStatusHtml) {
+        unoStatusSlot.innerHTML = unoStatusHtml;
+      }
+
+      // Fan cards: only recalculate if count, flipSide, or mode changed
+      const fanKey = `${p.cardCount}_${gameState.flipSide}_${gameState.mode}_${p.isEliminated}`;
+      if (wrapper.dataset.renderedFanKey !== fanKey) {
+        wrapper.dataset.renderedFanKey = fanKey;
+        let fanEl = wrapper.querySelector('.opponent-cards-fan');
+        if (p.isEliminated || p.cardCount <= 0) {
+          if (fanEl) fanEl.remove();
+        } else {
+          if (!fanEl) {
+            fanEl = document.createElement('div');
+            fanEl.className = 'opponent-cards-fan';
+            fanEl.setAttribute('aria-hidden', 'true');
+            wrapper.appendChild(fanEl);
+          }
+          const fanCardsCount = Math.min(Math.max(p.cardCount, 1), 10);
+          fanEl.innerHTML = '';
+          const spread = fanCardsCount > 1 ? Math.min(30 / (fanCardsCount - 1), 5.5) : 0;
+          const startAngle = -((fanCardsCount - 1) * spread) / 2;
+          let fanInner = '';
+          for (let c = 0; c < fanCardsCount; c++) {
+            const rot = startAngle + c * spread;
+            const xOffset = (c - (fanCardsCount - 1) / 2) * 17;
+            fanInner += `<div class="opponent-fan-card opponent-card-back" data-card-index="${c}" style="transform: translateX(${xOffset.toFixed(1)}px) rotate(${rot.toFixed(1)}deg); z-index: ${c + 1};">
+              ${renderCardBackHTML(gameState.flipSide === 'dark', true, gameState.mode)}
+            </div>`;
+          }
+          fanEl.innerHTML = fanInner;
+        }
+      }
+    });
   }
 
   renderPlayerHand(hand, canPlayIds, mode, flipSide) {
@@ -2371,6 +2636,12 @@ class UnoArenaApp {
     this.activeTurnStatus = status;
     this.activeTurnIsMyTurn = Boolean(isMyTurn);
 
+    let ringCircles = Array.from(document.querySelectorAll('.avatar-turn-circle'));
+    let ringSvgs = Array.from(document.querySelectorAll('.avatar-turn-ring'));
+    let secondsEls = Array.from(document.querySelectorAll('.avatar-turn-seconds'));
+    let discBadges = Array.from(document.querySelectorAll('.disconnect-countdown-badge'));
+    let lastQuery = Date.now();
+
     const tick = () => {
       if (this.activeTurnStatus !== 'playing' || !this.activeTurnDeadline) {
         if (this.turnTimerInterval) {
@@ -2381,34 +2652,45 @@ class UnoArenaApp {
       }
 
       const now = Date.now();
+      // Periodically refresh cached element refs in case badges were dynamically added
+      if (now - lastQuery > 1000) {
+        ringCircles = Array.from(document.querySelectorAll('.avatar-turn-circle'));
+        ringSvgs = Array.from(document.querySelectorAll('.avatar-turn-ring'));
+        secondsEls = Array.from(document.querySelectorAll('.avatar-turn-seconds'));
+        discBadges = Array.from(document.querySelectorAll('.disconnect-countdown-badge'));
+        lastQuery = now;
+      }
+
       const remainingMs = Math.max(0, this.activeTurnDeadline - now);
       const durationMs = 30000;
       const fraction = Math.max(0, Math.min(1, remainingMs / durationMs));
       const remainingSec = Math.ceil(remainingMs / 1000);
       const ringOffset = (138.23 * (1 - fraction)).toFixed(2);
+      const isCritical = remainingMs <= 7000;
 
       // Update disconnect countdown badges
-      document.querySelectorAll('.disconnect-countdown-badge').forEach(badge => {
+      for (let i = 0; i < discBadges.length; i++) {
+        const badge = discBadges[i];
         const discAt = Number(badge.dataset.disconnectedAt);
         if (discAt) {
           const leftSec = Math.max(0, 60 - Math.floor((now - discAt) / 1000));
           badge.textContent = `DISCONNECTED (${leftSec}s)`;
         }
-      });
+      }
 
       // Update the single active player's avatar turn ring
-      const ringCircles = document.querySelectorAll('.avatar-turn-circle');
-      ringCircles.forEach(circle => {
-        circle.style.strokeDashoffset = ringOffset;
-      });
-      const ringSvgs = document.querySelectorAll('.avatar-turn-ring');
-      ringSvgs.forEach(svg => {
-        svg.classList.toggle('timer-critical', remainingMs <= 7000);
-      });
-      const secondsEls = document.querySelectorAll('.avatar-turn-seconds');
-      secondsEls.forEach(el => {
-        el.textContent = `${remainingSec}s`;
-      });
+      for (let i = 0; i < ringCircles.length; i++) {
+        ringCircles[i].style.strokeDashoffset = ringOffset;
+      }
+      for (let i = 0; i < ringSvgs.length; i++) {
+        ringSvgs[i].classList.toggle('timer-critical', isCritical);
+      }
+      const secStr = `${remainingSec}s`;
+      for (let i = 0; i < secondsEls.length; i++) {
+        if (secondsEls[i].textContent !== secStr) {
+          secondsEls[i].textContent = secStr;
+        }
+      }
     };
 
     tick();

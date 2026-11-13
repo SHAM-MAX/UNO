@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>UNO Arena - Online Multiplayer Card Game</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#2b180d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="./home.css">
   <link rel="stylesheet" href="./lobby.css">
@@ -28,6 +32,10 @@
       <span id="navRoomCode" class="room-code-badge" style="display: none; font-size: 0.95rem; padding: 4px 10px;"></span>
       <span id="navModeTag" class="mode-tag classic" style="display: none;">CLASSIC</span>
       
+      <button id="fullscreenToggleBtn" class="nav-btn" type="button" title="Toggle Fullscreen / Landscape" aria-label="Toggle Fullscreen">
+        <span id="fullscreenIcon">⛶</span>
+      </button>
+
       <button id="soundToggleBtn" class="nav-btn" title="Toggle Sound">
         <span id="soundIcon">🔊</span>
       </button>
@@ -74,6 +82,7 @@
                     <input id="playerNameInput" type="text" placeholder="Player 1" maxlength="15" autocomplete="nickname" aria-label="Player name">
                   </label>
                   <div class="home-create-actions">
+                    <button id="quickMatchBtn" class="home-button home-quick" type="button" title="Play Quick Match immediately with online players">QUICK MATCH ⚡</button>
                     <button id="createRoomBtn" class="home-button home-create">CREATE ROOM <span>→</span></button>
                     <button id="playVsAiBtn" class="home-button home-ai" type="button" title="Play instantly against AI bots">PLAY VS AI 🤖</button>
                   </div>
@@ -229,6 +238,7 @@
               <span class="mobile-brand-arena">ARENA</span>
             </div>
             <div class="mobile-nav-actions">
+              <button id="mobileNavFullscreenBtn" class="mobile-nav-action-btn" type="button" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">⛶</button>
               <button id="mobileNavSoundBtn" class="mobile-nav-action-btn" type="button" aria-label="Toggle Sound" title="Toggle Sound">🔊</button>
               <button id="mobileNavRulesBtn" class="mobile-nav-action-btn" type="button" aria-label="Game Rules" title="Game Rules">📖 RULES</button>
             </div>
@@ -245,6 +255,7 @@
               <div id="mobileFormWrap" class="mobile-form-wrap">
                 <div id="mobileDefaultForm" class="mobile-form-controls">
                   <label class="mobile-name-field"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><input id="mobilePlayerNameInput" class="mobile-control mobile-form-input-name" type="text" placeholder="Guest" maxlength="15" autocomplete="nickname" aria-label="Your player name" /></label>
+                  <button id="mobileQuickMatchBtn" class="mobile-control mobile-form-btn-quick" type="button" title="Play Quick Match immediately with online players">QUICK MATCH ⚡</button>
                   <button id="mobileCreateRoomBtn" class="mobile-control mobile-form-btn-create" type="button">CREATE A ROOM <span aria-hidden="true">&#8594;</span></button>
                   <button id="mobilePlayVsAiBtn" class="mobile-control mobile-form-btn-ai" type="button" title="Play instantly against AI bots">PLAY VS AI 🤖</button>
                   <div class="mobile-form-divider"><span></span><b>OR JOIN FRIENDS</b><span></span></div>
@@ -564,8 +575,11 @@
     <!-- 2. ARENA MULTIPLAYER TABLE VIEW (Realistic Tabletop UI) -->
     <div id="arenaView" class="arena-container" style="display: none;">
       
-      <!-- Decorative Tabletop Items (Screenshot 2 Environment) -->
-      <!-- Decorative Tabletop Items removed for clean gameplay screen -->
+      <!-- Dedicated Floating Fullscreen Button for Arena -->
+      <button id="arenaFullscreenBtn" class="arena-fullscreen-btn" type="button" title="Toggle Fullscreen / Landscape" aria-label="Toggle Fullscreen">
+        <span class="arena-fs-icon">⛶</span>
+        <span class="arena-fs-text">FULLSCREEN</span>
+      </button>
 
       <!-- Opponents Row -->
       <div id="opponentsRow" class="opponents-row"></div>
@@ -1007,6 +1021,29 @@
       <div class="caught-failed-icon">⚠️</div>
       <div class="caught-failed-title">CAUGHT FAILED!</div>
       <div id="caughtFailedMsg" class="caught-failed-message">Player already called UNO.</div>
+    </div>
+  </div>
+
+  <!-- ACTION MODAL: QUICK MATCH SEARCHING OVERLAY -->
+  <div id="quickMatchModal" class="modal-overlay quick-match-overlay" role="dialog" aria-modal="true" aria-labelledby="quickMatchTitle" style="display: none;">
+    <div class="modal-card quick-match-card">
+      <div class="quick-match-header">
+        <span class="color-picker-badge">UNO ARENA</span>
+        <h3 id="quickMatchTitle" class="quick-match-title">FINDING MATCH...</h3>
+        <p class="quick-match-subtitle">Searching for players in <strong id="quickMatchModeBadge" class="qm-mode-badge">CLASSIC</strong> mode</p>
+      </div>
+      <div class="quick-match-radar" aria-hidden="true">
+        <div class="qm-pulse-circle c1"></div>
+        <div class="qm-pulse-circle c2"></div>
+        <div class="qm-pulse-circle c3"></div>
+        <div class="qm-center-icon">⚡</div>
+      </div>
+      <div class="quick-match-status-text">
+        <span id="quickMatchTimer">00:03</span> · Searching public tables
+      </div>
+      <div class="quick-match-actions">
+        <button id="cancelQuickMatchBtn" class="action-btn qm-cancel-btn" type="button">CANCEL</button>
+      </div>
     </div>
   </div>
 

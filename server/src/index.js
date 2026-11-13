@@ -133,6 +133,17 @@ app.post('/api/rooms/bot', (req, res) => {
   }
 });
 
+// Quick Match REST endpoint
+app.post('/api/rooms/quick-match', (req, res) => {
+  const { playerName, mode } = req.body;
+  try {
+    const result = roomManager.joinOrCreateQuickMatch(playerName, mode);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
 // Join Room REST endpoint
 app.post('/api/rooms/join', (req, res) => {
   const { roomId, playerName, sessionToken } = req.body;
@@ -234,6 +245,35 @@ wss.on('connection', (ws, req) => {
           broadcastRoomState(created.roomId);
         } catch (err) {
           sendError(ws, err.message || 'Could not start AI game.');
+        }
+        return;
+      }
+
+      if (type === 'quick_match') {
+        if (clientSockets.has(ws)) {
+          sendError(ws, 'This connection has already joined a room.');
+          return;
+        }
+        try {
+          const matched = roomManager.joinOrCreateQuickMatch(playerName || 'Player', data?.mode || 'classic');
+          playerId = matched.playerId;
+          roomManager.attachSocket(matched.roomId, playerId, ws);
+          clientSockets.set(ws, { roomId: matched.roomId, playerId });
+          ws.send(JSON.stringify({ type: 'joined', data: matched }));
+          broadcastRoomState(matched.roomId);
+        } catch (err) {
+          sendError(ws, err.message || 'Could not find quick match.');
+        }
+        return;
+      }
+
+      if (type === 'cancel_quick_match') {
+        const authenticated = clientSockets.get(ws);
+        if (authenticated) {
+          roomManager.leaveRoom(authenticated.roomId, authenticated.playerId);
+          clientSockets.delete(ws);
+          ws.send(JSON.stringify({ type: 'quick_match_cancelled' }));
+          broadcastRoomState(authenticated.roomId);
         }
         return;
       }

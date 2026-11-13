@@ -4219,3 +4219,396 @@ body.no-mercy-arena .table-action-bar:not(:has(#btnViewVictory:not([style*="disp
   transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.22s ease-out;
   will-change: transform, opacity;
 }
+
+
+/* ==========================================================================
+   QUICK MATCH MODAL (Rich Tabletop Palette)
+   ========================================================================== */
+.quick-match-overlay {
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.88) 0%, rgba(5, 10, 20, 0.96) 100%) !important;
+  backdrop-filter: blur(8px);
+}
+.quick-match-card {
+  max-width: 420px;
+  width: 90%;
+  background: radial-gradient(circle at 50% 20%, #3e1b12 0%, #1e0905 85%) !important;
+  border: 3px solid #d4af37 !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.35) !important;
+  color: #fff9ea;
+  text-align: center;
+  padding: 30px 24px;
+  border-radius: 24px;
+  position: relative;
+}
+.quick-match-title {
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  margin: 10px 0 4px;
+  color: #fde047;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+.quick-match-subtitle {
+  font-size: 0.88rem;
+  color: #e2e8f0;
+  margin-bottom: 22px;
+}
+.qm-mode-badge {
+  background: #f59e0b;
+  color: #1e1b18;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 900;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+.quick-match-radar {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qm-pulse-circle {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(245, 158, 11, 0.7);
+  animation: qmRadarPulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+.qm-pulse-circle.c2 {
+  animation-delay: 0.6s;
+}
+.qm-pulse-circle.c3 {
+  animation-delay: 1.2s;
+}
+.qm-center-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #1e1b18;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.8);
+  z-index: 2;
+  animation: qmCenterBounce 1.5s ease-in-out infinite alternate;
+}
+@keyframes qmRadarPulse {
+  0% { transform: scale(0.35); opacity: 1; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+@keyframes qmCenterBounce {
+  0% { transform: scale(0.94); }
+  100% { transform: scale(1.06); }
+}
+.quick-match-status-text {
+  font-size: 0.85rem;
+  color: #fde047;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+.qm-cancel-btn {
+  background: #374151;
+  color: #f3f4f6;
+  border: 1px solid #6b7280;
+  padding: 10px 28px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+.qm-cancel-btn:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   DEDICATED ARENA FULLSCREEN SHORTCUT BUTTON
+   ========================================================================== */
+.arena-fullscreen-btn {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 70;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(180deg, #fdfbf7 0%, #f4ede0 100%);
+  border: 1.5px solid #d4b982;
+  border-radius: 12px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #1e293b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.arena-fullscreen-btn:hover {
+  transform: translateY(-1px) scale(1.02);
+  filter: brightness(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+.arena-fullscreen-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+.arena-fullscreen-btn .arena-fs-icon {
+  font-size: 1rem;
+  color: #b45309;
+}
+body.is-fullscreen .arena-fullscreen-btn .arena-fs-text {
+  content: "EXIT FULLSCREEN";
+}
+
+/* ==========================================================================
+   MOBILE FULLSCREEN & RESPONSIVE LANDSCAPE BOARD ARCHITECTURE
+   ========================================================================== */
+@media (orientation: landscape) and (max-height: 540px), (max-height: 520px) and (min-width: 600px) {
+  body.in-arena {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  .in-arena .top-nav {
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 2px 10px !important;
+    margin: 2px auto !important;
+    border-radius: 10px !important;
+  }
+
+  .in-arena .brand-logo {
+    font-size: 1.15rem !important;
+    gap: 6px !important;
+  }
+
+  .in-arena .logo-badge {
+    font-size: 1.15rem !important;
+  }
+
+  .in-arena .nav-btn {
+    padding: 3px 8px !important;
+    font-size: 0.78rem !important;
+    min-height: 28px !important;
+  }
+
+  .in-arena #navRoomCode,
+  .in-arena #navModeTag {
+    padding: 3px 8px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .arena-fullscreen-btn {
+    top: 6px !important;
+    right: 10px !important;
+    padding: 4px 10px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .in-arena .main-content {
+    min-height: calc(100vh - 42px) !important;
+    height: calc(100vh - 42px) !important;
+    max-height: calc(100vh - 42px) !important;
+    overflow: hidden !important;
+  }
+
+  .in-arena .arena-container {
+    padding: 2px 8px 4px !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important;
+  }
+
+  /* Compact Horizontal Opponents Row */
+  .in-arena .opponents-row {
+    min-height: 48px !important;
+    margin: 0 0 2px 0 !important;
+    padding: 2px 0 !important;
+    gap: 8px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+  .in-arena .opponent-wrapper {
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+    gap: 2px !important;
+  }
+
+  .in-arena .opponent-card-badge {
+    padding: 2px 8px !important;
+    gap: 6px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .in-arena .opponent-avatar {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .in-arena .opponent-name {
+    font-size: 0.75rem !important;
+    max-width: 72px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .in-arena .opponent-cards-count {
+    font-size: 0.68rem !important;
+  }
+
+  .in-arena .opponent-cards-fan {
+    display: none !important;
+  }
+
+  /* Center Playing Table Felt */
+  .in-arena .center-table {
+    min-height: 125px !important;
+    height: clamp(120px, 34vh, 165px) !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 1 auto !important;
+  }
+
+  .in-arena .table-felt {
+    width: min(94%, 680px) !important;
+    height: clamp(120px, 34vh, 165px) !important;
+    border-radius: 75px !important;
+    border-width: 6px !important;
+    gap: 20px !important;
+    outline-offset: -6px !important;
+  }
+
+  .in-arena .pile-container {
+    min-width: 50px !important;
+  }
+
+  .in-arena .draw-pile-btn,
+  .in-arena #discardPile .game-card,
+  .in-arena #drawPile .game-card {
+    width: 50px !important;
+    height: 72px !important;
+  }
+
+  .in-arena .direction-indicator {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 16px !important;
+    top: -10px !important;
+  }
+
+  .in-arena .orbital-direction-track {
+    display: none !important;
+  }
+
+  .in-arena .table-action-bar {
+    position: absolute !important;
+    bottom: -14px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    display: flex !important;
+    gap: 6px !important;
+    z-index: 40 !important;
+    width: max-content !important;
+    max-width: 95% !important;
+  }
+
+  .in-arena .table-action-bar .action-btn {
+    min-height: 32px !important;
+    padding: 3px 10px !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Player Bottom Area & Hand Cards */
+  .in-arena .player-bottom-area {
+    margin-top: 0 !important;
+    padding-bottom: max(2px, env(safe-area-inset-bottom)) !important;
+    flex: 0 0 auto !important;
+    position: relative !important;
+  }
+
+  .in-arena .card-rack-container {
+    padding: 2px 0 0 0 !important;
+    min-height: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .in-arena .card-rack-groove {
+    padding: 0 !important;
+    min-height: 0 !important;
+    background: transparent !important;
+  }
+
+  .in-arena .card-rack-lip {
+    display: none !important;
+  }
+
+  .in-arena .hand-cards .card-wrapper {
+    height: clamp(66px, 20vh, 88px) !important;
+    aspect-ratio: 355/502 !important;
+  }
+
+  .in-arena .hand-cards .game-card {
+    height: 100% !important;
+    width: 100% !important;
+    border-radius: 6px !important;
+  }
+
+  .in-arena .local-player-profile {
+    position: absolute !important;
+    left: 8px !important;
+    bottom: 6px !important;
+    z-index: 50 !important;
+    padding: 3px 8px !important;
+    font-size: 10px !important;
+    border-radius: 8px !important;
+    background: rgba(15, 23, 42, 0.88) !important;
+  }
+
+  .in-arena .local-avatar {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 10px !important;
+  }
+
+  .in-arena .contextual-uno-container {
+    position: absolute !important;
+    right: 8px !important;
+    bottom: 6px !important;
+    z-index: 50 !important;
+  }
+
+  .in-arena .btn-call-uno-contextual {
+    min-height: 32px !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+  }
+}

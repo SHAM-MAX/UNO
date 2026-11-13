@@ -1,0 +1,30 @@
+{
+  "name": "UNO Arena",
+  "short_name": "UNO Arena",
+  "description": "Authentic real-time multiplayer UNO card arena featuring Classic, Flip, and Show 'Em No Mercy modes.",
+  "start_url": "/",
+  "id": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "theme_color": "#2b180d",
+  "background_color": "#2b180d",
+  "categories": ["games", "entertainment"],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "icons": [
+    {
+      "src": "./assets/game-modes/classic-card.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/game-modes/classic-card.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
