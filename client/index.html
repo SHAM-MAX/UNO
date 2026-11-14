@@ -189,6 +189,21 @@
                   </div>
                 </div>
 
+                <!-- Section 3: Game Rules -->
+                <div class="ai-form-section ai-rules-section">
+                  <div class="ai-section-heading">
+                    <span class="ai-num-badge">3</span>
+                    <span class="ai-section-title">GAME RULES</span>
+                    <div class="ai-rules-heading-actions">
+                      <span id="aiRulesStatusBadge" class="ai-rules-status-badge">Official Rules</span>
+                      <button id="aiCustomizeRulesBtn" class="ai-customize-rules-btn" type="button" aria-label="Customize game rules">⚙️ Customize</button>
+                    </div>
+                  </div>
+                  <div id="aiRulesSummaryPill" class="ai-rules-summary-pill">
+                    <span id="aiRulesSummaryText">Missed UNO: 2 cards · Starting hand: 7 · Turn: 30s</span>
+                  </div>
+                </div>
+
                 <!-- Divider & Actions -->
                 <div class="ai-form-footer">
                   <div class="ai-form-divider" aria-hidden="true"></div>
@@ -351,6 +366,21 @@
                           <span class="ai-check-badge" aria-hidden="true">✓</span>
                         </button>
                       </div>
+                    </div>
+                  </div>
+
+                  <!-- Section 3: Game Rules -->
+                  <div class="ai-form-section ai-rules-section">
+                    <div class="ai-section-heading">
+                      <span class="ai-num-badge">3</span>
+                      <span class="ai-section-title">GAME RULES</span>
+                      <div class="ai-rules-heading-actions">
+                        <span id="mobileAiRulesStatusBadge" class="ai-rules-status-badge">Official Rules</span>
+                        <button id="mobileAiCustomizeRulesBtn" class="ai-customize-rules-btn" type="button" aria-label="Customize game rules">⚙️ Customize</button>
+                      </div>
+                    </div>
+                    <div id="mobileAiRulesSummaryPill" class="ai-rules-summary-pill">
+                      <span id="mobileAiRulesSummaryText">Missed UNO: 2 cards · Starting hand: 7 · Turn: 30s</span>
                     </div>
                   </div>
 
@@ -929,6 +959,270 @@
       <button id="rematchCloseBtn" class="rematch-close" type="button" aria-label="Close rematch invitation">×</button>
       <div id="rematchProposalContent"></div>
     </section>
+  </div>
+
+  <!-- MODAL: SETTINGS -> GAME RULES -->
+  <div id="gameRulesModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="gameRulesModalTitle">
+    <div class="modal-card game-rules-modal-card">
+      <div class="modal-header">
+        <div class="rules-modal-title-wrap">
+          <h3 id="gameRulesModalTitle" class="modal-title">⚙️ Game Rules &amp; Settings</h3>
+          <span id="gameRulesModeBadge" class="rules-mode-badge">CLASSIC UNO</span>
+          <span id="gameRulesTypeBadge" class="rules-type-badge">Official Rules</span>
+        </div>
+        <button id="gameRulesModalClose" class="modal-close-btn" type="button" aria-label="Close rules settings">&times;</button>
+      </div>
+
+      <!-- Mode Selector Tabs (Visible when editing outside a match) -->
+      <div id="gameRulesModeTabs" class="rule-tabs">
+        <button class="rule-tab-btn active" data-rules-mode="classic" type="button">Classic UNO</button>
+        <button class="rule-tab-btn" data-rules-mode="flip" type="button">UNO Flip</button>
+        <button class="rule-tab-btn" data-rules-mode="no_mercy" type="button">Show 'em No Mercy</button>
+      </div>
+
+      <!-- Status Banners -->
+      <div id="rulesLockedBanner" class="rules-status-banner banner-locked" hidden>
+        <span class="banner-icon">🔒</span>
+        <span class="banner-text"><strong>Match in progress:</strong> Game rules are locked and view-only.</span>
+      </div>
+      <div id="rulesGuestBanner" class="rules-status-banner banner-guest" hidden>
+        <span class="banner-icon">👑</span>
+        <span class="banner-text"><strong>Host controls:</strong> Only the room host can modify game rules.</span>
+      </div>
+
+      <div class="modal-body rules-modal-body">
+        <!-- Section: Common Settings -->
+        <div class="rules-group">
+          <h4 class="rules-group-heading">General Rules (All Modes)</h4>
+
+          <!-- Missed UNO Penalty (MANDATORY FEATURE) -->
+          <div class="rule-setting-row" id="ruleRowMissedUno">
+            <div class="rule-setting-info">
+              <label for="ruleMissedUnoPenalty" class="rule-setting-label">Missed UNO penalty</label>
+              <p class="rule-setting-desc">Cards drawn when another player catches someone who did not call UNO.</p>
+            </div>
+            <div class="rule-setting-control">
+              <select id="ruleMissedUnoPenalty" class="rule-select" aria-label="Missed UNO penalty cards">
+                <option value="1">1 card</option>
+                <option value="2" selected>2 cards (Official Default)</option>
+                <option value="3">3 cards</option>
+                <option value="4">4 cards</option>
+                <option value="5">5 cards</option>
+                <option value="6">6 cards</option>
+                <option value="7">7 cards</option>
+                <option value="8">8 cards</option>
+                <option value="9">9 cards</option>
+                <option value="10">10 cards (Extreme)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Starting Hand Size -->
+          <div class="rule-setting-row" id="ruleRowHandSize">
+            <div class="rule-setting-info">
+              <label for="ruleStartingHandSize" class="rule-setting-label">Starting hand size</label>
+              <p class="rule-setting-desc">Number of cards dealt to each player at the start of each round.</p>
+            </div>
+            <div class="rule-setting-control">
+              <select id="ruleStartingHandSize" class="rule-select" aria-label="Starting hand size">
+                <option value="3">3 cards (Fast round)</option>
+                <option value="4">4 cards</option>
+                <option value="5">5 cards (Short)</option>
+                <option value="6">6 cards</option>
+                <option value="7" selected>7 cards (Official Default)</option>
+                <option value="8">8 cards</option>
+                <option value="9">9 cards</option>
+                <option value="10">10 cards (Deep battle)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Turn Duration -->
+          <div class="rule-setting-row" id="ruleRowTurnDuration">
+            <div class="rule-setting-info">
+              <label for="ruleTurnDuration" class="rule-setting-label">Turn duration</label>
+              <p class="rule-setting-desc">Time allowed per turn before auto-play or pass.</p>
+            </div>
+            <div class="rule-setting-control">
+              <select id="ruleTurnDuration" class="rule-select" aria-label="Turn duration">
+                <option value="15">15 seconds (Blitz ⚡)</option>
+                <option value="30" selected>30 seconds (Standard)</option>
+                <option value="45">45 seconds (Relaxed)</option>
+                <option value="60">60 seconds (Slow)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Mode-Specific Rules Container -->
+        <div class="rules-group" id="rulesModeSpecificGroup">
+          <h4 id="rulesModeSpecificHeading" class="rules-group-heading">Mode-Specific Rules</h4>
+
+          <!-- Classic: Draw-card Stacking -->
+          <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicStacking">
+            <div class="rule-setting-info">
+              <span class="rule-setting-label">Draw-card stacking</span>
+              <p class="rule-setting-desc">Stack Draw Two on Draw Two, or Wild Draw Four on Wild Draw Four.</p>
+            </div>
+            <div class="rule-setting-control">
+              <label class="rule-toggle">
+                <input type="checkbox" id="ruleClassicStacking">
+                <span class="rule-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Classic: Draw Behavior -->
+          <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicDraw">
+            <div class="rule-setting-info">
+              <label for="ruleClassicDrawBehavior" class="rule-setting-label">Draw behavior</label>
+              <p class="rule-setting-desc">Choose between drawing a single card or drawing until playable.</p>
+            </div>
+            <div class="rule-setting-control">
+              <select id="ruleClassicDrawBehavior" class="rule-select">
+                <option value="false" selected>Draw One (Official)</option>
+                <option value="true">Draw Until Playable (House Rule)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Classic: 7-0 Hand Swap & Pass -->
+          <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicSevenZero">
+            <div class="rule-setting-info">
+              <span class="rule-setting-label">7-0 Hand Swap &amp; Pass</span>
+              <p class="rule-setting-desc">Playing a 7 swaps hands with chosen player; 0 shifts hands in play direction.</p>
+            </div>
+            <div class="rule-setting-control">
+              <label class="rule-toggle">
+                <input type="checkbox" id="ruleClassicSevenZero">
+                <span class="rule-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Classic: Wild Draw 4 Challenge -->
+          <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicWd4Challenge">
+            <div class="rule-setting-info">
+              <span class="rule-setting-label">Wild Draw Four challenge</span>
+              <p class="rule-setting-desc">Allow recipient to challenge if player held a matching color.</p>
+            </div>
+            <div class="rule-setting-control">
+              <label class="rule-toggle">
+                <input type="checkbox" id="ruleClassicWd4Challenge" checked>
+                <span class="rule-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Flip: Draw-card Stacking -->
+          <div class="rule-setting-row mode-setting mode-flip" id="ruleRowFlipStacking" style="display: none;">
+            <div class="rule-setting-info">
+              <span class="rule-setting-label">Draw-card stacking</span>
+              <p class="rule-setting-desc">Stack Draw 1 on Light side, or Draw 5 on Dark side.</p>
+            </div>
+            <div class="rule-setting-control">
+              <label class="rule-toggle">
+                <input type="checkbox" id="ruleFlipStacking">
+                <span class="rule-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Flip: Draw Behavior -->
+          <div class="rule-setting-row mode-setting mode-flip" id="ruleRowFlipDraw" style="display: none;">
+            <div class="rule-setting-info">
+              <label for="ruleFlipDrawBehavior" class="rule-setting-label">Draw behavior</label>
+              <p class="rule-setting-desc">Voluntary draw 1 card vs draw until finding a playable card.</p>
+            </div>
+            <div class="rule-setting-control">
+              <select id="ruleFlipDrawBehavior" class="rule-select">
+                <option value="false" selected>Draw One (Official)</option>
+                <option value="true">Draw Until Playable (House Rule)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- No Mercy: Penalty Stacking -->
+          <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmStacking" style="display: none;">
+            <div class="rule-setting-info">
+              <span class="rule-setting-label">Penalty stacking</span>
+              <p class="rule-setting-desc">Stack equal or higher draw cards (+2, +4, +6, +10) to pass penalty.</p>
+            </div>
+            <div class="rule-setting-control">
+              <label class="rule-toggle">
+                <input type="checkbox" id="ruleNmStacking" checked>
+                <span class="rule-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- No Mercy: Draw Behavior -->
+          <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmDraw" style="display: none;">
+            <div class="rule-setting-info">
+              <label for="ruleNmDrawBehavior" class="rule-setting-label">Draw behavior</label>
+              <p class="rule-setting-desc">Draw until finding a playable card (or draw 1 card if toggled).</p>
+            </div>
+            <div class="rule-setting-control">
+              <select id="ruleNmDrawBehavior" class="rule-select">
+                <option value="true" selected>Draw Until Playable (Official)</option>
+                <option value="false">Draw One (House Rule)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- No Mercy: 7-Swap and 0-Pass -->
+          <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmSevenZero" style="display: none;">
+            <div class="rule-setting-info">
+              <span class="rule-setting-label">7-Swap &amp; 0-Pass</span>
+              <p class="rule-setting-desc">7 swaps hands with chosen player; 0 passes hands in direction of play.</p>
+            </div>
+            <div class="rule-setting-control">
+              <label class="rule-toggle">
+                <input type="checkbox" id="ruleNmSevenZero" checked>
+                <span class="rule-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- No Mercy: Mercy Knockout -->
+          <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmKnockout" style="display: none;">
+            <div class="rule-setting-info">
+              <span class="rule-setting-label">Mercy Knockout</span>
+              <p class="rule-setting-desc">Instantly eliminate any player whose hand reaches the knockout limit.</p>
+            </div>
+            <div class="rule-setting-control">
+              <label class="rule-toggle">
+                <input type="checkbox" id="ruleNmKnockout" checked>
+                <span class="rule-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- No Mercy: Knockout Limit -->
+          <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmKnockoutLimit" style="display: none;">
+            <div class="rule-setting-info">
+              <label for="ruleNmKnockoutLimit" class="rule-setting-label">Knockout hand limit</label>
+              <p class="rule-setting-desc">Hand size that triggers immediate elimination.</p>
+            </div>
+            <div class="rule-setting-control">
+              <select id="ruleNmKnockoutLimit" class="rule-select">
+                <option value="20">20 cards (Short)</option>
+                <option value="25" selected>25 cards (Official Standard)</option>
+                <option value="30">30 cards</option>
+                <option value="35">35 cards (House rule)</option>
+                <option value="45">45 cards (Extreme endurance)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="modal-footer rules-modal-footer">
+        <button id="ruleRestoreDefaultsBtn" class="rule-btn-secondary" type="button">↺ Restore default rules</button>
+        <button id="ruleApplyBtn" class="rule-btn-primary" type="button">Done ✓</button>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL: HOW TO PLAY GUIDE -->

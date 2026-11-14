@@ -1355,3 +1355,310 @@ body::before {
   }
 }
 
+
+/* ==========================================================================
+   SETTINGS -> GAME RULES MODAL & CONTROLS
+   ========================================================================== */
+.game-rules-modal-card {
+  max-width: 660px;
+  width: 95%;
+  background: linear-gradient(135deg, #24140b 0%, #170d07 100%);
+  border: 2px solid #d4af37;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 30px rgba(212, 175, 55, 0.2);
+  color: #f8fafc;
+  padding: 20px clamp(16px, 3vw, 28px);
+}
+
+.rules-modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rules-mode-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.rules-type-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid #10b981;
+  color: #34d399;
+}
+
+.rules-type-badge.is-custom {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+
+.rules-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  margin-bottom: 14px;
+}
+
+.rules-status-banner.banner-locked {
+  background: rgba(185, 28, 28, 0.15);
+  border: 1px solid #dc2626;
+  color: #fca5a5;
+}
+
+.rules-status-banner.banner-guest {
+  background: rgba(217, 119, 6, 0.15);
+  border: 1px solid #f59e0b;
+  color: #fde68a;
+}
+
+.rules-modal-body {
+  overflow-y: auto;
+  max-height: clamp(340px, 58vh, 520px);
+  padding-right: 6px;
+  margin-bottom: 16px;
+}
+
+.rules-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+.rules-modal-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+}
+.rules-modal-body::-webkit-scrollbar-thumb {
+  background: #d4af37;
+  border-radius: 10px;
+}
+
+.rules-group {
+  margin-bottom: 18px;
+}
+
+.rules-group-heading {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #d4af37;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 10px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.rule-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 8px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.rule-setting-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.rule-setting-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rule-setting-label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #f1f5f9;
+  margin-bottom: 2px;
+}
+
+.rule-setting-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.rule-setting-control {
+  flex-shrink: 0;
+}
+
+.rule-select {
+  background: #180f08;
+  color: #f8fafc;
+  border: 1.5px solid #d4af37;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  min-height: 38px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rule-select:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+}
+
+.rule-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #64748b;
+}
+
+/* Custom Toggle Switch */
+.rule-toggle {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.rule-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.rule-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background-color: #334155;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 34px;
+  transition: 0.2s ease;
+}
+
+.rule-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rule-toggle input:checked + .rule-toggle-slider {
+  background-color: #10b981;
+  border-color: #059669;
+}
+
+.rule-toggle input:focus + .rule-toggle-slider {
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
+}
+
+.rule-toggle input:checked + .rule-toggle-slider:before {
+  transform: translateX(22px);
+}
+
+.rule-toggle input:disabled + .rule-toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rules-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+.rule-btn-secondary {
+  background: transparent;
+  color: #fbbf24;
+  border: 1.5px solid rgba(245, 158, 11, 0.4);
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rule-btn-secondary:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: #f59e0b;
+}
+
+.rule-btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rule-btn-primary {
+  background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+  color: #170d07;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 24px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rule-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.45);
+}
+
+/* Compact Mobile Rules Modal */
+@media (max-width: 600px) {
+  .game-rules-modal-card {
+    padding: 16px;
+    max-height: 94vh;
+  }
+  .rule-setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .rule-setting-control {
+    width: 100%;
+  }
+  .rule-select {
+    width: 100%;
+  }
+  .rules-modal-footer {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .rule-btn-primary, .rule-btn-secondary {
+    width: 100%;
+    text-align: center;
+  }
+}

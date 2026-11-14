@@ -1,4 +1,5 @@
 import { CLASSIC_COLORS, FLIP_DARK_COLORS, COLOR_METADATA } from '../shared/constants.js';
+import { defaultHouseRules } from '../shared/rules.js';
 import { sounds } from './audio.js';
 import { renderCardHTML, renderCardBackHTML } from './cardGraphics.js';
 
@@ -20,6 +21,14 @@ class UnoArenaApp {
     this.gameState = null;
     this.clientView = null;
     this.pendingPlayCard = null; // Card awaiting color or target selection
+
+    this.customHouseRules = {
+      classic: defaultHouseRules('classic'),
+      flip: defaultHouseRules('flip'),
+      no_mercy: defaultHouseRules('no_mercy'),
+    };
+    this.activeRulesModalMode = 'classic';
+    this.rulesModalContext = 'lobby'; // 'ai', 'lobby', 'arena'
 
     this.aiSetup = {
       mode: null,
@@ -219,6 +228,45 @@ class UnoArenaApp {
       quickMatchModeBadge: document.getElementById('quickMatchModeBadge'),
       quickMatchTimer: document.getElementById('quickMatchTimer'),
       cancelQuickMatchBtn: document.getElementById('cancelQuickMatchBtn'),
+
+      // Game Rules Settings Modal & Controls
+      gameRulesModal: document.getElementById('gameRulesModal'),
+      gameRulesModalClose: document.getElementById('gameRulesModalClose'),
+      gameRulesModeTabs: document.getElementById('gameRulesModeTabs'),
+      gameRulesModeBadge: document.getElementById('gameRulesModeBadge'),
+      gameRulesTypeBadge: document.getElementById('gameRulesTypeBadge'),
+      rulesLockedBanner: document.getElementById('rulesLockedBanner'),
+      rulesGuestBanner: document.getElementById('rulesGuestBanner'),
+      rulesModeSpecificGroup: document.getElementById('rulesModeSpecificGroup'),
+      rulesModeSpecificHeading: document.getElementById('rulesModeSpecificHeading'),
+
+      // Rule Inputs
+      ruleMissedUnoPenalty: document.getElementById('ruleMissedUnoPenalty'),
+      ruleStartingHandSize: document.getElementById('ruleStartingHandSize'),
+      ruleTurnDuration: document.getElementById('ruleTurnDuration'),
+      ruleClassicStacking: document.getElementById('ruleClassicStacking'),
+      ruleClassicDrawBehavior: document.getElementById('ruleClassicDrawBehavior'),
+      ruleClassicSevenZero: document.getElementById('ruleClassicSevenZero'),
+      ruleClassicWd4Challenge: document.getElementById('ruleClassicWd4Challenge'),
+      ruleFlipStacking: document.getElementById('ruleFlipStacking'),
+      ruleFlipDrawBehavior: document.getElementById('ruleFlipDrawBehavior'),
+      ruleNmStacking: document.getElementById('ruleNmStacking'),
+      ruleNmDrawBehavior: document.getElementById('ruleNmDrawBehavior'),
+      ruleNmSevenZero: document.getElementById('ruleNmSevenZero'),
+      ruleNmKnockout: document.getElementById('ruleNmKnockout'),
+      ruleNmKnockoutLimit: document.getElementById('ruleNmKnockoutLimit'),
+
+      // Modal Footer Buttons
+      ruleRestoreDefaultsBtn: document.getElementById('ruleRestoreDefaultsBtn'),
+      ruleApplyBtn: document.getElementById('ruleApplyBtn'),
+
+      // AI Setup Rule Controls (Desktop & Mobile)
+      aiCustomizeRulesBtn: document.getElementById('aiCustomizeRulesBtn'),
+      mobileAiCustomizeRulesBtn: document.getElementById('mobileAiCustomizeRulesBtn'),
+      aiRulesStatusBadge: document.getElementById('aiRulesStatusBadge'),
+      mobileAiRulesStatusBadge: document.getElementById('mobileAiRulesStatusBadge'),
+      aiRulesSummaryText: document.getElementById('aiRulesSummaryText'),
+      mobileAiRulesSummaryText: document.getElementById('mobileAiRulesSummaryText'),
     };
   }
 
@@ -287,7 +335,7 @@ class UnoArenaApp {
     if (window.screen?.orientation) {
       try {
         window.screen.orientation.addEventListener('change', () => this.handleOrientationOrResize());
-      } catch (_) {}
+      } catch (_) { }
     }
     this.syncFullscreenState();
 
@@ -745,7 +793,105 @@ class UnoArenaApp {
         });
         sounds.playSnap?.(440, 0.08);
         this.updateAiSetupState();
+        this.updateAiRulesSummary(mode);
       });
+    });
+
+    // AI Setup Customize Rules button
+    const triggerCustomizeAiRules = () => {
+      this.openGameRulesModal('ai', this.aiSetup.mode || 'classic');
+    };
+    if (this.el.aiCustomizeRulesBtn) {
+      this.el.aiCustomizeRulesBtn.addEventListener('click', triggerCustomizeAiRules);
+    }
+    if (this.el.mobileAiCustomizeRulesBtn) {
+      this.el.mobileAiCustomizeRulesBtn.addEventListener('click', triggerCustomizeAiRules);
+    }
+
+    // Game Rules Modal Close & Apply
+    if (this.el.gameRulesModalClose) {
+      this.el.gameRulesModalClose.addEventListener('click', () => this.closeGameRulesModal());
+    }
+    if (this.el.ruleApplyBtn) {
+      this.el.ruleApplyBtn.addEventListener('click', () => this.closeGameRulesModal());
+    }
+    if (this.el.gameRulesModal) {
+      this.el.gameRulesModal.addEventListener('click', (e) => {
+        if (e.target === this.el.gameRulesModal) this.closeGameRulesModal();
+      });
+    }
+
+    // Modal Mode Tabs
+    if (this.el.gameRulesModeTabs) {
+      this.el.gameRulesModeTabs.querySelectorAll('.rule-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const mode = btn.dataset.rulesMode;
+          if (mode) {
+            this.activeRulesModalMode = mode;
+            this.el.gameRulesModeTabs.querySelectorAll('.rule-tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
+            const rules = this.rulesModalContext === 'ai'
+              ? (this.customHouseRules[mode] || defaultHouseRules(mode))
+              : (this.gameState?.houseRules || defaultHouseRules(mode));
+            this.syncGameRulesModalInputs(mode, rules, this.gameState?.status === 'playing', this.gameState?.players?.find(p => p.id === this.playerId)?.isHost);
+          }
+        });
+      });
+    }
+
+    // Restore Defaults Button in Rules Modal
+    if (this.el.ruleRestoreDefaultsBtn) {
+      this.el.ruleRestoreDefaultsBtn.addEventListener('click', () => {
+        const mode = this.activeRulesModalMode;
+        if (this.rulesModalContext === 'ai') {
+          this.customHouseRules[mode] = defaultHouseRules(mode);
+          this.syncGameRulesModalInputs(mode, this.customHouseRules[mode], false, true);
+          this.updateAiRulesSummary(mode);
+        } else if (this.rulesModalContext === 'lobby') {
+          this.send({ type: 'set_rules', data: { houseRules: { restoreDefaults: true } } });
+        }
+      });
+    }
+
+    // Live update when rule inputs change
+    const handleRuleInputChange = () => {
+      const mode = this.activeRulesModalMode;
+      const updatedRules = this.readGameRulesModalInputs(mode);
+      if (this.rulesModalContext === 'ai') {
+        this.customHouseRules[mode] = updatedRules;
+        const isCustom = this.isCustomRules(mode, updatedRules);
+        if (this.el.gameRulesTypeBadge) {
+          this.el.gameRulesTypeBadge.textContent = isCustom ? 'Custom House Rules' : 'Official Rules';
+          this.el.gameRulesTypeBadge.classList.toggle('is-custom', isCustom);
+        }
+        this.updateAiRulesSummary(mode);
+      } else if (this.rulesModalContext === 'lobby') {
+        const me = this.gameState?.players?.find((p) => p.id === this.playerId);
+        if (me?.isHost) {
+          this.send({ type: 'set_rules', data: { houseRules: updatedRules } });
+        }
+      }
+    };
+
+    const ruleInputs = [
+      this.el.ruleMissedUnoPenalty,
+      this.el.ruleStartingHandSize,
+      this.el.ruleTurnDuration,
+      this.el.ruleClassicStacking,
+      this.el.ruleClassicDrawBehavior,
+      this.el.ruleClassicSevenZero,
+      this.el.ruleClassicWd4Challenge,
+      this.el.ruleFlipStacking,
+      this.el.ruleFlipDrawBehavior,
+      this.el.ruleNmStacking,
+      this.el.ruleNmDrawBehavior,
+      this.el.ruleNmSevenZero,
+      this.el.ruleNmKnockout,
+      this.el.ruleNmKnockoutLimit,
+    ];
+    ruleInputs.forEach((input) => {
+      if (input) {
+        input.addEventListener('change', handleRuleInputChange);
+      }
     });
 
     // AI Setup Player Count pills
@@ -1011,7 +1157,7 @@ class UnoArenaApp {
         else if (doc.mozCancelFullScreen) await doc.mozCancelFullScreen();
         else if (doc.msExitFullscreen) await doc.msExitFullscreen();
         if (window.screen?.orientation?.unlock) {
-          try { window.screen.orientation.unlock(); } catch (_) {}
+          try { window.screen.orientation.unlock(); } catch (_) { }
         }
       } else {
         const el = document.documentElement;
@@ -1355,6 +1501,7 @@ class UnoArenaApp {
     const mobileWrap = document.getElementById('mobileFormWrap') || this.el.mobileFormWrap;
     if (mobileWrap) mobileWrap.classList.add('show-ai-form');
 
+    this.updateAiRulesSummary(this.aiSetup.mode || 'classic');
     sounds.playSnap?.(440, 0.08);
   }
 
@@ -1397,7 +1544,7 @@ class UnoArenaApp {
     localStorage.setItem('uno_arena_name', name);
 
     this.closeAiSetup();
-    this.createBotRoom(name, this.aiSetup.mode, botCount, this.getSelectedHouseRules(), botNames);
+    this.createBotRoom(name, this.aiSetup.mode, botCount, this.getSelectedHouseRules(this.aiSetup.mode), botNames);
   }
 
   async createBotRoom(hostName, mode = this.preferredMode, botCount = 3, houseRules = {}, botNames = null) {
@@ -2052,18 +2199,8 @@ class UnoArenaApp {
       });
     }
 
-    const mercyLimit = Number(this.gameState.houseRules?.mercyKnockoutLimit) || 25;
-    this.el.lobbyRulesPanel.hidden = this.gameState.mode !== 'no_mercy';
-    if (this.gameState.mode === 'no_mercy') {
-      this.el.lobbyRulesPanel.innerHTML = isHost
-        ? `<div class="lobby-rules-copy"><span>HOST RULES</span><strong>No Mercy knockout</strong><small>Eliminate a player when their hand reaches the chosen limit.</small></div>
-           <label class="lobby-rule-control"><span>Knockout at</span><select id="lobbyMercyLimit" class="lobby-rule-select" aria-label="No Mercy knockout card limit">${[25, 35, 45].map((limit) => `<option value="${limit}" ${limit === mercyLimit ? 'selected' : ''}>${limit} cards (${limit === 25 ? 'official' : 'house rule'})</option>`).join('')}</select></label>`
-        : `<div class="lobby-rules-copy"><span>HOST RULE</span><strong>No Mercy knockout: ${mercyLimit} cards</strong><small>The host can change this before the game starts.</small></div>`;
-      const mercySelect = document.getElementById('lobbyMercyLimit');
-      mercySelect?.addEventListener('change', () => {
-        this.send({ type: 'set_rules', data: { houseRules: { mercyKnockoutLimit: Number(mercySelect.value) } } });
-      });
-    }
+    // Render lobby rules panel for current mode
+    this.renderLobbyRulesPanel(isHost);
 
     // Render Players
     this.el.lobbyPlayersList.innerHTML = this.gameState.players
@@ -2662,7 +2799,7 @@ class UnoArenaApp {
       }
 
       const remainingMs = Math.max(0, this.activeTurnDeadline - now);
-      const durationMs = 30000;
+      const durationMs = this.clientView?.turnDurationMs || (this.gameState?.houseRules?.turnDuration ? this.gameState.houseRules.turnDuration * 1000 : 30000);
       const fraction = Math.max(0, Math.min(1, remainingMs / durationMs));
       const remainingSec = Math.ceil(remainingMs / 1000);
       const ringOffset = (138.23 * (1 - fraction)).toFixed(2);
@@ -2819,10 +2956,10 @@ class UnoArenaApp {
     const cardBackHtml = renderCardBackHTML(isDark, false, mode);
     const fanCards = [
       { pos: 0, rot: -18, x: -100, y: 14, z: 1 },
-      { pos: 1, rot: -9,  x: -50,  y: 2,  z: 2 },
-      { pos: 2, rot: 0,   x: 0,    y: -8, z: 3 },
-      { pos: 3, rot: 9,   x: 50,   y: 2,  z: 2 },
-      { pos: 4, rot: 18,  x: 100,  y: 14, z: 1 },
+      { pos: 1, rot: -9, x: -50, y: 2, z: 2 },
+      { pos: 2, rot: 0, x: 0, y: -8, z: 3 },
+      { pos: 3, rot: 9, x: 50, y: 2, z: 2 },
+      { pos: 4, rot: 18, x: 100, y: 14, z: 1 },
     ];
     this.el.colorPickerCardFan.innerHTML = fanCards
       .map(
@@ -2907,10 +3044,10 @@ class UnoArenaApp {
     const cardBackHtml = renderCardBackHTML(false, false, mode);
     const fanCards = [
       { pos: 0, rot: -18, x: -100, y: 14, z: 1 },
-      { pos: 1, rot: -9,  x: -50,  y: 2,  z: 2 },
-      { pos: 2, rot: 0,   x: 0,    y: -8, z: 3 },
-      { pos: 3, rot: 9,   x: 50,   y: 2,  z: 2 },
-      { pos: 4, rot: 18,  x: 100,  y: 14, z: 1 },
+      { pos: 1, rot: -9, x: -50, y: 2, z: 2 },
+      { pos: 2, rot: 0, x: 0, y: -8, z: 3 },
+      { pos: 3, rot: 9, x: 50, y: 2, z: 2 },
+      { pos: 4, rot: 18, x: 100, y: 14, z: 1 },
     ];
     this.el.rouletteCardFan.innerHTML = fanCards
       .map(
@@ -3006,7 +3143,7 @@ class UnoArenaApp {
         const angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
         return ((angle % 360) + 360) % 360;
       }
-    } catch (_) {}
+    } catch (_) { }
     return this.currentRouletteAngle || 0;
   }
 
@@ -3266,6 +3403,10 @@ class UnoArenaApp {
   }
 
   openRulesModal() {
+    if (this.gameState?.status === 'playing') {
+      this.openGameRulesModal('arena', this.gameState.mode);
+      return;
+    }
     this.el.rulesModal.classList.add('active');
   }
 
@@ -3324,6 +3465,326 @@ class UnoArenaApp {
       });
     } else {
       this.showToast('Invite link copied! 📋');
+    }
+  }
+
+  getSelectedHouseRules(mode = this.aiSetup?.mode || this.gameState?.mode || this.preferredMode || 'classic') {
+    const custom = this.customHouseRules?.[mode];
+    if (custom) return { ...custom };
+    return defaultHouseRules(mode);
+  }
+
+  isCustomRules(mode, rules) {
+    if (!rules) return false;
+    const defaults = defaultHouseRules(mode);
+    if (rules.missedUnoPenalty !== undefined && Number(rules.missedUnoPenalty) !== defaults.missedUnoPenalty) return true;
+    if (rules.startingHandSize !== undefined && Number(rules.startingHandSize) !== defaults.startingHandSize) return true;
+    if (rules.turnDuration !== undefined && Number(rules.turnDuration) !== defaults.turnDuration) return true;
+
+    if (mode === 'classic') {
+      if (rules.stackingAllowed !== undefined && Boolean(rules.stackingAllowed) !== defaults.stackingAllowed) return true;
+      if (rules.drawUntilPlayable !== undefined && Boolean(rules.drawUntilPlayable) !== defaults.drawUntilPlayable) return true;
+      if (rules.sevenZeroSwap !== undefined && Boolean(rules.sevenZeroSwap) !== defaults.sevenZeroSwap) return true;
+      if (rules.wildDraw4Challenge !== undefined && Boolean(rules.wildDraw4Challenge) !== defaults.wildDraw4Challenge) return true;
+    } else if (mode === 'flip') {
+      if (rules.stackingAllowed !== undefined && Boolean(rules.stackingAllowed) !== defaults.stackingAllowed) return true;
+      if (rules.drawUntilPlayable !== undefined && Boolean(rules.drawUntilPlayable) !== defaults.drawUntilPlayable) return true;
+    } else if (mode === 'no_mercy') {
+      if (rules.stackingAllowed !== undefined && Boolean(rules.stackingAllowed) !== defaults.stackingAllowed) return true;
+      if (rules.drawUntilPlayable !== undefined && Boolean(rules.drawUntilPlayable) !== defaults.drawUntilPlayable) return true;
+      if (rules.sevenZeroSwap !== undefined && Boolean(rules.sevenZeroSwap) !== defaults.sevenZeroSwap) return true;
+      if (rules.mercyKnockout !== undefined && Boolean(rules.mercyKnockout) !== defaults.mercyKnockout) return true;
+      if (rules.mercyKnockoutLimit !== undefined && Number(rules.mercyKnockoutLimit) !== defaults.mercyKnockoutLimit) return true;
+    }
+    return false;
+  }
+
+  getRulesSummaryString(mode, rules) {
+    const r = { ...defaultHouseRules(mode), ...(rules || {}) };
+    const parts = [
+      `Missed UNO: ${r.missedUnoPenalty} cards`,
+      `Starting hand: ${r.startingHandSize}`,
+      `Turn: ${r.turnDuration}s`,
+    ];
+    if (mode === 'classic') {
+      if (r.stackingAllowed) parts.push('Stacking');
+      if (r.drawUntilPlayable) parts.push('Draw Until Playable');
+      if (r.sevenZeroSwap) parts.push('7-Swap & 0-Pass');
+      if (r.wildDraw4Challenge === false) parts.push('No WD4 Challenge');
+    } else if (mode === 'flip') {
+      if (r.stackingAllowed) parts.push('Stacking');
+      if (r.drawUntilPlayable) parts.push('Draw Until Playable');
+    } else if (mode === 'no_mercy') {
+      if (!r.stackingAllowed) parts.push('No Stacking');
+      if (!r.drawUntilPlayable) parts.push('Draw 1');
+      if (!r.sevenZeroSwap) parts.push('No 7-0');
+      if (!r.mercyKnockout) parts.push('No Knockout');
+      else parts.push(`Knockout: ${r.mercyKnockoutLimit || 25}`);
+    }
+    return parts.join(' · ');
+  }
+
+  updateAiRulesSummary(mode = this.aiSetup?.mode || 'classic') {
+    const rules = this.getSelectedHouseRules(mode);
+    const isCustom = this.isCustomRules(mode, rules);
+    const badgeText = isCustom ? 'Custom House Rules' : 'Official Rules';
+    const summaryText = this.getRulesSummaryString(mode, rules);
+
+    if (this.el.aiRulesStatusBadge) {
+      this.el.aiRulesStatusBadge.textContent = badgeText;
+      this.el.aiRulesStatusBadge.classList.toggle('is-custom', isCustom);
+    }
+    if (this.el.mobileAiRulesStatusBadge) {
+      this.el.mobileAiRulesStatusBadge.textContent = badgeText;
+      this.el.mobileAiRulesStatusBadge.classList.toggle('is-custom', isCustom);
+    }
+    if (this.el.aiRulesSummaryText) {
+      this.el.aiRulesSummaryText.textContent = summaryText;
+    }
+    if (this.el.mobileAiRulesSummaryText) {
+      this.el.mobileAiRulesSummaryText.textContent = summaryText;
+    }
+  }
+
+  openGameRulesModal(context = 'lobby', mode = null) {
+    this.rulesModalContext = context;
+    const targetMode = mode || (context === 'ai' ? (this.aiSetup?.mode || 'classic') : (this.gameState?.mode || 'classic'));
+    this.activeRulesModalMode = targetMode;
+
+    const me = this.gameState?.players?.find((p) => p.id === this.playerId);
+    const isHost = context === 'ai' ? true : (me?.isHost || false);
+    const isPlaying = this.gameState?.status === 'playing';
+    const isReadOnly = isPlaying || !isHost;
+
+    if (this.el.rulesLockedBanner) {
+      this.el.rulesLockedBanner.hidden = !isPlaying;
+    }
+    if (this.el.rulesGuestBanner) {
+      this.el.rulesGuestBanner.hidden = isPlaying || isHost || context === 'ai';
+    }
+
+    if (this.el.gameRulesModalTitle) {
+      this.el.gameRulesModalTitle.textContent = isPlaying
+        ? '🔒 Active Match Rules'
+        : (context === 'ai' ? '⚙️ Play vs AI Rules' : '⚙️ Lobby Game Rules');
+    }
+
+    const rules = context === 'ai'
+      ? this.getSelectedHouseRules(targetMode)
+      : (this.gameState?.houseRules || defaultHouseRules(targetMode));
+
+    this.syncGameRulesModalInputs(targetMode, rules, isReadOnly, isHost);
+
+    if (this.el.gameRulesModal) {
+      this.el.gameRulesModal.classList.add('active');
+      this.el.gameRulesModal.setAttribute('aria-hidden', 'false');
+    }
+    sounds.playSnap?.(440, 0.08);
+  }
+
+  closeGameRulesModal() {
+    if (this.el.gameRulesModal) {
+      this.el.gameRulesModal.classList.remove('active');
+      this.el.gameRulesModal.setAttribute('aria-hidden', 'true');
+    }
+    sounds.playSnap?.(380, 0.08);
+  }
+
+  syncGameRulesModalInputs(mode, rules, isReadOnly, isHost) {
+    const currentRules = { ...defaultHouseRules(mode), ...(rules || {}) };
+    const isCustom = this.isCustomRules(mode, currentRules);
+    const modeNames = { classic: 'CLASSIC UNO', flip: 'UNO FLIP', no_mercy: 'NO MERCY' };
+
+    // Badges
+    if (this.el.gameRulesModeBadge) {
+      this.el.gameRulesModeBadge.textContent = modeNames[mode] || mode.toUpperCase();
+    }
+    if (this.el.gameRulesTypeBadge) {
+      this.el.gameRulesTypeBadge.textContent = isCustom ? 'Custom House Rules' : 'Official Rules';
+      this.el.gameRulesTypeBadge.classList.toggle('is-custom', isCustom);
+    }
+
+    // Tabs
+    if (this.el.gameRulesModeTabs) {
+      this.el.gameRulesModeTabs.querySelectorAll('.rule-tab-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.rulesMode === mode);
+      });
+      this.el.gameRulesModeTabs.style.display = this.rulesModalContext === 'ai' ? 'flex' : 'none';
+    }
+
+    // Mode-specific sections visibility
+    const classicRows = document.querySelectorAll('.mode-setting.mode-classic');
+    const flipRows = document.querySelectorAll('.mode-setting.mode-flip');
+    const nmRows = document.querySelectorAll('.mode-setting.mode-no_mercy');
+
+    classicRows.forEach((r) => { r.style.display = mode === 'classic' ? 'flex' : 'none'; });
+    flipRows.forEach((r) => { r.style.display = mode === 'flip' ? 'flex' : 'none'; });
+    nmRows.forEach((r) => { r.style.display = mode === 'no_mercy' ? 'flex' : 'none'; });
+
+    if (this.el.rulesModeSpecificHeading) {
+      const headings = {
+        classic: 'Classic UNO Specific Settings',
+        flip: 'UNO Flip Specific Settings',
+        no_mercy: 'No Mercy Specific Settings',
+      };
+      this.el.rulesModeSpecificHeading.textContent = headings[mode] || 'Mode-Specific Settings';
+    }
+
+    // Common Settings
+    if (this.el.ruleMissedUnoPenalty) {
+      this.el.ruleMissedUnoPenalty.value = String(currentRules.missedUnoPenalty || 2);
+      this.el.ruleMissedUnoPenalty.disabled = isReadOnly;
+    }
+    if (this.el.ruleStartingHandSize) {
+      this.el.ruleStartingHandSize.value = String(currentRules.startingHandSize || 7);
+      this.el.ruleStartingHandSize.disabled = isReadOnly;
+    }
+    if (this.el.ruleTurnDuration) {
+      this.el.ruleTurnDuration.value = String(currentRules.turnDuration || 30);
+      this.el.ruleTurnDuration.disabled = isReadOnly;
+    }
+
+    // Classic
+    if (this.el.ruleClassicStacking) {
+      this.el.ruleClassicStacking.checked = Boolean(currentRules.stackingAllowed);
+      this.el.ruleClassicStacking.disabled = isReadOnly;
+    }
+    if (this.el.ruleClassicDrawBehavior) {
+      this.el.ruleClassicDrawBehavior.value = currentRules.drawUntilPlayable ? 'draw_until_playable' : 'draw_one';
+      this.el.ruleClassicDrawBehavior.disabled = isReadOnly;
+    }
+    if (this.el.ruleClassicSevenZero) {
+      this.el.ruleClassicSevenZero.checked = Boolean(currentRules.sevenZeroSwap);
+      this.el.ruleClassicSevenZero.disabled = isReadOnly;
+    }
+    if (this.el.ruleClassicWd4Challenge) {
+      this.el.ruleClassicWd4Challenge.checked = currentRules.wildDraw4Challenge !== false;
+      this.el.ruleClassicWd4Challenge.disabled = isReadOnly;
+    }
+
+    // Flip
+    if (this.el.ruleFlipStacking) {
+      this.el.ruleFlipStacking.checked = Boolean(currentRules.stackingAllowed);
+      this.el.ruleFlipStacking.disabled = isReadOnly;
+    }
+    if (this.el.ruleFlipDrawBehavior) {
+      this.el.ruleFlipDrawBehavior.value = currentRules.drawUntilPlayable ? 'draw_until_playable' : 'draw_one';
+      this.el.ruleFlipDrawBehavior.disabled = isReadOnly;
+    }
+
+    // No Mercy
+    if (this.el.ruleNmStacking) {
+      this.el.ruleNmStacking.checked = currentRules.stackingAllowed !== false;
+      this.el.ruleNmStacking.disabled = isReadOnly;
+    }
+    if (this.el.ruleNmDrawBehavior) {
+      this.el.ruleNmDrawBehavior.value = currentRules.drawUntilPlayable !== false ? 'draw_until_playable' : 'draw_one';
+      this.el.ruleNmDrawBehavior.disabled = isReadOnly;
+    }
+    if (this.el.ruleNmSevenZero) {
+      this.el.ruleNmSevenZero.checked = currentRules.sevenZeroSwap !== false;
+      this.el.ruleNmSevenZero.disabled = isReadOnly;
+    }
+    if (this.el.ruleNmKnockout) {
+      this.el.ruleNmKnockout.checked = currentRules.mercyKnockout !== false;
+      this.el.ruleNmKnockout.disabled = isReadOnly;
+    }
+    if (this.el.ruleNmKnockoutLimit) {
+      this.el.ruleNmKnockoutLimit.value = String(currentRules.mercyKnockoutLimit || 25);
+      this.el.ruleNmKnockoutLimit.disabled = isReadOnly;
+    }
+
+    // Footer actions
+    if (this.el.ruleRestoreDefaultsBtn) {
+      this.el.ruleRestoreDefaultsBtn.style.display = isReadOnly ? 'none' : 'inline-flex';
+    }
+    if (this.el.ruleApplyBtn) {
+      this.el.ruleApplyBtn.textContent = isReadOnly ? 'Close ✕' : 'Done ✓';
+    }
+  }
+
+  readGameRulesModalInputs(mode) {
+    const rules = {
+      missedUnoPenalty: Math.max(1, Math.min(10, Number(this.el.ruleMissedUnoPenalty?.value) || 2)),
+      startingHandSize: Math.max(3, Math.min(10, Number(this.el.ruleStartingHandSize?.value) || 7)),
+      turnDuration: [15, 30, 45, 60].includes(Number(this.el.ruleTurnDuration?.value))
+        ? Number(this.el.ruleTurnDuration?.value)
+        : 30,
+    };
+
+    if (mode === 'classic') {
+      rules.stackingAllowed = Boolean(this.el.ruleClassicStacking?.checked);
+      rules.drawUntilPlayable = this.el.ruleClassicDrawBehavior?.value === 'draw_until_playable';
+      rules.sevenZeroSwap = Boolean(this.el.ruleClassicSevenZero?.checked);
+      rules.wildDraw4Challenge = Boolean(this.el.ruleClassicWd4Challenge?.checked);
+    } else if (mode === 'flip') {
+      rules.stackingAllowed = Boolean(this.el.ruleFlipStacking?.checked);
+      rules.drawUntilPlayable = this.el.ruleFlipDrawBehavior?.value === 'draw_until_playable';
+    } else if (mode === 'no_mercy') {
+      rules.stackingAllowed = Boolean(this.el.ruleNmStacking?.checked);
+      rules.drawUntilPlayable = this.el.ruleNmDrawBehavior?.value === 'draw_until_playable';
+      rules.sevenZeroSwap = Boolean(this.el.ruleNmSevenZero?.checked);
+      rules.mercyKnockout = Boolean(this.el.ruleNmKnockout?.checked);
+      rules.mercyKnockoutLimit = Number(this.el.ruleNmKnockoutLimit?.value) || 25;
+    }
+    return rules;
+  }
+
+  renderLobbyRulesPanel(isHost) {
+    if (!this.el.lobbyRulesPanel) return;
+    this.el.lobbyRulesPanel.hidden = false;
+
+    const mode = this.gameState.mode || 'classic';
+    const rules = this.gameState.houseRules || defaultHouseRules(mode);
+    const isCustom = this.isCustomRules(mode, rules);
+    const modeLabels = { classic: 'Classic UNO', flip: 'UNO Flip', no_mercy: 'No Mercy' };
+
+    const chips = [
+      `<span class="lobby-rule-chip">🚨 Missed UNO: <strong>${rules.missedUnoPenalty || 2} cards</strong></span>`,
+      `<span class="lobby-rule-chip">🃏 Hand: <strong>${rules.startingHandSize || 7} cards</strong></span>`,
+      `<span class="lobby-rule-chip">⏱️ Turn: <strong>${rules.turnDuration || 30}s</strong></span>`,
+    ];
+
+    if (mode === 'classic') {
+      chips.push(`<span class="lobby-rule-chip">⚡ Stacking: <strong>${rules.stackingAllowed ? 'ON' : 'OFF'}</strong></span>`);
+      chips.push(`<span class="lobby-rule-chip">🔄 Draw: <strong>${rules.drawUntilPlayable ? 'Until Playable' : 'Draw 1'}</strong></span>`);
+      if (rules.sevenZeroSwap) chips.push('<span class="lobby-rule-chip">🔄 7-0 Swap/Pass: <strong>ON</strong></span>');
+      if (rules.wildDraw4Challenge === false) chips.push('<span class="lobby-rule-chip">🛡️ WD4 Challenge: <strong>OFF</strong></span>');
+    } else if (mode === 'flip') {
+      chips.push(`<span class="lobby-rule-chip">⚡ Stacking: <strong>${rules.stackingAllowed ? 'ON' : 'OFF'}</strong></span>`);
+      chips.push(`<span class="lobby-rule-chip">🔄 Draw: <strong>${rules.drawUntilPlayable ? 'Until Playable' : 'Draw 1'}</strong></span>`);
+    } else if (mode === 'no_mercy') {
+      chips.push(`<span class="lobby-rule-chip">⚡ Stacking: <strong>${rules.stackingAllowed !== false ? 'ON' : 'OFF'}</strong></span>`);
+      chips.push(`<span class="lobby-rule-chip">🔄 Draw: <strong>${rules.drawUntilPlayable !== false ? 'Until Playable' : 'Draw 1'}</strong></span>`);
+      chips.push(`<span class="lobby-rule-chip">🔄 7-0 Swap: <strong>${rules.sevenZeroSwap !== false ? 'ON' : 'OFF'}</strong></span>`);
+      chips.push(`<span class="lobby-rule-chip">💥 Knockout: <strong>${rules.mercyKnockout !== false ? `${rules.mercyKnockoutLimit || 25} cards` : 'OFF'}</strong></span>`);
+    }
+
+    this.el.lobbyRulesPanel.innerHTML = `
+      <div class="lobby-rules-header">
+        <div class="lobby-rules-title">
+          <span>⚙️</span>
+          <span>${modeLabels[mode] || mode.toUpperCase()} RULES</span>
+          <span class="lobby-rules-badge ${isCustom ? 'is-custom' : ''}">${isCustom ? 'Custom House Rules' : 'Official Rules'}</span>
+        </div>
+        <div class="lobby-rules-actions">
+          <button id="lobbyRulesBtn" class="lobby-rules-btn" type="button">
+            ${isHost ? '⚙️ Customize Rules' : '👁️ View Rules'}
+          </button>
+        </div>
+      </div>
+      <div class="lobby-rules-chips">
+        ${chips.join('')}
+      </div>
+    `;
+
+    const lobbyRulesBtn = document.getElementById('lobbyRulesBtn');
+    lobbyRulesBtn?.addEventListener('click', () => {
+      this.openGameRulesModal('lobby', mode);
+    });
+
+    if (this.el.gameRulesModal?.classList.contains('active') && this.rulesModalContext === 'lobby') {
+      this.syncGameRulesModalInputs(mode, rules, !isHost, isHost);
     }
   }
 }

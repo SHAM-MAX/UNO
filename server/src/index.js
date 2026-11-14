@@ -169,6 +169,18 @@ app.get('/api/rooms/:roomId', (req, res) => {
   });
 });
 
+// Update Room Rules REST endpoint
+app.put('/api/rooms/:roomId/rules', (req, res) => {
+  const { playerId, houseRules } = req.body;
+  const cleanRoomId = (req.params.roomId || '').toUpperCase();
+  const result = roomManager.setHouseRules(cleanRoomId, playerId, houseRules);
+  if (!result.success) {
+    return res.status(400).json(result);
+  }
+  broadcastRoomState(cleanRoomId);
+  res.json(result);
+});
+
 // Serve shared constants and rules to client
 const sharedDir = path.resolve(__dirname, '../../shared');
 app.use('/shared', express.static(sharedDir));
@@ -401,8 +413,9 @@ wss.on('connection', (ws, req) => {
         }
 
         case 'set_rules': {
-          roomManager.setHouseRules(cleanRoomId, playerId, data?.houseRules);
-          broadcastRoomState(cleanRoomId);
+          const res = roomManager.setHouseRules(cleanRoomId, playerId, data?.houseRules);
+          if (!res.success) sendError(ws, res.error);
+          else broadcastRoomState(cleanRoomId);
           break;
         }
 

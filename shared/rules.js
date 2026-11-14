@@ -1,6 +1,42 @@
 import { getActiveFace } from './deck.js';
 import { NO_MERCY_MAX_CARDS } from './constants.js';
 
+export function defaultHouseRules(mode = 'classic') {
+  const common = {
+    missedUnoPenalty: 2,
+    startingHandSize: 7,
+    turnDuration: 30,
+  };
+
+  if (mode === 'no_mercy') {
+    return {
+      ...common,
+      stackingAllowed: true,
+      drawUntilPlayable: true,
+      sevenZeroSwap: true,
+      mercyKnockout: true,
+      mercyKnockoutLimit: NO_MERCY_MAX_CARDS,
+    };
+  }
+
+  if (mode === 'flip') {
+    return {
+      ...common,
+      stackingAllowed: false,
+      drawUntilPlayable: false,
+    };
+  }
+
+  // Classic
+  return {
+    ...common,
+    stackingAllowed: false,
+    drawUntilPlayable: false,
+    sevenZeroSwap: false,
+    wildDraw4Challenge: true,
+  };
+}
+
 export function getCardDrawPenalty(card, mode = 'classic', flipSide = 'light') {
   const face = getActiveFace(card, mode, flipSide);
   switch (face.type) {
@@ -25,12 +61,13 @@ export function getCardDrawPenalty(card, mode = 'classic', flipSide = 'light') {
 }
 
 export function canStackCard(card, mode, flipSide, currentPenalty, topCard, houseRules = {}) {
-  if (mode === 'classic' || currentPenalty <= 0) return false;
+  if (currentPenalty <= 0) return false;
 
   const cardPenalty = getCardDrawPenalty(card, mode, flipSide);
   if (cardPenalty <= 0) return false;
 
   if (mode === 'no_mercy') {
+    if (houseRules.stackingAllowed === false) return false;
     // In No Mercy, a draw card can be played on an active draw penalty if its draw value is EQUAL TO OR HIGHER
     // than the last draw card that initiated or added to the penalty.
     const lastPenalty = topCard ? getCardDrawPenalty(topCard, mode, flipSide) : 0;
@@ -38,7 +75,7 @@ export function canStackCard(card, mode, flipSide, currentPenalty, topCard, hous
   }
 
   if (houseRules.stackingAllowed) {
-    // In Classic house rules: Draw 2 can stack on Draw 2; Wild Draw 4 on Wild Draw 4
+    // In Classic house rules: Draw 2 on Draw 2; Wild Draw 4 on Wild Draw 4. In Flip: Draw 1 on Draw 1; Draw 5 on Draw 5
     if (!topCard) return false;
     const topFace = getActiveFace(topCard, mode, flipSide);
     const cardFace = getActiveFace(card, mode, flipSide);
@@ -61,7 +98,11 @@ export function isCardPlayable(
 
   // If a draw penalty is pending and stacking is allowed:
   if (pendingDrawPenalty > 0) {
-    if (mode === 'no_mercy' || houseRules.stackingAllowed) {
+    const isStackingAllowed = mode === 'no_mercy'
+      ? houseRules.stackingAllowed !== false
+      : Boolean(houseRules.stackingAllowed);
+
+    if (isStackingAllowed) {
       return canStackCard(card, mode, flipSide, pendingDrawPenalty, topCard, houseRules);
     }
     // If stacking is not allowed, no card can be played; player must draw
@@ -152,7 +193,7 @@ export function checkWinCondition(players = [], hands = {}, mode = 'classic') {
 }
 
 export function checkMercyKnockout(player, hand = [], mode = 'classic', houseRules = {}) {
-  if (mode !== 'no_mercy') return false;
+  if (mode !== 'no_mercy' || houseRules.mercyKnockout === false) return false;
   const limit = Number(houseRules.mercyKnockoutLimit) || NO_MERCY_MAX_CARDS;
   return hand.length >= limit;
 }

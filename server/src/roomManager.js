@@ -12,9 +12,16 @@ import {
   isCardPlayable,
 } from '../../shared/rules.js';
 
-export function defaultHouseRules(mode) {
+export function defaultHouseRules(mode = 'classic') {
+  const common = {
+    missedUnoPenalty: 2,
+    startingHandSize: 7,
+    turnDuration: 30,
+  };
+
   if (mode === 'no_mercy') {
     return {
+      ...common,
       stackingAllowed: true,
       drawUntilPlayable: true,
       sevenZeroSwap: true,
@@ -22,12 +29,90 @@ export function defaultHouseRules(mode) {
       mercyKnockoutLimit: NO_MERCY_MAX_CARDS,
     };
   }
+
+  if (mode === 'flip') {
+    return {
+      ...common,
+      stackingAllowed: false,
+      drawUntilPlayable: false,
+    };
+  }
+
+  // Classic
   return {
+    ...common,
     stackingAllowed: false,
     drawUntilPlayable: false,
     sevenZeroSwap: false,
-    mercyKnockout: false,
+    wildDraw4Challenge: true,
   };
+}
+
+export function sanitizeHouseRules(mode = 'classic', rawRules = {}) {
+  const defaults = defaultHouseRules(mode);
+  if (!rawRules || typeof rawRules !== 'object') return defaults;
+
+  const sanitized = { ...defaults };
+
+  // Common: Missed UNO penalty (1 to 10 cards)
+  if (rawRules.missedUnoPenalty !== undefined) {
+    const p = Math.floor(Number(rawRules.missedUnoPenalty));
+    if (!isNaN(p) && p >= 1 && p <= 10) sanitized.missedUnoPenalty = p;
+  }
+
+  // Common: Starting hand size (3 to 10 cards)
+  if (rawRules.startingHandSize !== undefined) {
+    const s = Math.floor(Number(rawRules.startingHandSize));
+    if (!isNaN(s) && s >= 3 && s <= 10) sanitized.startingHandSize = s;
+  }
+
+  // Common: Turn duration (15, 30, 45, 60 seconds)
+  if (rawRules.turnDuration !== undefined) {
+    const t = Number(rawRules.turnDuration);
+    if ([15, 30, 45, 60].includes(t)) sanitized.turnDuration = t;
+  }
+
+  // Mode specific:
+  if (mode === 'classic') {
+    if (rawRules.stackingAllowed !== undefined) {
+      sanitized.stackingAllowed = Boolean(rawRules.stackingAllowed);
+    }
+    if (rawRules.drawUntilPlayable !== undefined) {
+      sanitized.drawUntilPlayable = Boolean(rawRules.drawUntilPlayable);
+    }
+    if (rawRules.sevenZeroSwap !== undefined) {
+      sanitized.sevenZeroSwap = Boolean(rawRules.sevenZeroSwap);
+    }
+    if (rawRules.wildDraw4Challenge !== undefined) {
+      sanitized.wildDraw4Challenge = Boolean(rawRules.wildDraw4Challenge);
+    }
+  } else if (mode === 'flip') {
+    if (rawRules.stackingAllowed !== undefined) {
+      sanitized.stackingAllowed = Boolean(rawRules.stackingAllowed);
+    }
+    if (rawRules.drawUntilPlayable !== undefined) {
+      sanitized.drawUntilPlayable = Boolean(rawRules.drawUntilPlayable);
+    }
+  } else if (mode === 'no_mercy') {
+    if (rawRules.stackingAllowed !== undefined) {
+      sanitized.stackingAllowed = Boolean(rawRules.stackingAllowed);
+    }
+    if (rawRules.drawUntilPlayable !== undefined) {
+      sanitized.drawUntilPlayable = Boolean(rawRules.drawUntilPlayable);
+    }
+    if (rawRules.sevenZeroSwap !== undefined) {
+      sanitized.sevenZeroSwap = Boolean(rawRules.sevenZeroSwap);
+    }
+    if (rawRules.mercyKnockout !== undefined) {
+      sanitized.mercyKnockout = Boolean(rawRules.mercyKnockout);
+    }
+    if (rawRules.mercyKnockoutLimit !== undefined) {
+      const l = Number(rawRules.mercyKnockoutLimit);
+      if ([10, 15, 20, 25, 30, 35, 45].includes(l)) sanitized.mercyKnockoutLimit = l;
+    }
+  }
+
+  return sanitized;
 }
 
 export class RoomManager {
@@ -135,11 +220,7 @@ export class RoomManager {
       sessionToken,
     };
 
-    const rules = { ...defaultHouseRules(mode) };
-    if (mode === 'no_mercy') {
-      const requestedLimit = Number(houseRulesInput?.mercyKnockoutLimit);
-      if ([25, 35, 45].includes(requestedLimit)) rules.mercyKnockoutLimit = requestedLimit;
-    }
+    const rules = sanitizeHouseRules(mode, houseRulesInput);
 
     const room = {
       roomId,
@@ -432,26 +513,48 @@ export class RoomManager {
     if (!player || !player.isHost) return false;
     if (mode !== 'classic' && room.players.length > 6) return false;
     room.mode = mode;
-    room.houseRules = defaultHouseRules(mode);
-    this.addLog(room, `Game mode changed to ${mode.toUpperCase()} by host.`);
+
+    // Retain common settings (missedUnoPenalty, startingHandSize, turnDuration), use mode defaults
+    const common = {
+      missedUnoPenalty: room.houseRules?.missedUnoPenalty || 2,
+      startingHandSize: room.houseRules?.startingHandSize || 7,
+      turnDuration: room.houseRules?.turnDuration || 30,
+    };
+    room.houseRules = { ...defaultHouseRules(mode), ...common };
+
+    // Unready guests
+    for (const p of room.players) {
+      if (!p.isHost && !p.isBot) p.isReady = false;
+    }
+    this.addLog(room, `Game mode changed to ${mode.toUpperCase()} by host. Ready status reset.`);
     this.persist(roomId);
     return true;
   }
 
   setHouseRules(roomId, playerId, rules) {
     const room = this.rooms.get(roomId);
-    if (!room || room.status !== 'lobby') return false;
+    if (!room) return { success: false, error: 'Room not found' };
+    if (room.status !== 'lobby') return { success: false, error: 'Cannot change rules while a match is in progress' };
     const player = room.players.find((p) => p.id === playerId);
-    if (!player || !player.isHost) return false;
-    if (room.mode === 'no_mercy') {
-      const requestedLimit = Number(rules?.mercyKnockoutLimit);
-      if ([25, 35, 45].includes(requestedLimit)) {
-        room.houseRules = { ...room.houseRules, mercyKnockoutLimit: requestedLimit };
-        this.addLog(room, `${player.name} set the Mercy knockout limit to ${requestedLimit} cards.`);
+    if (!player || !player.isHost) return { success: false, error: 'Only the host can modify game rules' };
+
+    if (!rules || rules.restoreDefaults) {
+      room.houseRules = defaultHouseRules(room.mode);
+      this.addLog(room, `↺ ${player.name} restored default rules for ${room.mode.toUpperCase()}.`);
+    } else {
+      room.houseRules = sanitizeHouseRules(room.mode, rules);
+      this.addLog(room, `⚙️ ${player.name} updated game rules.`);
+    }
+
+    // Require human guests to confirm readiness again
+    for (const p of room.players) {
+      if (!p.isHost && !p.isBot) {
+        p.isReady = false;
       }
     }
+
     this.persist(roomId);
-    return true;
+    return { success: true, houseRules: room.houseRules };
   }
 
   leaveRoom(roomId, playerId) {
@@ -549,8 +652,9 @@ export class RoomManager {
     room.flipSide = 'light';
     room.pendingAction = null;
 
+    const handSize = Math.max(3, Math.min(10, Number(room.houseRules?.startingHandSize) || 7));
     room.players.forEach((p) => {
-      p.cardCount = 7;
+      p.cardCount = handSize;
       p.hasCalledUno = false;
       p.isEliminated = false;
       p.eliminatedReason = null;
@@ -560,7 +664,7 @@ export class RoomManager {
 
     room.playerHands = {};
     room.players.forEach((p) => {
-      room.playerHands[p.id] = fullDeck.splice(0, 7);
+      room.playerHands[p.id] = fullDeck.splice(0, handSize);
     });
 
     let initialDiscardIndex = 0;
@@ -767,15 +871,18 @@ export class RoomManager {
   }
 
   checkKnockout(room, player) {
+    if (!room || !player) return false;
     const hand = room.playerHands[player.id] || [];
     const knockoutLimit = Number(room.houseRules?.mercyKnockoutLimit) || NO_MERCY_MAX_CARDS;
-    if (room.mode === 'no_mercy' && hand.length >= knockoutLimit && !player.isEliminated) {
+    if (room.mode === 'no_mercy' && room.houseRules?.mercyKnockout !== false && hand.length >= knockoutLimit && !player.isEliminated) {
       player.isEliminated = true;
       player.eliminatedReason = `Knocked out by Mercy rule (${knockoutLimit} cards)!`;
       room.mercyPile = [...(room.mercyPile || []), ...hand];
       room.playerHands[player.id] = [];
       player.cardCount = 0;
       this.addLog(room, `💥 ${player.name} accumulated ${knockoutLimit}+ cards and was KNOCKED OUT!`, 'knockout');
+      if (room.unoChallengeWindow?.targetPlayerId === player.id) room.unoChallengeWindow = null;
+      if (room.unoChallengeTargets) room.unoChallengeTargets = room.unoChallengeTargets.filter(id => id !== player.id);
 
       const win = checkWinCondition(room.players, room.playerHands, room.mode);
       if (win.winnerId) {
@@ -809,7 +916,7 @@ export class RoomManager {
       this.scheduleBotTurn(room);
       return;
     }
-    const DURATION = 30000; // 30 seconds
+    const DURATION = (Math.max(15, Math.min(60, Number(room.houseRules?.turnDuration) || 30))) * 1000;
     room.turnDeadline = Date.now() + DURATION;
 
     const currentTurnAtSchedule = room.currentTurn;
@@ -867,11 +974,12 @@ export class RoomManager {
       if (this.onStateChange) this.onStateChange(roomId);
       return;
     }
+    const durationSec = Math.max(15, Math.min(60, Number(room.houseRules?.turnDuration) || 30));
     if (room.turnDrawnCard) {
       // Player already drew, so pass their turn
       this.passTurn(roomId, currentPlayer.id);
-      this.addLog(room, `⏱️ ${currentPlayer.name}'s turn timed out (30s). Turn passed.`);
-      room.lastActionMessage = `⏱️ ${currentPlayer.name}'s turn timed out (30s).`;
+      this.addLog(room, `⏱️ ${currentPlayer.name}'s turn timed out (${durationSec}s). Turn passed.`);
+      room.lastActionMessage = `⏱️ ${currentPlayer.name}'s turn timed out (${durationSec}s).`;
     } else {
       // Player took no action: automatically apply penalty/draw and pass
       if (room.pendingDrawPenalty > 0) {
@@ -883,8 +991,8 @@ export class RoomManager {
         if (room.turnDrawnCard) {
           this.passTurn(roomId, currentPlayer.id);
         }
-        this.addLog(room, `⏱️ ${currentPlayer.name}'s turn timed out (30s). Drew card & passed.`);
-        room.lastActionMessage = `⏱️ ${currentPlayer.name}'s turn timed out (30s). Drew card & passed.`;
+        this.addLog(room, `⏱️ ${currentPlayer.name}'s turn timed out (${durationSec}s). Drew card & passed.`);
+        room.lastActionMessage = `⏱️ ${currentPlayer.name}'s turn timed out (${durationSec}s). Drew card & passed.`;
       }
     }
 
@@ -1046,8 +1154,11 @@ export class RoomManager {
       const playPayload = { cardId: cardToPlay.id };
       if (face.color === 'wild') playPayload.chosenColor = pickBestColor();
 
-      // If playing a 7 in No Mercy, select opponent with fewest cards
-      if (room.mode === 'no_mercy' && face.type === 'number' && face.value === 7) {
+      // If playing a 7 with 7-Swap active, select opponent with fewest cards
+      const isSevenZeroEnabled = room.mode === 'no_mercy'
+        ? room.houseRules?.sevenZeroSwap !== false
+        : Boolean(room.houseRules?.sevenZeroSwap);
+      if (isSevenZeroEnabled && face.type === 'number' && face.value === 7) {
         const opponents = room.players.filter((p) => p.id !== botId && !p.isEliminated);
         opponents.sort((a, b) => a.cardCount - b.cardCount);
         if (opponents.length > 0) playPayload.targetPlayerId = opponents[0].id;
@@ -1072,7 +1183,10 @@ export class RoomManager {
             const drawnFace = getActiveFace(drawnCard, room.mode, room.flipSide);
             const payload = { cardId: drawnCard.id };
             if (drawnFace.color === 'wild') payload.chosenColor = pickBestColor();
-            if (room.mode === 'no_mercy' && drawnFace.type === 'number' && drawnFace.value === 7) {
+            const isSevenZeroEnabled = room.mode === 'no_mercy'
+              ? room.houseRules?.sevenZeroSwap !== false
+              : Boolean(room.houseRules?.sevenZeroSwap);
+            if (isSevenZeroEnabled && drawnFace.type === 'number' && drawnFace.value === 7) {
               const opps = room.players.filter((p) => p.id !== botId && !p.isEliminated);
               opps.sort((a, b) => a.cardCount - b.cardCount);
               if (opps.length > 0) payload.targetPlayerId = opps[0].id;
@@ -1189,7 +1303,11 @@ export class RoomManager {
       }
     }
 
-    if (room.mode === 'no_mercy' && face.type === 'number' && face.value === 7) {
+    const isSevenZeroEnabled = room.mode === 'no_mercy'
+      ? room.houseRules?.sevenZeroSwap !== false
+      : Boolean(room.houseRules?.sevenZeroSwap);
+
+    if (isSevenZeroEnabled && face.type === 'number' && face.value === 7) {
       if (!payload.targetPlayerId) {
         return { success: false, error: 'Must select a player to swap hands with' };
       }
@@ -1242,7 +1360,7 @@ export class RoomManager {
       );
     }
 
-    if (room.mode === 'no_mercy' && face.type === 'number' && face.value === 7) {
+    if (isSevenZeroEnabled && face.type === 'number' && face.value === 7) {
       const target = room.players.find((p) => p.id === payload.targetPlayerId);
       const myHand = room.playerHands[playerId];
       const targetHand = room.playerHands[target.id];
@@ -1256,7 +1374,7 @@ export class RoomManager {
       this.addLog(room, `🔄 7 SWAP! ${currentPlayer.name} swapped hands with ${target.name}!`, 'action');
     }
 
-    if (room.mode === 'no_mercy' && face.type === 'number' && face.value === 0) {
+    if (isSevenZeroEnabled && face.type === 'number' && face.value === 0) {
       const activePlayers = room.players.filter((p) => !p.isEliminated);
       if (activePlayers.length > 1) {
         const oldHands = activePlayers.map((p) => [...room.playerHands[p.id]]);
@@ -1290,10 +1408,27 @@ export class RoomManager {
     let step = 1;
 
     if (room.mode === 'classic' && face.type === 'wild_draw4') {
-      step = 1;
-      room.lastDrawFourResult = null;
-      room.pendingAction = { id: randomUUID(), type: 'draw4_challenge', offenderId: playerId, targetPlayerId: room.players[getNextPlayerIndex(room.currentTurn, room.direction, room.players)].id, illegal: hadMatchingColor, previousColor, handBeforePlay: handBeforeDrawFour };
-      this.addLog(room, `${currentPlayer.name} played Wild Draw Four. Accept or challenge.`);
+      const isStackingAllowed = Boolean(room.houseRules?.stackingAllowed);
+      const isChallengeAllowed = room.houseRules?.wildDraw4Challenge !== false;
+
+      if (isStackingAllowed) {
+        room.pendingDrawPenalty += 4;
+        step = 1;
+        this.addLog(room, `${currentPlayer.name} played Wild Draw Four (+4 penalty, stacking active).`);
+      } else if (isChallengeAllowed) {
+        step = 1;
+        room.lastDrawFourResult = null;
+        room.pendingAction = { id: randomUUID(), type: 'draw4_challenge', offenderId: playerId, targetPlayerId: room.players[getNextPlayerIndex(room.currentTurn, room.direction, room.players)].id, illegal: hadMatchingColor, previousColor, handBeforePlay: handBeforeDrawFour };
+        this.addLog(room, `${currentPlayer.name} played Wild Draw Four. Accept or challenge.`);
+      } else {
+        step = 2;
+        const targetPlayer = room.players[getNextPlayerIndex(room.currentTurn, room.direction, room.players, 1)];
+        this.reshuffleIfEmpty(room);
+        const drawnCards = this.takeCards(room, 4);
+        room.playerHands[targetPlayer.id].push(...drawnCards);
+        targetPlayer.cardCount = room.playerHands[targetPlayer.id].length;
+        this.addLog(room, `${currentPlayer.name} played Wild Draw Four! ${targetPlayer.name} drew 4 cards and was skipped.`);
+      }
     } else if (face.type === 'reverse') {
       room.direction = room.direction * -1;
       const activePlayers = room.players.filter((p) => !p.isEliminated);
@@ -1330,7 +1465,11 @@ export class RoomManager {
       face.type === 'wild_draw10'
     ) {
       const penalty = getCardDrawPenalty(card, room.mode, room.flipSide);
-      if (room.mode !== 'classic' && (room.mode === 'no_mercy' || room.houseRules.stackingAllowed)) {
+      const isStackingAllowed = room.mode === 'no_mercy'
+        ? room.houseRules?.stackingAllowed !== false
+        : Boolean(room.houseRules?.stackingAllowed);
+
+      if (isStackingAllowed) {
         room.pendingDrawPenalty += penalty;
         step = 1;
         this.addLog(room, `${currentPlayer.name} played +${penalty}! Pending penalty: ${room.pendingDrawPenalty} cards.`);
@@ -1450,7 +1589,7 @@ export class RoomManager {
 
     if (room.mode === 'classic') {
       if (room.pendingAction?.type === 'draw4_challenge') return this.resolveDrawFour(roomId, playerId, false);
-      if (room.pendingAction || room.turnDrawnCard) return { success: false, error: 'Cannot draw again or before choosing colour' };
+      if (room.pendingAction || (!room.houseRules?.drawUntilPlayable && room.turnDrawnCard)) return { success: false, error: 'Cannot draw again or before choosing colour' };
       room.unoChallengeWindow = null;
       currentPlayer.hasCalledUno = false;
     }
@@ -1489,7 +1628,11 @@ export class RoomManager {
       return { success: true, drawnCards: drawn };
     }
 
-    if (room.mode === 'no_mercy') {
+    const isDrawUntilPlayable = room.mode === 'no_mercy'
+      ? room.houseRules?.drawUntilPlayable !== false
+      : Boolean(room.houseRules?.drawUntilPlayable);
+
+    if (isDrawUntilPlayable) {
       this.reshuffleIfEmpty(room);
       if (room.drawPile.length === 0) {
         return { success: false, error: 'Draw pile is empty' };
@@ -1674,8 +1817,9 @@ export class RoomManager {
       return { success: false, error: 'CAUGHT FAILED: UNO catch window is closed' };
     }
 
+    const penaltyCount = Math.max(1, Math.min(10, Number(room.houseRules?.missedUnoPenalty) || 2));
     const drawn = [];
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < penaltyCount; i++) {
       this.reshuffleIfEmpty(room);
       if (room.drawPile.length > 0) {
         drawn.push(room.drawPile.shift());
@@ -1691,13 +1835,13 @@ export class RoomManager {
       room.unoChallengeWindow = room.unoChallengeTargets.length ? { targetPlayerId: room.unoChallengeTargets[0], expiresAt: null } : null;
     }
 
-    const caughtMsg = `CAUGHT! ${target.name} draws 2 cards.`;
+    const caughtMsg = `CAUGHT! ${target.name} draws ${drawn.length} ${drawn.length === 1 ? 'card' : 'cards'}.`;
     this.addLog(room, caughtMsg, 'warn');
     room.lastActionMessage = caughtMsg;
 
     this.checkKnockout(room, target);
     this.persist(roomId);
-    return { success: true, targetId: targetPlayerId, targetName: target.name, drawnCount: drawn.length };
+    return { success: true, targetId: targetPlayerId, targetName: target.name, drawnCount: drawn.length, penaltyConfigured: penaltyCount };
   }
 
   rematch(roomId, playerId) {
@@ -1851,7 +1995,18 @@ export class RoomManager {
     room.players=room.players.filter(player=>accepted.has(player.id));
     const host=room.players.find(player=>player.isHost&&player.isConnected)||room.players.find(player=>player.id===p.initiatorPlayerId&&player.isConnected)||room.players.find(player=>player.isConnected)||room.players.find(player=>player.id===p.initiatorPlayerId)||room.players[0];
     for (const player of [...room.players,...room.spectators]) {player.isHost=player.id===host.id; if(accepted.has(player.id)){player.score=0;player.isReady=true;}}
-    room.mode=p.selectedMode;room.houseRules=defaultHouseRules(room.mode);room.roundNumber=1;room.turnDrawnCardId=null;room.roundResult=null;room.lastDrawFourResult=null;room.pendingRoundWinner=null;room.actionReceipts=[];room.status='lobby';
+    const sameMode = p.selectedMode === room.mode;
+    if (sameMode) {
+      room.houseRules = room.houseRules || defaultHouseRules(room.mode);
+    } else {
+      const common = {
+        missedUnoPenalty: room.houseRules?.missedUnoPenalty || 2,
+        startingHandSize: room.houseRules?.startingHandSize || 7,
+        turnDuration: room.houseRules?.turnDuration || 30,
+      };
+      room.houseRules = { ...defaultHouseRules(p.selectedMode), ...common };
+    }
+    room.mode=p.selectedMode;room.roundNumber=1;room.turnDrawnCardId=null;room.roundResult=null;room.lastDrawFourResult=null;room.pendingRoundWinner=null;room.actionReceipts=[];room.status='lobby';
     p.status='started';p.version++;
     this.startGame(room.roomId,host.id);
   }
@@ -1942,7 +2097,7 @@ export class RoomManager {
       turnDrawnCount: room.turnDrawnCount || 0,
       turnDrawnPlayable: Boolean(room.turnDrawnPlayable),
       turnDeadline: room.turnDeadline || null,
-      turnDurationMs: 30000,
+      turnDurationMs: (Math.max(15, Math.min(60, Number(room.houseRules?.turnDuration) || 30))) * 1000,
       eventLogs: room.eventLogs.slice(0, 20),
     };
 
@@ -1979,8 +2134,14 @@ export class RoomManager {
       myPlayerId: playerId,
       isMyTurn,
       canPlayCards,
-      canDraw: room.mode === 'no_mercy' ? isMyTurn && !room.pendingAction && (room.pendingDrawPenalty > 0 || !room.turnDrawnPlayable) : room.mode === 'classic' ? isMyTurn && !room.turnDrawnCard && (!room.pendingAction || room.pendingAction.type === 'draw4_challenge') : isMyTurn,
-      canPass: room.mode === 'no_mercy' ? isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCount > 0 || room.turnDrawnCard) : room.mode === 'classic' ? isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCard) : isMyTurn && Boolean(room.turnDrawnCard),
+      canDraw: (room.mode === 'no_mercy' || room.houseRules?.drawUntilPlayable)
+        ? isMyTurn && !room.pendingAction && (room.pendingDrawPenalty > 0 || !room.turnDrawnPlayable)
+        : room.mode === 'classic'
+          ? isMyTurn && !room.turnDrawnCard && (!room.pendingAction || room.pendingAction.type === 'draw4_challenge')
+          : isMyTurn && !room.turnDrawnCard,
+      canPass: (room.mode === 'no_mercy' || room.houseRules?.drawUntilPlayable)
+        ? isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCount > 0 || room.turnDrawnCard)
+        : isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCard),
       canCallUno: room.mode !== 'flip' ? room.status === 'playing' && ((isMyTurn && myHand.length === 2 && !room.pendingAction) || room.unoChallengeWindow?.targetPlayerId === playerId || (room.mode === 'no_mercy' && room.unoChallengeTargets?.includes(playerId))) && !myPlayer.hasCalledUno : myHand.length <= 2,
       canCatchUno,
       canCatchUnoTargets,
