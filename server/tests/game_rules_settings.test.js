@@ -399,3 +399,62 @@ test('Game Rules: Rematch preserves settings for same mode and resets to default
     try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
   }
 });
+
+test('Profile & Avatar: Creation, joining and real-time profile updates with sanitization', () => {
+  const { manager, tmpDir } = createFreshManager();
+  try {
+    // 1. Host creates room with builtin avatar
+    const roomRes = manager.createRoom('HostPlayer', 'classic', {}, null, 'lion');
+    const roomId = roomRes.roomId;
+    const hostId = roomRes.playerId;
+
+    const hostView = manager.getClientView(roomId, hostId);
+    const hostPublic = hostView.gameState.players.find(p => p.id === hostId);
+    assert.equal(hostPublic.name, 'HostPlayer');
+    assert.equal(hostPublic.avatar, 'lion');
+
+    // 2. Guest joins with custom base64 image data URL (<= 16KB)
+    const validDataUrl = 'data:image/jpeg;base64,' + Buffer.from('fake-avatar-bytes').toString('base64');
+    const guestRes = manager.joinRoom(roomId, 'GuestPlayer', null, validDataUrl);
+    const guestId = guestRes.playerId;
+
+    const guestView = manager.getClientView(roomId, guestId);
+    const guestPublic = guestView.gameState.players.find(p => p.id === guestId);
+    assert.equal(guestPublic.avatar, validDataUrl);
+
+    // 3. Update profile with valid new name and preset avatar
+    const updateRes = manager.updatePlayerProfile(roomId, hostId, {
+      name: 'SuperHost',
+      avatar: 'rocket',
+    });
+    assert.equal(updateRes.success, true);
+    assert.equal(updateRes.player.name, 'SuperHost');
+    assert.equal(updateRes.player.avatar, 'rocket');
+
+    const updatedHostView = manager.getClientView(roomId, hostId);
+    const updatedHost = updatedHostView.gameState.players.find(p => p.id === hostId);
+    assert.equal(updatedHost.name, 'SuperHost');
+    assert.equal(updatedHost.avatar, 'rocket');
+
+    // 4. Update profile rejects names > 18 chars or empty
+    const tooLongRes = manager.updatePlayerProfile(roomId, hostId, { name: 'ThisNameIsWayTooLongForUnoArena' });
+    assert.equal(tooLongRes.success, false);
+    assert.match(tooLongRes.error, /1 and 18 characters/);
+
+    const emptyRes = manager.updatePlayerProfile(roomId, hostId, { name: '   ' });
+    assert.equal(emptyRes.success, false);
+
+    // 5. Update profile rejects oversized avatar (> 16384 bytes)
+    const oversizedAvatar = 'data:image/jpeg;base64,' + 'A'.repeat(20000);
+    const oversizeRes = manager.updatePlayerProfile(roomId, hostId, { avatar: oversizedAvatar });
+    assert.equal(oversizeRes.success, false);
+    assert.match(oversizeRes.error, /16KB/);
+
+    // Verify original profile was not corrupted
+    const untouchedView = manager.getClientView(roomId, hostId);
+    assert.equal(untouchedView.gameState.players.find(p => p.id === hostId).name, 'SuperHost');
+    assert.equal(untouchedView.gameState.players.find(p => p.id === hostId).avatar, 'rocket');
+  } finally {
+    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
+  }
+});

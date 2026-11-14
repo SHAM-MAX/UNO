@@ -12,6 +12,24 @@ import {
   isCardPlayable,
 } from '../../shared/rules.js';
 
+export const VALID_BUILTIN_AVATARS = [
+  'fox', 'panda', 'lion', 'frog', 'robot',
+  'wizard', 'crown', 'lightning', 'rocket', 'tiger'
+];
+
+export function sanitizeAvatar(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  const lower = trimmed.toLowerCase();
+  if (VALID_BUILTIN_AVATARS.includes(lower)) {
+    return lower;
+  }
+  if (/^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+/=]+$/.test(trimmed) && trimmed.length <= 16384) {
+    return trimmed;
+  }
+  return null;
+}
+
 export function defaultHouseRules(mode = 'classic') {
   const common = {
     missedUnoPenalty: 2,
@@ -153,6 +171,7 @@ export class RoomManager {
       const cleanPlayers = room.players.map((p) => ({
         id: p.id,
         name: p.name,
+        avatar: p.avatar || null,
         isHost: p.isHost,
         isReady: p.isReady,
         isConnected: p.isConnected,
@@ -199,7 +218,7 @@ export class RoomManager {
     return code;
   }
 
-  createRoom(hostName, mode = 'classic', houseRulesInput = {}, providedCode = null) {
+  createRoom(hostName, mode = 'classic', houseRulesInput = {}, providedCode = null, avatar = null) {
     const roomId = (providedCode || this.generateRoomCode()).toUpperCase();
     if (this.rooms.has(roomId)) throw new Error('Room code is already in use. Choose another code.');
     mode = ['classic', 'flip', 'no_mercy'].includes(mode) ? mode : 'classic';
@@ -209,6 +228,7 @@ export class RoomManager {
     const hostPlayer = {
       id: playerId,
       name: String(hostName || '').trim().slice(0, 18) || 'Host',
+      avatar: sanitizeAvatar(avatar),
       isHost: true,
       isReady: true,
       isConnected: true,
@@ -258,7 +278,7 @@ export class RoomManager {
     return { roomId, playerId, sessionToken };
   }
 
-  joinRoom(roomId, playerName, sessionToken) {
+  joinRoom(roomId, playerName, sessionToken, avatar = null) {
     const cleanCode = (roomId || '').trim().toUpperCase();
     const room = this.rooms.get(cleanCode);
     if (!room) {
@@ -270,6 +290,10 @@ export class RoomManager {
       const existing = [...room.players, ...(room.spectators || [])].find((p) => p.sessionToken === sessionToken);
       if (existing) {
         existing.isConnected = true;
+        if (avatar) {
+          const sanitized = sanitizeAvatar(avatar);
+          if (sanitized) existing.avatar = sanitized;
+        }
         if (room.status === 'playing' && !this.turnTimers.has(room.roomId)) this.resetTurnTimer(room);
         this.addLog(room, `${existing.name} reconnected.`);
         this.persist(cleanCode);
@@ -292,6 +316,7 @@ export class RoomManager {
     const player = {
       id: playerId,
       name: String(playerName || '').trim().slice(0, 18) || `Player ${room.players.length + 1}`,
+      avatar: sanitizeAvatar(avatar),
       isHost: false,
       isReady: false,
       isConnected: true,
@@ -555,6 +580,43 @@ export class RoomManager {
 
     this.persist(roomId);
     return { success: true, houseRules: room.houseRules };
+  }
+
+  updatePlayerProfile(roomId, playerId, profileData = {}) {
+    const room = this.rooms.get(roomId);
+    if (!room) return { success: false, error: 'Room not found' };
+    const player = [...room.players, ...(room.spectators || [])].find((p) => p.id === playerId);
+    if (!player) return { success: false, error: 'Player not found' };
+
+    let changed = false;
+    if (profileData.name !== undefined) {
+      if (typeof profileData.name !== 'string') {
+        return { success: false, error: 'Name must be a string' };
+      }
+      const trimmed = profileData.name.trim();
+      if (trimmed.length < 1 || trimmed.length > 18) {
+        return { success: false, error: 'Name must be between 1 and 18 characters' };
+      }
+      player.name = trimmed;
+      this.store.saveSession(player.sessionToken, roomId, playerId, player.name);
+      changed = true;
+    }
+
+    if (profileData.avatar !== undefined) {
+      if (typeof profileData.avatar === 'string' && profileData.avatar.length > 16384) {
+        return { success: false, error: 'Avatar data exceeds 16KB limit' };
+      }
+      const sanitized = sanitizeAvatar(profileData.avatar);
+      player.avatar = sanitized;
+      changed = true;
+    }
+
+    if (changed) {
+      this.persist(roomId);
+      this.onStateChange?.(roomId);
+      return { success: true, player: { id: player.id, name: player.name, avatar: player.avatar } };
+    }
+    return { success: false, error: 'No valid profile updates provided' };
   }
 
   leaveRoom(roomId, playerId) {
@@ -2052,6 +2114,7 @@ export class RoomManager {
     const publicPlayers = room.players.map((p) => ({
       id: p.id,
       name: p.name,
+      avatar: p.avatar || null,
       isHost: p.isHost,
       isReady: p.isReady,
       isConnected: p.isConnected,

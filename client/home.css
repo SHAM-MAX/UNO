@@ -71,12 +71,39 @@ body::before {
 }
 
 .brand-logo {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 0 !important;
+  outline: none;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
   font-size: 1.35rem;
   letter-spacing: -.6px;
   color: #092a20;
   text-transform: uppercase;
   text-shadow: 1px 2px 0 #d4c4a5;
+  box-shadow: none;
+  user-select: none;
+  font-family: inherit;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.brand-logo:hover {
+  background: rgba(9, 54, 40, .08);
+}
+
+.brand-logo:active {
+  transform: scale(0.97);
+}
+
+.brand-logo:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
 }
 
 .logo-badge {
@@ -545,10 +572,43 @@ body::before {
   margin-top: 2px;
 }
 
+.ai-form-scroll-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #d4af37 transparent;
+}
+
+.ai-form-scroll-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-form-scroll-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ai-form-scroll-content::-webkit-scrollbar-thumb {
+  background: #d4af37;
+  border-radius: 4px;
+}
+
+.ai-form-scroll-content::-webkit-scrollbar-thumb:hover {
+  background: #b89228;
+}
+
 .ai-form-footer {
+  flex: 0 0 auto;
   margin-top: auto;
   display: flex;
   flex-direction: column;
+  padding-top: 4px;
+  background: inherit;
+  z-index: 3;
 }
 
 .ai-form-divider {
@@ -730,9 +790,10 @@ body::before {
 
   .home-playbox.show-ai-form {
     left: 6.2%;
-    top: 6.2%;
-    width: 49%;
-    height: 87.6%;
+    top: clamp(2%, 3.2%, 4.5%);
+    width: clamp(380px, 49.5%, 580px);
+    height: clamp(380px, 92%, 94.5%);
+    max-height: 94.5%;
     border-radius: clamp(16px, 1.8cqi, 26px);
     background: #fbf6e8;
     box-shadow: 0 22px 52px rgba(18, 56, 36, 0.24), 0 4px 14px rgba(0, 0, 0, 0.08), inset 0 1px rgba(255, 255, 255, 0.95);
@@ -769,8 +830,7 @@ body::before {
     transition: opacity 220ms ease 30ms, visibility 220ms;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: clamp(12px, 1.5cqi, 20px) clamp(16px, 2.2cqi, 28px);
+    padding: clamp(8px, 1.2cqi, 16px) clamp(12px, 1.8cqi, 24px) 10px;
     overflow: hidden;
   }
 
@@ -934,16 +994,16 @@ body::before {
 
   .home-create-actions {
     display: flex;
-    gap: clamp(4px, 0.5cqi, 8px);
+    gap: clamp(6px, 0.7cqi, 12px);
     width: 100%;
     height: 100%;
   }
 
   .home-create-actions .home-button {
     flex: 1;
-    font-size: clamp(8px, 0.65cqi, 11px);
-    padding: 0 4px;
-    letter-spacing: 0.05em;
+    font-size: clamp(9px, 0.8cqi, 13px);
+    padding: 0 clamp(8px, 0.8cqi, 14px);
+    letter-spacing: 0.04em;
   }
 
   .home-quick {

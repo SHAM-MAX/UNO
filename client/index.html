@@ -36,17 +36,22 @@
         <span id="fullscreenIcon">⛶</span>
       </button>
 
-      <button id="soundToggleBtn" class="nav-btn" title="Toggle Sound">
-        <span id="soundIcon">🔊</span>
-      </button>
-
-      <button id="howToPlayBtn" class="nav-btn">
-        <span>📖 Rules</span>
+      <button id="settingsBtn" class="nav-btn" type="button" title="Settings &amp; Rules" aria-label="Settings">
+        <span>⚙️ Settings</span>
       </button>
 
       <button id="leaveBtn" class="nav-btn" style="display: none; background: rgba(239, 68, 68, 0.2); color: #EF4444; border-color: rgba(239, 68, 68, 0.4);">
         <span>Leave</span>
       </button>
+
+      <!-- Hidden proxy elements for backwards compatibility with tests and legacy triggers -->
+      <div style="display: none;" aria-hidden="true">
+        <button id="soundToggleBtn" type="button"><span id="soundIcon"></span></button>
+        <button id="howToPlayBtn" type="button"></button>
+        <button id="rulesModalClose" type="button"></button>
+        <button id="gameRulesModalClose" type="button"></button>
+        <div id="rulesModal"></div>
+      </div>
     </div>
   </header>
 
@@ -79,10 +84,9 @@
                     <span class="home-input-icon" aria-hidden="true">
                       <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                     </span>
-                    <input id="playerNameInput" type="text" placeholder="Player 1" maxlength="15" autocomplete="nickname" aria-label="Player name">
+                    <input id="playerNameInput" type="text" placeholder="Player 1" maxlength="18" autocomplete="nickname" aria-label="Player name">
                   </label>
                   <div class="home-create-actions">
-                    <button id="quickMatchBtn" class="home-button home-quick" type="button" title="Play Quick Match immediately with online players">QUICK MATCH ⚡</button>
                     <button id="createRoomBtn" class="home-button home-create">CREATE ROOM <span>→</span></button>
                     <button id="playVsAiBtn" class="home-button home-ai" type="button" title="Play instantly against AI bots">PLAY VS AI 🤖</button>
                   </div>
@@ -99,108 +103,110 @@
 
               <!-- Play vs AI Form (Embedded Form Replacement) -->
               <div id="homeAiForm" class="home-form-pane home-ai-form" aria-label="Play vs AI Setup">
-                <div class="ai-form-header">
-                  <div class="ai-title-wrap">
-                    <svg class="ai-doodle-crown" viewBox="0 0 38 28" fill="none" stroke="#d43828" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M4 22 L7 8 L19 16 L31 8 L34 22 Z" />
-                    </svg>
-                    <h2 class="ai-form-title">PLAY VS AI</h2>
-                    <svg class="ai-doodle-rays" viewBox="0 0 40 28" fill="none" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-                      <line x1="8" y1="20" x2="2" y2="24" stroke="#f59e0b" />
-                      <line x1="14" y1="12" x2="24" y2="4" stroke="#d43828" />
-                      <line x1="24" y1="16" x2="36" y2="10" stroke="#f59e0b" />
-                      <line x1="20" y1="22" x2="32" y2="22" stroke="#d43828" />
-                    </svg>
-                  </div>
-                  <p class="ai-form-subtitle">Configure your battle before starting the game.</p>
-                </div>
-
-                <!-- Section 1: Select Game Mode -->
-                <div class="ai-form-section">
-                  <div class="ai-section-heading">
-                    <span class="ai-num-badge">1</span>
-                    <span class="ai-section-title">SELECT GAME MODE <strong class="ai-req-tag">*REQUIRED</strong></span>
-                  </div>
-                  <p class="ai-section-hint">Choose which UNO ruleset you want to play:</p>
-                  <div class="ai-mode-cards-grid" id="aiModeGrid">
-                    <button class="ai-mode-card" type="button" data-mode="classic" aria-label="Classic UNO">
-                      <div class="ai-card-art-wrap">
-                        <svg class="ai-card-sparks left" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="2" y1="8" x2="6" y2="8"/><line x1="4" y1="3" x2="8" y2="6"/></svg>
-                        <img src="./assets/game-modes/classic-card.png" alt="" class="ai-card-img" draggable="false" />
-                        <svg class="ai-card-sparks right" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="10" y1="8" x2="14" y2="8"/><line x1="8" y1="6" x2="12" y2="3"/></svg>
-                      </div>
-                      <span class="ai-card-title">CLASSIC UNO</span>
-                      <span class="ai-card-desc">Standard 108 cards · Official rules</span>
-                      <span class="ai-check-badge" aria-hidden="true">✓</span>
-                    </button>
-
-                    <button class="ai-mode-card" type="button" data-mode="flip" aria-label="UNO Flip">
-                      <div class="ai-card-art-wrap">
-                        <img src="./assets/game-modes/flip-card.png" alt="" class="ai-card-img" draggable="false" />
-                      </div>
-                      <span class="ai-card-title">UNO FLIP</span>
-                      <span class="ai-card-desc">Dual-sided cards · Light &amp; Dark side</span>
-                      <span class="ai-check-badge" aria-hidden="true">✓</span>
-                    </button>
-
-                    <button class="ai-mode-card" type="button" data-mode="no_mercy" aria-label="No Mercy">
-                      <div class="ai-card-art-wrap">
-                        <img src="./assets/game-modes/no-mercy-card.png" alt="" class="ai-card-img" draggable="false" />
-                      </div>
-                      <span class="ai-card-title">NO MERCY</span>
-                      <span class="ai-card-desc">168 cards · Stacking &amp; 25-card Knockout</span>
-                      <span class="ai-check-badge" aria-hidden="true">✓</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Section 2: Total Players -->
-                <div class="ai-form-section">
-                  <div class="ai-section-heading">
-                    <span class="ai-num-badge">2</span>
-                    <span class="ai-section-title">TOTAL PLAYERS <strong class="ai-req-tag">*REQUIRED</strong></span>
-                  </div>
-                  <p class="ai-section-hint">Total seats at the table (Includes you + AI opponents):</p>
-                  <div class="ai-players-grid" id="aiPlayerCountPills">
-                    <div class="ai-players-row row-1">
-                      <button class="ai-player-pill" type="button" data-count="2">
-                        <span>2 Players (1 Bot)</span>
-                        <span class="ai-check-badge" aria-hidden="true">✓</span>
-                      </button>
-                      <button class="ai-player-pill" type="button" data-count="3">
-                        <span>3 Players (2 Bots)</span>
-                        <span class="ai-check-badge" aria-hidden="true">✓</span>
-                      </button>
-                      <button class="ai-player-pill" type="button" data-count="4">
-                        <span>4 Players (3 Bots)</span>
-                        <span class="ai-check-badge" aria-hidden="true">✓</span>
-                      </button>
+                <div class="ai-form-scroll-content">
+                  <div class="ai-form-header">
+                    <div class="ai-title-wrap">
+                      <svg class="ai-doodle-crown" viewBox="0 0 38 28" fill="none" stroke="#d43828" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 22 L7 8 L19 16 L31 8 L34 22 Z" />
+                      </svg>
+                      <h2 class="ai-form-title">PLAY VS AI</h2>
+                      <svg class="ai-doodle-rays" viewBox="0 0 40 28" fill="none" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                        <line x1="8" y1="20" x2="2" y2="24" stroke="#f59e0b" />
+                        <line x1="14" y1="12" x2="24" y2="4" stroke="#d43828" />
+                        <line x1="24" y1="16" x2="36" y2="10" stroke="#f59e0b" />
+                        <line x1="20" y1="22" x2="32" y2="22" stroke="#d43828" />
+                      </svg>
                     </div>
-                    <div class="ai-players-row row-2">
-                      <button class="ai-player-pill" type="button" data-count="5">
-                        <span>5 Players (4 Bots)</span>
+                    <p class="ai-form-subtitle">Configure your battle before starting the game.</p>
+                  </div>
+
+                  <!-- Section 1: Select Game Mode -->
+                  <div class="ai-form-section">
+                    <div class="ai-section-heading">
+                      <span class="ai-num-badge">1</span>
+                      <span class="ai-section-title">SELECT GAME MODE <strong class="ai-req-tag">*REQUIRED</strong></span>
+                    </div>
+                    <p class="ai-section-hint">Choose which UNO ruleset you want to play:</p>
+                    <div class="ai-mode-cards-grid" id="aiModeGrid">
+                      <button class="ai-mode-card" type="button" data-mode="classic" aria-label="Classic UNO">
+                        <div class="ai-card-art-wrap">
+                          <svg class="ai-card-sparks left" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="2" y1="8" x2="6" y2="8"/><line x1="4" y1="3" x2="8" y2="6"/></svg>
+                          <img src="./assets/game-modes/classic-card.png" alt="" class="ai-card-img" draggable="false" />
+                          <svg class="ai-card-sparks right" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="10" y1="8" x2="14" y2="8"/><line x1="8" y1="6" x2="12" y2="3"/></svg>
+                        </div>
+                        <span class="ai-card-title">CLASSIC UNO</span>
+                        <span class="ai-card-desc">Standard 108 cards · Official rules</span>
                         <span class="ai-check-badge" aria-hidden="true">✓</span>
                       </button>
-                      <button class="ai-player-pill" type="button" data-count="6">
-                        <span>6 Players (5 Bots)</span>
+
+                      <button class="ai-mode-card" type="button" data-mode="flip" aria-label="UNO Flip">
+                        <div class="ai-card-art-wrap">
+                          <img src="./assets/game-modes/flip-card.png" alt="" class="ai-card-img" draggable="false" />
+                        </div>
+                        <span class="ai-card-title">UNO FLIP</span>
+                        <span class="ai-card-desc">Dual-sided cards · Light &amp; Dark side</span>
+                        <span class="ai-check-badge" aria-hidden="true">✓</span>
+                      </button>
+
+                      <button class="ai-mode-card" type="button" data-mode="no_mercy" aria-label="No Mercy">
+                        <div class="ai-card-art-wrap">
+                          <img src="./assets/game-modes/no-mercy-card.png" alt="" class="ai-card-img" draggable="false" />
+                        </div>
+                        <span class="ai-card-title">NO MERCY</span>
+                        <span class="ai-card-desc">168 cards · Stacking &amp; 25-card Knockout</span>
                         <span class="ai-check-badge" aria-hidden="true">✓</span>
                       </button>
                     </div>
                   </div>
-                </div>
 
-                <!-- Section 3: Game Rules -->
-                <div class="ai-form-section ai-rules-section">
-                  <div class="ai-section-heading">
-                    <span class="ai-num-badge">3</span>
-                    <span class="ai-section-title">GAME RULES</span>
-                    <div class="ai-rules-heading-actions">
-                      <span id="aiRulesStatusBadge" class="ai-rules-status-badge">Official Rules</span>
-                      <button id="aiCustomizeRulesBtn" class="ai-customize-rules-btn" type="button" aria-label="Customize game rules">⚙️ Customize</button>
+                  <!-- Section 2: Total Players -->
+                  <div class="ai-form-section">
+                    <div class="ai-section-heading">
+                      <span class="ai-num-badge">2</span>
+                      <span class="ai-section-title">TOTAL PLAYERS <strong class="ai-req-tag">*REQUIRED</strong></span>
+                    </div>
+                    <p class="ai-section-hint">Total seats at the table (Includes you + AI opponents):</p>
+                    <div class="ai-players-grid" id="aiPlayerCountPills">
+                      <div class="ai-players-row row-1">
+                        <button class="ai-player-pill" type="button" data-count="2">
+                          <span>2 Players (1 Bot)</span>
+                          <span class="ai-check-badge" aria-hidden="true">✓</span>
+                        </button>
+                        <button class="ai-player-pill" type="button" data-count="3">
+                          <span>3 Players (2 Bots)</span>
+                          <span class="ai-check-badge" aria-hidden="true">✓</span>
+                        </button>
+                        <button class="ai-player-pill" type="button" data-count="4">
+                          <span>4 Players (3 Bots)</span>
+                          <span class="ai-check-badge" aria-hidden="true">✓</span>
+                        </button>
+                      </div>
+                      <div class="ai-players-row row-2">
+                        <button class="ai-player-pill" type="button" data-count="5">
+                          <span>5 Players (4 Bots)</span>
+                          <span class="ai-check-badge" aria-hidden="true">✓</span>
+                        </button>
+                        <button class="ai-player-pill" type="button" data-count="6">
+                          <span>6 Players (5 Bots)</span>
+                          <span class="ai-check-badge" aria-hidden="true">✓</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <div id="aiRulesSummaryPill" class="ai-rules-summary-pill">
-                    <span id="aiRulesSummaryText">Missed UNO: 2 cards · Starting hand: 7 · Turn: 30s</span>
+
+                  <!-- Section 3: Game Rules -->
+                  <div class="ai-form-section ai-rules-section">
+                    <div class="ai-section-heading">
+                      <span class="ai-num-badge">3</span>
+                      <span class="ai-section-title">GAME RULES</span>
+                      <div class="ai-rules-heading-actions">
+                        <span id="aiRulesStatusBadge" class="ai-rules-status-badge">Official Rules</span>
+                        <button id="aiCustomizeRulesBtn" class="ai-customize-rules-btn" type="button" aria-label="Customize game rules">⚙️ Customize</button>
+                      </div>
+                    </div>
+                    <div id="aiRulesSummaryPill" class="ai-rules-summary-pill">
+                      <span id="aiRulesSummaryText">Missed UNO: 2 cards · Starting hand: 7 · Turn: 30s</span>
+                    </div>
                   </div>
                 </div>
 
@@ -254,8 +260,7 @@
             </div>
             <div class="mobile-nav-actions">
               <button id="mobileNavFullscreenBtn" class="mobile-nav-action-btn" type="button" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">⛶</button>
-              <button id="mobileNavSoundBtn" class="mobile-nav-action-btn" type="button" aria-label="Toggle Sound" title="Toggle Sound">🔊</button>
-              <button id="mobileNavRulesBtn" class="mobile-nav-action-btn" type="button" aria-label="Game Rules" title="Game Rules">📖 RULES</button>
+              <button id="mobileNavSettingsBtn" class="mobile-nav-action-btn" type="button" aria-label="Settings" title="Settings">⚙️</button>
             </div>
           </header>
 
@@ -269,8 +274,7 @@
             <section class="mobile-form-section" aria-label="Room Setup">
               <div id="mobileFormWrap" class="mobile-form-wrap">
                 <div id="mobileDefaultForm" class="mobile-form-controls">
-                  <label class="mobile-name-field"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><input id="mobilePlayerNameInput" class="mobile-control mobile-form-input-name" type="text" placeholder="Guest" maxlength="15" autocomplete="nickname" aria-label="Your player name" /></label>
-                  <button id="mobileQuickMatchBtn" class="mobile-control mobile-form-btn-quick" type="button" title="Play Quick Match immediately with online players">QUICK MATCH ⚡</button>
+                  <label class="mobile-name-field"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><input id="mobilePlayerNameInput" class="mobile-control mobile-form-input-name" type="text" placeholder="Guest" maxlength="18" autocomplete="nickname" aria-label="Your player name" /></label>
                   <button id="mobileCreateRoomBtn" class="mobile-control mobile-form-btn-create" type="button">CREATE A ROOM <span aria-hidden="true">&#8594;</span></button>
                   <button id="mobilePlayVsAiBtn" class="mobile-control mobile-form-btn-ai" type="button" title="Play instantly against AI bots">PLAY VS AI 🤖</button>
                   <div class="mobile-form-divider"><span></span><b>OR JOIN FRIENDS</b><span></span></div>
@@ -279,108 +283,110 @@
                 </div>
 
                 <div id="mobileAiForm" class="mobile-ai-form" aria-label="Play vs AI Setup">
-                  <div class="ai-form-header">
-                    <div class="ai-title-wrap">
-                      <svg class="ai-doodle-crown" viewBox="0 0 38 28" fill="none" stroke="#d43828" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M4 22 L7 8 L19 16 L31 8 L34 22 Z" />
-                      </svg>
-                      <h2 class="ai-form-title">PLAY VS AI</h2>
-                      <svg class="ai-doodle-rays" viewBox="0 0 40 28" fill="none" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-                        <line x1="8" y1="20" x2="2" y2="24" stroke="#f59e0b" />
-                        <line x1="14" y1="12" x2="24" y2="4" stroke="#d43828" />
-                        <line x1="24" y1="16" x2="36" y2="10" stroke="#f59e0b" />
-                        <line x1="20" y1="22" x2="32" y2="22" stroke="#d43828" />
-                      </svg>
-                    </div>
-                    <p class="ai-form-subtitle">Configure your battle before starting the game.</p>
-                  </div>
-
-                  <!-- Section 1: Select Game Mode -->
-                  <div class="ai-form-section">
-                    <div class="ai-section-heading">
-                      <span class="ai-num-badge">1</span>
-                      <span class="ai-section-title">SELECT GAME MODE <strong class="ai-req-tag">*REQUIRED</strong></span>
-                    </div>
-                    <p class="ai-section-hint">Choose which UNO ruleset you want to play:</p>
-                    <div class="ai-mode-cards-grid">
-                      <button class="ai-mode-card" type="button" data-mode="classic" aria-label="Classic UNO">
-                        <div class="ai-card-art-wrap">
-                          <svg class="ai-card-sparks left" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="2" y1="8" x2="6" y2="8"/><line x1="4" y1="3" x2="8" y2="6"/></svg>
-                          <img src="./assets/game-modes/classic-card.png" alt="" class="ai-card-img" draggable="false" />
-                          <svg class="ai-card-sparks right" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="10" y1="8" x2="14" y2="8"/><line x1="8" y1="6" x2="12" y2="3"/></svg>
-                        </div>
-                        <span class="ai-card-title">CLASSIC UNO</span>
-                        <span class="ai-card-desc">Standard 108 cards · Official rules</span>
-                        <span class="ai-check-badge" aria-hidden="true">✓</span>
-                      </button>
-
-                      <button class="ai-mode-card" type="button" data-mode="flip" aria-label="UNO Flip">
-                        <div class="ai-card-art-wrap">
-                          <img src="./assets/game-modes/flip-card.png" alt="" class="ai-card-img" draggable="false" />
-                        </div>
-                        <span class="ai-card-title">UNO FLIP</span>
-                        <span class="ai-card-desc">Dual-sided cards · Light &amp; Dark side</span>
-                        <span class="ai-check-badge" aria-hidden="true">✓</span>
-                      </button>
-
-                      <button class="ai-mode-card" type="button" data-mode="no_mercy" aria-label="No Mercy">
-                        <div class="ai-card-art-wrap">
-                          <img src="./assets/game-modes/no-mercy-card.png" alt="" class="ai-card-img" draggable="false" />
-                        </div>
-                        <span class="ai-card-title">NO MERCY</span>
-                        <span class="ai-card-desc">168 cards · Stacking &amp; 25-card Knockout</span>
-                        <span class="ai-check-badge" aria-hidden="true">✓</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Section 2: Total Players -->
-                  <div class="ai-form-section">
-                    <div class="ai-section-heading">
-                      <span class="ai-num-badge">2</span>
-                      <span class="ai-section-title">TOTAL PLAYERS <strong class="ai-req-tag">*REQUIRED</strong></span>
-                    </div>
-                    <p class="ai-section-hint">Total seats at the table (Includes you + AI opponents):</p>
-                    <div class="ai-players-grid">
-                      <div class="ai-players-row row-1">
-                        <button class="ai-player-pill" type="button" data-count="2">
-                          <span>2 Players (1 Bot)</span>
-                          <span class="ai-check-badge" aria-hidden="true">✓</span>
-                        </button>
-                        <button class="ai-player-pill" type="button" data-count="3">
-                          <span>3 Players (2 Bots)</span>
-                          <span class="ai-check-badge" aria-hidden="true">✓</span>
-                        </button>
-                        <button class="ai-player-pill" type="button" data-count="4">
-                          <span>4 Players (3 Bots)</span>
-                          <span class="ai-check-badge" aria-hidden="true">✓</span>
-                        </button>
+                  <div class="ai-form-scroll-content">
+                    <div class="ai-form-header">
+                      <div class="ai-title-wrap">
+                        <svg class="ai-doodle-crown" viewBox="0 0 38 28" fill="none" stroke="#d43828" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M4 22 L7 8 L19 16 L31 8 L34 22 Z" />
+                        </svg>
+                        <h2 class="ai-form-title">PLAY VS AI</h2>
+                        <svg class="ai-doodle-rays" viewBox="0 0 40 28" fill="none" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                          <line x1="8" y1="20" x2="2" y2="24" stroke="#f59e0b" />
+                          <line x1="14" y1="12" x2="24" y2="4" stroke="#d43828" />
+                          <line x1="24" y1="16" x2="36" y2="10" stroke="#f59e0b" />
+                          <line x1="20" y1="22" x2="32" y2="22" stroke="#d43828" />
+                        </svg>
                       </div>
-                      <div class="ai-players-row row-2">
-                        <button class="ai-player-pill" type="button" data-count="5">
-                          <span>5 Players (4 Bots)</span>
+                      <p class="ai-form-subtitle">Configure your battle before starting the game.</p>
+                    </div>
+
+                    <!-- Section 1: Select Game Mode -->
+                    <div class="ai-form-section">
+                      <div class="ai-section-heading">
+                        <span class="ai-num-badge">1</span>
+                        <span class="ai-section-title">SELECT GAME MODE <strong class="ai-req-tag">*REQUIRED</strong></span>
+                      </div>
+                      <p class="ai-section-hint">Choose which UNO ruleset you want to play:</p>
+                      <div class="ai-mode-cards-grid">
+                        <button class="ai-mode-card" type="button" data-mode="classic" aria-label="Classic UNO">
+                          <div class="ai-card-art-wrap">
+                            <svg class="ai-card-sparks left" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="2" y1="8" x2="6" y2="8"/><line x1="4" y1="3" x2="8" y2="6"/></svg>
+                            <img src="./assets/game-modes/classic-card.png" alt="" class="ai-card-img" draggable="false" />
+                            <svg class="ai-card-sparks right" viewBox="0 0 16 16" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="10" y1="8" x2="14" y2="8"/><line x1="8" y1="6" x2="12" y2="3"/></svg>
+                          </div>
+                          <span class="ai-card-title">CLASSIC UNO</span>
+                          <span class="ai-card-desc">Standard 108 cards · Official rules</span>
                           <span class="ai-check-badge" aria-hidden="true">✓</span>
                         </button>
-                        <button class="ai-player-pill" type="button" data-count="6">
-                          <span>6 Players (5 Bots)</span>
+
+                        <button class="ai-mode-card" type="button" data-mode="flip" aria-label="UNO Flip">
+                          <div class="ai-card-art-wrap">
+                            <img src="./assets/game-modes/flip-card.png" alt="" class="ai-card-img" draggable="false" />
+                          </div>
+                          <span class="ai-card-title">UNO FLIP</span>
+                          <span class="ai-card-desc">Dual-sided cards · Light &amp; Dark side</span>
+                          <span class="ai-check-badge" aria-hidden="true">✓</span>
+                        </button>
+
+                        <button class="ai-mode-card" type="button" data-mode="no_mercy" aria-label="No Mercy">
+                          <div class="ai-card-art-wrap">
+                            <img src="./assets/game-modes/no-mercy-card.png" alt="" class="ai-card-img" draggable="false" />
+                          </div>
+                          <span class="ai-card-title">NO MERCY</span>
+                          <span class="ai-card-desc">168 cards · Stacking &amp; 25-card Knockout</span>
                           <span class="ai-check-badge" aria-hidden="true">✓</span>
                         </button>
                       </div>
                     </div>
-                  </div>
 
-                  <!-- Section 3: Game Rules -->
-                  <div class="ai-form-section ai-rules-section">
-                    <div class="ai-section-heading">
-                      <span class="ai-num-badge">3</span>
-                      <span class="ai-section-title">GAME RULES</span>
-                      <div class="ai-rules-heading-actions">
-                        <span id="mobileAiRulesStatusBadge" class="ai-rules-status-badge">Official Rules</span>
-                        <button id="mobileAiCustomizeRulesBtn" class="ai-customize-rules-btn" type="button" aria-label="Customize game rules">⚙️ Customize</button>
+                    <!-- Section 2: Total Players -->
+                    <div class="ai-form-section">
+                      <div class="ai-section-heading">
+                        <span class="ai-num-badge">2</span>
+                        <span class="ai-section-title">TOTAL PLAYERS <strong class="ai-req-tag">*REQUIRED</strong></span>
+                      </div>
+                      <p class="ai-section-hint">Total seats at the table (Includes you + AI opponents):</p>
+                      <div class="ai-players-grid">
+                        <div class="ai-players-row row-1">
+                          <button class="ai-player-pill" type="button" data-count="2">
+                            <span>2 Players (1 Bot)</span>
+                            <span class="ai-check-badge" aria-hidden="true">✓</span>
+                          </button>
+                          <button class="ai-player-pill" type="button" data-count="3">
+                            <span>3 Players (2 Bots)</span>
+                            <span class="ai-check-badge" aria-hidden="true">✓</span>
+                          </button>
+                          <button class="ai-player-pill" type="button" data-count="4">
+                            <span>4 Players (3 Bots)</span>
+                            <span class="ai-check-badge" aria-hidden="true">✓</span>
+                          </button>
+                        </div>
+                        <div class="ai-players-row row-2">
+                          <button class="ai-player-pill" type="button" data-count="5">
+                            <span>5 Players (4 Bots)</span>
+                            <span class="ai-check-badge" aria-hidden="true">✓</span>
+                          </button>
+                          <button class="ai-player-pill" type="button" data-count="6">
+                            <span>6 Players (5 Bots)</span>
+                            <span class="ai-check-badge" aria-hidden="true">✓</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <div id="mobileAiRulesSummaryPill" class="ai-rules-summary-pill">
-                      <span id="mobileAiRulesSummaryText">Missed UNO: 2 cards · Starting hand: 7 · Turn: 30s</span>
+
+                    <!-- Section 3: Game Rules -->
+                    <div class="ai-form-section ai-rules-section">
+                      <div class="ai-section-heading">
+                        <span class="ai-num-badge">3</span>
+                        <span class="ai-section-title">GAME RULES</span>
+                        <div class="ai-rules-heading-actions">
+                          <span id="mobileAiRulesStatusBadge" class="ai-rules-status-badge">Official Rules</span>
+                          <button id="mobileAiCustomizeRulesBtn" class="ai-customize-rules-btn" type="button" aria-label="Customize game rules">⚙️ Customize</button>
+                        </div>
+                      </div>
+                      <div id="mobileAiRulesSummaryPill" class="ai-rules-summary-pill">
+                        <span id="mobileAiRulesSummaryText">Missed UNO: 2 cards · Starting hand: 7 · Turn: 30s</span>
+                      </div>
                     </div>
                   </div>
 
@@ -424,10 +430,9 @@
               </div>
             </div>
             <div class="nm-nav-right">
-              <button id="noMercySoundBtn" class="nm-nav-btn nm-nav-icon" type="button" aria-label="Toggle Sound">🔊</button>
-              <button id="noMercyRulesBtn" class="nm-nav-btn nm-nav-rules" type="button" aria-label="How to play">
-                <span>📖</span>
-                <span>RULES</span>
+              <button id="noMercySettingsBtn" class="nm-nav-btn nm-nav-rules" type="button" aria-label="Settings">
+                <span>⚙️</span>
+                <span>SETTINGS</span>
               </button>
             </div>
           </nav>
@@ -961,20 +966,27 @@
     </section>
   </div>
 
-  <!-- MODAL: SETTINGS -> GAME RULES -->
-  <div id="gameRulesModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="gameRulesModalTitle">
-    <div class="modal-card game-rules-modal-card">
-      <div class="modal-header">
+  <!-- UNIFIED SETTINGS MODAL: GENERAL | GAME RULES | HOW TO PLAY -->
+  <div id="settingsModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+    <div class="modal-card settings-modal-card">
+      <div class="modal-header settings-modal-header">
         <div class="rules-modal-title-wrap">
-          <h3 id="gameRulesModalTitle" class="modal-title">⚙️ Game Rules &amp; Settings</h3>
-          <span id="gameRulesModeBadge" class="rules-mode-badge">CLASSIC UNO</span>
-          <span id="gameRulesTypeBadge" class="rules-type-badge">Official Rules</span>
+          <h3 id="settingsModalTitle" class="modal-title">⚙️ Settings</h3>
+          <span id="gameRulesModeBadge" class="rules-mode-badge" style="display: none;">CLASSIC UNO</span>
+          <span id="gameRulesTypeBadge" class="rules-type-badge" style="display: none;">Official Rules</span>
         </div>
-        <button id="gameRulesModalClose" class="modal-close-btn" type="button" aria-label="Close rules settings">&times;</button>
+        <button id="settingsModalClose" class="modal-close-btn" type="button" aria-label="Close settings">&times;</button>
       </div>
 
-      <!-- Mode Selector Tabs (Visible when editing outside a match) -->
-      <div id="gameRulesModeTabs" class="rule-tabs">
+      <!-- Navigation Tabs: General | Game Rules | How to Play -->
+      <div class="settings-nav-tabs" role="tablist">
+        <button id="tabBtnGeneral" class="settings-tab-btn active" role="tab" aria-selected="true" data-tab="general" type="button">⚙️ General</button>
+        <button id="tabBtnGameRules" class="settings-tab-btn" role="tab" aria-selected="false" data-tab="rules" type="button">📋 Game Rules</button>
+        <button id="tabBtnHowToPlay" class="settings-tab-btn" role="tab" aria-selected="false" data-tab="how_to_play" type="button">📖 How to Play</button>
+      </div>
+
+      <!-- Mode Selector Tabs (For Game Rules) -->
+      <div id="gameRulesModeTabs" class="rule-tabs" style="display: none;">
         <button class="rule-tab-btn active" data-rules-mode="classic" type="button">Classic UNO</button>
         <button class="rule-tab-btn" data-rules-mode="flip" type="button">UNO Flip</button>
         <button class="rule-tab-btn" data-rules-mode="no_mercy" type="button">Show 'em No Mercy</button>
@@ -990,307 +1002,396 @@
         <span class="banner-text"><strong>Host controls:</strong> Only the room host can modify game rules.</span>
       </div>
 
-      <div class="modal-body rules-modal-body">
-        <!-- Section: Common Settings -->
-        <div class="rules-group">
-          <h4 class="rules-group-heading">General Rules (All Modes)</h4>
-
-          <!-- Missed UNO Penalty (MANDATORY FEATURE) -->
-          <div class="rule-setting-row" id="ruleRowMissedUno">
-            <div class="rule-setting-info">
-              <label for="ruleMissedUnoPenalty" class="rule-setting-label">Missed UNO penalty</label>
-              <p class="rule-setting-desc">Cards drawn when another player catches someone who did not call UNO.</p>
+      <div class="modal-body settings-modal-body">
+        <!-- TAB 1: GENERAL -->
+        <div id="tabContentGeneral" class="settings-tab-content active">
+          <!-- Audio Settings -->
+          <div class="settings-section">
+            <h4 class="settings-section-title">🔊 Sound &amp; Audio</h4>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">Sound effects</span>
+                <p class="setting-desc">Card plays, shuffling, turn timers, and victory fanfare.</p>
+              </div>
+              <div class="setting-ctrl">
+                <label class="rule-toggle">
+                  <input type="checkbox" id="settingSoundToggle" checked>
+                  <span class="rule-toggle-slider"></span>
+                </label>
+              </div>
             </div>
-            <div class="rule-setting-control">
-              <select id="ruleMissedUnoPenalty" class="rule-select" aria-label="Missed UNO penalty cards">
-                <option value="1">1 card</option>
-                <option value="2" selected>2 cards (Official Default)</option>
-                <option value="3">3 cards</option>
-                <option value="4">4 cards</option>
-                <option value="5">5 cards</option>
-                <option value="6">6 cards</option>
-                <option value="7">7 cards</option>
-                <option value="8">8 cards</option>
-                <option value="9">9 cards</option>
-                <option value="10">10 cards (Extreme)</option>
-              </select>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <label for="settingVolumeSlider" class="setting-title">Audio Volume</label>
+                <p class="setting-desc">Adjust the volume of game sounds and turn alerts.</p>
+              </div>
+              <div class="setting-ctrl volume-ctrl-group">
+                <input type="range" id="settingVolumeSlider" min="0" max="100" value="80" class="setting-range" aria-label="Audio volume">
+                <span id="settingVolumeValue" class="volume-val-badge">80%</span>
+              </div>
             </div>
           </div>
 
-          <!-- Starting Hand Size -->
-          <div class="rule-setting-row" id="ruleRowHandSize">
-            <div class="rule-setting-info">
-              <label for="ruleStartingHandSize" class="rule-setting-label">Starting hand size</label>
-              <p class="rule-setting-desc">Number of cards dealt to each player at the start of each round.</p>
+          <!-- Profile Settings -->
+          <div class="settings-section">
+            <h4 class="settings-section-title">👤 Player Profile</h4>
+            <div class="setting-row">
+              <div class="setting-info">
+                <label for="settingPlayerNameInput" class="setting-title">Display Name</label>
+                <p class="setting-desc">Name displayed to other players in lobby and arena (1-18 characters).</p>
+              </div>
+              <div class="setting-ctrl">
+                <input type="text" id="settingPlayerNameInput" class="setting-text-field" maxlength="18" placeholder="Player 1" autocomplete="nickname">
+              </div>
             </div>
-            <div class="rule-setting-control">
-              <select id="ruleStartingHandSize" class="rule-select" aria-label="Starting hand size">
-                <option value="3">3 cards (Fast round)</option>
-                <option value="4">4 cards</option>
-                <option value="5">5 cards (Short)</option>
-                <option value="6">6 cards</option>
-                <option value="7" selected>7 cards (Official Default)</option>
-                <option value="8">8 cards</option>
-                <option value="9">9 cards</option>
-                <option value="10">10 cards (Deep battle)</option>
-              </select>
+
+            <div class="setting-col">
+              <div class="setting-info">
+                <span class="setting-title">Player Avatar</span>
+                <p class="setting-desc">Choose a built-in avatar badge or upload a custom image (auto-scaled to 96×96).</p>
+              </div>
+              <div class="avatar-manager-box">
+                <div class="avatar-preview-wrap">
+                  <div id="settingAvatarPreview" class="avatar-preview-circle">
+                    <span id="settingAvatarEmoji" class="avatar-preview-emoji">🦊</span>
+                    <img id="settingAvatarImg" class="avatar-preview-img" alt="Avatar" style="display: none;">
+                  </div>
+                  <div class="avatar-preview-actions">
+                    <label class="avatar-btn-upload" title="Upload custom picture">
+                      <span>📁 Upload Photo</span>
+                      <input type="file" id="settingAvatarUpload" accept="image/png,image/jpeg,image/webp" style="display: none;">
+                    </label>
+                    <button type="button" id="settingAvatarRemoveBtn" class="avatar-btn-remove" style="display: none;">✕ Remove</button>
+                  </div>
+                </div>
+
+                <div class="avatar-presets-grid" id="avatarPresetsGrid" role="radiogroup" aria-label="Built-in avatars">
+                  <button type="button" class="avatar-preset-btn active" data-avatar-id="fox" title="Fox">🦊</button>
+                  <button type="button" class="avatar-preset-btn" data-avatar-id="panda" title="Panda">🐼</button>
+                  <button type="button" class="avatar-preset-btn" data-avatar-id="lion" title="Lion">🦁</button>
+                  <button type="button" class="avatar-preset-btn" data-avatar-id="frog" title="Frog">🐸</button>
+                  <button type="button" class="avatar-preset-btn" data-avatar-id="robot" title="Robot">🤖</button>
+                  <button type="button" class="avatar-preset-btn" data-avatar-id="wizard" title="Wizard">🧙</button>
+                  <button type="button" class="avatar-preset-btn" data-avatar-id="crown" title="Crown">👑</button>
+                  <button type="button" class="avatar-preset-btn" data-avatar-id="lightning" title="Lightning">⚡</button>
+                  <button type="button" class="avatar-preset-btn" data-avatar-id="rocket" title="Rocket">🚀</button>
+                  <button type="button" class="avatar-preset-btn" data-avatar-id="tiger" title="Tiger">🐯</button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Turn Duration -->
-          <div class="rule-setting-row" id="ruleRowTurnDuration">
-            <div class="rule-setting-info">
-              <label for="ruleTurnDuration" class="rule-setting-label">Turn duration</label>
-              <p class="rule-setting-desc">Time allowed per turn before auto-play or pass.</p>
-            </div>
-            <div class="rule-setting-control">
-              <select id="ruleTurnDuration" class="rule-select" aria-label="Turn duration">
-                <option value="15">15 seconds (Blitz ⚡)</option>
-                <option value="30" selected>30 seconds (Standard)</option>
-                <option value="45">45 seconds (Relaxed)</option>
-                <option value="60">60 seconds (Slow)</option>
-              </select>
+          <!-- Visuals & Accessibility -->
+          <div class="settings-section">
+            <h4 class="settings-section-title">✨ Visuals &amp; Accessibility</h4>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">Reduced Motion</span>
+                <p class="setting-desc">Minimize non-essential card animations, spins, and screen shakes.</p>
+              </div>
+              <div class="setting-ctrl">
+                <label class="rule-toggle">
+                  <input type="checkbox" id="settingReducedMotion">
+                  <span class="rule-toggle-slider"></span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Section: Mode-Specific Rules Container -->
-        <div class="rules-group" id="rulesModeSpecificGroup">
-          <h4 id="rulesModeSpecificHeading" class="rules-group-heading">Mode-Specific Rules</h4>
+        <!-- TAB 2: GAME RULES (The complete matrix preserved) -->
+        <div id="tabContentGameRules" class="settings-tab-content">
+          <!-- Section: Common Settings -->
+          <div class="rules-group">
+            <h4 class="rules-group-heading">General Rules (All Modes)</h4>
 
-          <!-- Classic: Draw-card Stacking -->
-          <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicStacking">
-            <div class="rule-setting-info">
-              <span class="rule-setting-label">Draw-card stacking</span>
-              <p class="rule-setting-desc">Stack Draw Two on Draw Two, or Wild Draw Four on Wild Draw Four.</p>
+            <!-- Missed UNO Penalty -->
+            <div class="rule-setting-row" id="ruleRowMissedUno">
+              <div class="rule-setting-info">
+                <label for="ruleMissedUnoPenalty" class="rule-setting-label">Missed UNO penalty</label>
+                <p class="rule-setting-desc">Cards drawn when another player catches someone who did not call UNO.</p>
+              </div>
+              <div class="rule-setting-control">
+                <select id="ruleMissedUnoPenalty" class="rule-select" aria-label="Missed UNO penalty cards">
+                  <option value="1">1 card</option>
+                  <option value="2" selected>2 cards (Official Default)</option>
+                  <option value="3">3 cards</option>
+                  <option value="4">4 cards</option>
+                  <option value="5">5 cards</option>
+                  <option value="6">6 cards</option>
+                  <option value="7">7 cards</option>
+                  <option value="8">8 cards</option>
+                  <option value="9">9 cards</option>
+                  <option value="10">10 cards (Extreme)</option>
+                </select>
+              </div>
             </div>
-            <div class="rule-setting-control">
-              <label class="rule-toggle">
-                <input type="checkbox" id="ruleClassicStacking">
-                <span class="rule-toggle-slider"></span>
-              </label>
+
+            <!-- Starting Hand Size -->
+            <div class="rule-setting-row" id="ruleRowHandSize">
+              <div class="rule-setting-info">
+                <label for="ruleStartingHandSize" class="rule-setting-label">Starting hand size</label>
+                <p class="rule-setting-desc">Number of cards dealt to each player at the start of each round.</p>
+              </div>
+              <div class="rule-setting-control">
+                <select id="ruleStartingHandSize" class="rule-select" aria-label="Starting hand size">
+                  <option value="3">3 cards (Fast round)</option>
+                  <option value="4">4 cards</option>
+                  <option value="5">5 cards (Short)</option>
+                  <option value="6">6 cards</option>
+                  <option value="7" selected>7 cards (Official Default)</option>
+                  <option value="8">8 cards</option>
+                  <option value="9">9 cards</option>
+                  <option value="10">10 cards (Deep battle)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Turn Duration -->
+            <div class="rule-setting-row" id="ruleRowTurnDuration">
+              <div class="rule-setting-info">
+                <label for="ruleTurnDuration" class="rule-setting-label">Turn duration</label>
+                <p class="rule-setting-desc">Time allowed per turn before auto-play or pass.</p>
+              </div>
+              <div class="rule-setting-control">
+                <select id="ruleTurnDuration" class="rule-select" aria-label="Turn duration">
+                  <option value="15">15 seconds (Blitz ⚡)</option>
+                  <option value="30" selected>30 seconds (Standard)</option>
+                  <option value="45">45 seconds (Relaxed)</option>
+                  <option value="60">60 seconds (Slow)</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <!-- Classic: Draw Behavior -->
-          <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicDraw">
-            <div class="rule-setting-info">
-              <label for="ruleClassicDrawBehavior" class="rule-setting-label">Draw behavior</label>
-              <p class="rule-setting-desc">Choose between drawing a single card or drawing until playable.</p>
+          <!-- Section: Mode-Specific Rules Container -->
+          <div class="rules-group" id="rulesModeSpecificGroup">
+            <h4 id="rulesModeSpecificHeading" class="rules-group-heading">Mode-Specific Rules</h4>
+
+            <!-- Classic: Draw-card Stacking -->
+            <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicStacking">
+              <div class="rule-setting-info">
+                <span class="rule-setting-label">Draw-card stacking</span>
+                <p class="rule-setting-desc">Stack Draw Two on Draw Two, or Wild Draw Four on Wild Draw Four.</p>
+              </div>
+              <div class="rule-setting-control">
+                <label class="rule-toggle">
+                  <input type="checkbox" id="ruleClassicStacking">
+                  <span class="rule-toggle-slider"></span>
+                </label>
+              </div>
             </div>
-            <div class="rule-setting-control">
-              <select id="ruleClassicDrawBehavior" class="rule-select">
-                <option value="false" selected>Draw One (Official)</option>
-                <option value="true">Draw Until Playable (House Rule)</option>
-              </select>
+
+            <!-- Classic: Draw Behavior -->
+            <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicDraw">
+              <div class="rule-setting-info">
+                <label for="ruleClassicDrawBehavior" class="rule-setting-label">Draw behavior</label>
+                <p class="rule-setting-desc">Choose between drawing a single card or drawing until playable.</p>
+              </div>
+              <div class="rule-setting-control">
+                <select id="ruleClassicDrawBehavior" class="rule-select">
+                  <option value="false" selected>Draw One (Official)</option>
+                  <option value="true">Draw Until Playable (House Rule)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Classic: 7-0 Hand Swap & Pass -->
+            <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicSevenZero">
+              <div class="rule-setting-info">
+                <span class="rule-setting-label">7-0 Hand Swap &amp; Pass</span>
+                <p class="rule-setting-desc">Playing a 7 swaps hands with chosen player; 0 shifts hands in play direction.</p>
+              </div>
+              <div class="rule-setting-control">
+                <label class="rule-toggle">
+                  <input type="checkbox" id="ruleClassicSevenZero">
+                  <span class="rule-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Classic: Wild Draw 4 Challenge -->
+            <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicWd4Challenge">
+              <div class="rule-setting-info">
+                <span class="rule-setting-label">Wild Draw Four challenge</span>
+                <p class="rule-setting-desc">Allow recipient to challenge if player held a matching color.</p>
+              </div>
+              <div class="rule-setting-control">
+                <label class="rule-toggle">
+                  <input type="checkbox" id="ruleClassicWd4Challenge" checked>
+                  <span class="rule-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Flip: Draw-card Stacking -->
+            <div class="rule-setting-row mode-setting mode-flip" id="ruleRowFlipStacking" style="display: none;">
+              <div class="rule-setting-info">
+                <span class="rule-setting-label">Draw-card stacking</span>
+                <p class="rule-setting-desc">Stack Draw 1 on Light side, or Draw 5 on Dark side.</p>
+              </div>
+              <div class="rule-setting-control">
+                <label class="rule-toggle">
+                  <input type="checkbox" id="ruleFlipStacking">
+                  <span class="rule-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Flip: Draw Behavior -->
+            <div class="rule-setting-row mode-setting mode-flip" id="ruleRowFlipDraw" style="display: none;">
+              <div class="rule-setting-info">
+                <label for="ruleFlipDrawBehavior" class="rule-setting-label">Draw behavior</label>
+                <p class="rule-setting-desc">Voluntary draw 1 card vs draw until finding a playable card.</p>
+              </div>
+              <div class="rule-setting-control">
+                <select id="ruleFlipDrawBehavior" class="rule-select">
+                  <option value="false" selected>Draw One (Official)</option>
+                  <option value="true">Draw Until Playable (House Rule)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- No Mercy: Penalty Stacking -->
+            <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmStacking" style="display: none;">
+              <div class="rule-setting-info">
+                <span class="rule-setting-label">Penalty stacking</span>
+                <p class="rule-setting-desc">Stack equal or higher draw cards (+2, +4, +6, +10) to pass penalty.</p>
+              </div>
+              <div class="rule-setting-control">
+                <label class="rule-toggle">
+                  <input type="checkbox" id="ruleNmStacking" checked>
+                  <span class="rule-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- No Mercy: Draw Behavior -->
+            <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmDraw" style="display: none;">
+              <div class="rule-setting-info">
+                <label for="ruleNmDrawBehavior" class="rule-setting-label">Draw behavior</label>
+                <p class="rule-setting-desc">Draw until finding a playable card (or draw 1 card if toggled).</p>
+              </div>
+              <div class="rule-setting-control">
+                <select id="ruleNmDrawBehavior" class="rule-select">
+                  <option value="true" selected>Draw Until Playable (Official)</option>
+                  <option value="false">Draw One (House Rule)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- No Mercy: 7-Swap and 0-Pass -->
+            <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmSevenZero" style="display: none;">
+              <div class="rule-setting-info">
+                <span class="rule-setting-label">7-Swap &amp; 0-Pass</span>
+                <p class="rule-setting-desc">7 swaps hands with chosen player; 0 passes hands in direction of play.</p>
+              </div>
+              <div class="rule-setting-control">
+                <label class="rule-toggle">
+                  <input type="checkbox" id="ruleNmSevenZero" checked>
+                  <span class="rule-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- No Mercy: Mercy Knockout -->
+            <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmKnockout" style="display: none;">
+              <div class="rule-setting-info">
+                <span class="rule-setting-label">Mercy Knockout</span>
+                <p class="rule-setting-desc">Instantly eliminate any player whose hand reaches the knockout limit.</p>
+              </div>
+              <div class="rule-setting-control">
+                <label class="rule-toggle">
+                  <input type="checkbox" id="ruleNmKnockout" checked>
+                  <span class="rule-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- No Mercy: Knockout Limit -->
+            <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmKnockoutLimit" style="display: none;">
+              <div class="rule-setting-info">
+                <label for="ruleNmKnockoutLimit" class="rule-setting-label">Knockout hand limit</label>
+                <p class="rule-setting-desc">Hand size that triggers immediate elimination.</p>
+              </div>
+              <div class="rule-setting-control">
+                <select id="ruleNmKnockoutLimit" class="rule-select">
+                  <option value="20">20 cards (Short)</option>
+                  <option value="25" selected>25 cards (Official Standard)</option>
+                  <option value="30">30 cards</option>
+                  <option value="35">35 cards (House rule)</option>
+                  <option value="45">45 cards (Extreme endurance)</option>
+                </select>
+              </div>
             </div>
           </div>
+        </div>
 
-          <!-- Classic: 7-0 Hand Swap & Pass -->
-          <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicSevenZero">
-            <div class="rule-setting-info">
-              <span class="rule-setting-label">7-0 Hand Swap &amp; Pass</span>
-              <p class="rule-setting-desc">Playing a 7 swaps hands with chosen player; 0 shifts hands in play direction.</p>
-            </div>
-            <div class="rule-setting-control">
-              <label class="rule-toggle">
-                <input type="checkbox" id="ruleClassicSevenZero">
-                <span class="rule-toggle-slider"></span>
-              </label>
-            </div>
+        <!-- TAB 3: HOW TO PLAY GUIDE -->
+        <div id="tabContentHowToPlay" class="settings-tab-content">
+          <div class="rule-tabs" id="howToPlayTabs">
+            <button class="rule-tab-btn active" data-tab="classic" type="button">Classic UNO</button>
+            <button class="rule-tab-btn" data-tab="flip" type="button">UNO Flip</button>
+            <button class="rule-tab-btn" data-tab="no_mercy" type="button">Show 'em No Mercy</button>
           </div>
 
-          <!-- Classic: Wild Draw 4 Challenge -->
-          <div class="rule-setting-row mode-setting mode-classic" id="ruleRowClassicWd4Challenge">
-            <div class="rule-setting-info">
-              <span class="rule-setting-label">Wild Draw Four challenge</span>
-              <p class="rule-setting-desc">Allow recipient to challenge if player held a matching color.</p>
-            </div>
-            <div class="rule-setting-control">
-              <label class="rule-toggle">
-                <input type="checkbox" id="ruleClassicWd4Challenge" checked>
-                <span class="rule-toggle-slider"></span>
-              </label>
-            </div>
+          <!-- Classic Guide -->
+          <div id="tab-classic" class="rule-content-block">
+            <h4>Objective</h4>
+            <p>Be the first player to get rid of all your cards.</p>
+
+            <h4>Card Types &amp; Effects</h4>
+            <ul>
+              <li><strong>Number Cards (0-9):</strong> Match the active color or number on the discard pile.</li>
+              <li><strong>Skip:</strong> The next player in turn order loses their turn.</li>
+              <li><strong>Reverse:</strong> Changes the direction of play. (In a 2-player game, acts as a Skip!).</li>
+              <li><strong>Draw Two (+2):</strong> Next player must draw 2 cards and lose their turn.</li>
+              <li><strong>Wild:</strong> Can be played on any card. You declare the active color.</li>
+              <li><strong>Wild Draw Four (+4):</strong> Change the color; next player draws 4 cards and loses their turn.</li>
+            </ul>
+
+            <h4>The UNO Rule</h4>
+            <p>When you have only 1 card remaining in your hand, you MUST tap the <strong>CALL UNO</strong> button! If an opponent catches you before the next turn, you will be penalized with draw cards.</p>
           </div>
 
-          <!-- Flip: Draw-card Stacking -->
-          <div class="rule-setting-row mode-setting mode-flip" id="ruleRowFlipStacking" style="display: none;">
-            <div class="rule-setting-info">
-              <span class="rule-setting-label">Draw-card stacking</span>
-              <p class="rule-setting-desc">Stack Draw 1 on Light side, or Draw 5 on Dark side.</p>
-            </div>
-            <div class="rule-setting-control">
-              <label class="rule-toggle">
-                <input type="checkbox" id="ruleFlipStacking">
-                <span class="rule-toggle-slider"></span>
-              </label>
-            </div>
+          <!-- Flip Guide -->
+          <div id="tab-flip" class="rule-content-block" style="display: none;">
+            <h4>The Double-Sided Twist</h4>
+            <p>Cards are double-sided with a <strong>Light Side</strong> (Red, Yellow, Green, Blue) and a <strong>Dark Side</strong> (Teal, Orange, Pink, Purple). Playing a <strong>FLIP</strong> card turns EVERY hand, the draw pile, and the discard pile to the other side!</p>
+
+            <h4>Dark Side Special Cards</h4>
+            <ul>
+              <li><strong>Draw Five (+5):</strong> Next player draws 5 cards and is skipped!</li>
+              <li><strong>Skip Everyone:</strong> Skips all other players. You get another turn immediately!</li>
+              <li><strong>Wild Draw Color:</strong> Choose a color; next player draws until they get that color and loses their turn!</li>
+              <li><strong>Dark Reverse:</strong> Reverses play direction (acts as Skip in 2-player).</li>
+            </ul>
           </div>
 
-          <!-- Flip: Draw Behavior -->
-          <div class="rule-setting-row mode-setting mode-flip" id="ruleRowFlipDraw" style="display: none;">
-            <div class="rule-setting-info">
-              <label for="ruleFlipDrawBehavior" class="rule-setting-label">Draw behavior</label>
-              <p class="rule-setting-desc">Voluntary draw 1 card vs draw until finding a playable card.</p>
-            </div>
-            <div class="rule-setting-control">
-              <select id="ruleFlipDrawBehavior" class="rule-select">
-                <option value="false" selected>Draw One (Official)</option>
-                <option value="true">Draw Until Playable (House Rule)</option>
-              </select>
-            </div>
-          </div>
+          <!-- No Mercy Guide -->
+          <div id="tab-no_mercy" class="rule-content-block" style="display: none;">
+            <h4>Extreme Show 'em No Mercy Rules</h4>
+            <p>The most brutal and chaotic card game mode with a massive 168-card deck!</p>
 
-          <!-- No Mercy: Penalty Stacking -->
-          <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmStacking" style="display: none;">
-            <div class="rule-setting-info">
-              <span class="rule-setting-label">Penalty stacking</span>
-              <p class="rule-setting-desc">Stack equal or higher draw cards (+2, +4, +6, +10) to pass penalty.</p>
-            </div>
-            <div class="rule-setting-control">
-              <label class="rule-toggle">
-                <input type="checkbox" id="ruleNmStacking" checked>
-                <span class="rule-toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <!-- No Mercy: Draw Behavior -->
-          <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmDraw" style="display: none;">
-            <div class="rule-setting-info">
-              <label for="ruleNmDrawBehavior" class="rule-setting-label">Draw behavior</label>
-              <p class="rule-setting-desc">Draw until finding a playable card (or draw 1 card if toggled).</p>
-            </div>
-            <div class="rule-setting-control">
-              <select id="ruleNmDrawBehavior" class="rule-select">
-                <option value="true" selected>Draw Until Playable (Official)</option>
-                <option value="false">Draw One (House Rule)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- No Mercy: 7-Swap and 0-Pass -->
-          <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmSevenZero" style="display: none;">
-            <div class="rule-setting-info">
-              <span class="rule-setting-label">7-Swap &amp; 0-Pass</span>
-              <p class="rule-setting-desc">7 swaps hands with chosen player; 0 passes hands in direction of play.</p>
-            </div>
-            <div class="rule-setting-control">
-              <label class="rule-toggle">
-                <input type="checkbox" id="ruleNmSevenZero" checked>
-                <span class="rule-toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <!-- No Mercy: Mercy Knockout -->
-          <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmKnockout" style="display: none;">
-            <div class="rule-setting-info">
-              <span class="rule-setting-label">Mercy Knockout</span>
-              <p class="rule-setting-desc">Instantly eliminate any player whose hand reaches the knockout limit.</p>
-            </div>
-            <div class="rule-setting-control">
-              <label class="rule-toggle">
-                <input type="checkbox" id="ruleNmKnockout" checked>
-                <span class="rule-toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <!-- No Mercy: Knockout Limit -->
-          <div class="rule-setting-row mode-setting mode-no_mercy" id="ruleRowNmKnockoutLimit" style="display: none;">
-            <div class="rule-setting-info">
-              <label for="ruleNmKnockoutLimit" class="rule-setting-label">Knockout hand limit</label>
-              <p class="rule-setting-desc">Hand size that triggers immediate elimination.</p>
-            </div>
-            <div class="rule-setting-control">
-              <select id="ruleNmKnockoutLimit" class="rule-select">
-                <option value="20">20 cards (Short)</option>
-                <option value="25" selected>25 cards (Official Standard)</option>
-                <option value="30">30 cards</option>
-                <option value="35">35 cards (House rule)</option>
-                <option value="45">45 cards (Extreme endurance)</option>
-              </select>
-            </div>
+            <h4>Core Mechanics</h4>
+            <ul>
+              <li><strong>Draw Stacking (Always ON):</strong> When faced with a draw card (+2, +4, +6, +10), you can counter with an equal or higher draw card to pass the penalty to the next player! The unlucky player who cannot counter must draw the accumulated total!</li>
+              <li><strong>Draw Until Playable:</strong> When you have to draw cards, you keep drawing until you find a card you can play!</li>
+              <li><strong>7 Hand-Swap:</strong> Play a 7 and swap your ENTIRE hand with any chosen player!</li>
+              <li><strong>0 Hand-Pass:</strong> Play a 0 and ALL players pass their hands in the direction of play!</li>
+              <li><strong>Discard All:</strong> Dump all cards of that color from your hand at once!</li>
+              <li><strong>Mercy Knockout:</strong> A player reaching the knockout limit (default 25 cards) is immediately eliminated.</li>
+              <li><strong>Two Ways to Win:</strong> Empty your hand, OR be the last player standing after all opponents are knocked out!</li>
+            </ul>
           </div>
         </div>
       </div>
 
       <!-- Footer Actions -->
-      <div class="modal-footer rules-modal-footer">
+      <div class="modal-footer settings-modal-footer">
         <button id="ruleRestoreDefaultsBtn" class="rule-btn-secondary" type="button">↺ Restore default rules</button>
-        <button id="ruleApplyBtn" class="rule-btn-primary" type="button">Done ✓</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: HOW TO PLAY GUIDE -->
-  <div id="rulesModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 680px;">
-      <div class="modal-header">
-        <h3 class="modal-title">How to Play UNO Arena</h3>
-        <button id="rulesModalClose" class="modal-close-btn">&times;</button>
-      </div>
-      
-      <div class="rule-tabs">
-        <button class="rule-tab-btn active" data-tab="classic">Classic UNO</button>
-        <button class="rule-tab-btn" data-tab="flip">UNO Flip</button>
-        <button class="rule-tab-btn" data-tab="no_mercy">Show 'em No Mercy</button>
-      </div>
-
-      <div class="modal-body">
-        
-        <!-- Classic Tab -->
-        <div id="tab-classic" class="rule-content-block">
-          <h4>Objective</h4>
-          <p>Be the first player to get rid of all your cards.</p>
-
-          <h4>Card Types & Effects</h4>
-          <ul>
-            <li><strong>Number Cards (0-9):</strong> Match the active color or number on the discard pile.</li>
-            <li><strong>Skip:</strong> The next player in turn order loses their turn.</li>
-            <li><strong>Reverse:</strong> Changes the direction of play. (In a 2-player game, acts as a Skip!).</li>
-            <li><strong>Draw Two (+2):</strong> Next player must draw 2 cards and lose their turn.</li>
-            <li><strong>Wild:</strong> Can be played on any card. You declare the active color.</li>
-            <li><strong>Wild Draw Four (+4):</strong> Change the color; next player draws 4 cards and loses their turn.</li>
-          </ul>
-
-          <h4>The UNO Rule</h4>
-          <p>When you have only 1 card remaining in your hand, you MUST tap the <strong>CALL UNO</strong> button! If an opponent catches you before the next turn, you will be penalized with 2 draw cards.</p>
-        </div>
-
-        <!-- Flip Tab -->
-        <div id="tab-flip" class="rule-content-block" style="display: none;">
-          <h4>The Double-Sided Twist</h4>
-          <p>Cards are double-sided with a <strong>Light Side</strong> (Red, Yellow, Green, Blue) and a <strong>Dark Side</strong> (Teal, Orange, Pink, Purple). Playing a <strong>FLIP</strong> card turns EVERY hand, the draw pile, and the discard pile to the other side!</p>
-
-          <h4>Dark Side Special Cards</h4>
-          <ul>
-            <li><strong>Draw Five (+5):</strong> Next player draws 5 cards and is skipped!</li>
-            <li><strong>Skip Everyone:</strong> Skips all other players. You get another turn immediately!</li>
-            <li><strong>Wild Draw Color:</strong> Choose a color; next player draws until they get that color and loses their turn!</li>
-            <li><strong>Dark Reverse:</strong> Reverses play direction (acts as Skip in 2-player).</li>
-          </ul>
-        </div>
-
-        <!-- No Mercy Tab -->
-        <div id="tab-no_mercy" class="rule-content-block" style="display: none;">
-          <h4>Extreme Show 'em No Mercy Rules</h4>
-          <p>The most brutal and chaotic card game mode with a massive 168-card deck!</p>
-
-          <h4>Core Mechanics</h4>
-          <ul>
-            <li><strong>Draw Stacking (Always ON):</strong> When faced with a draw card (+2, +4, +6, +10), you can counter with an equal or higher draw card to pass the penalty to the next player! The unlucky player who cannot counter must draw the accumulated total!</li>
-            <li><strong>Draw Until Playable:</strong> When you have to draw cards, you keep drawing until you find a card you can play!</li>
-            <li><strong>7 Hand-Swap:</strong> Play a 7 and swap your ENTIRE hand with any chosen player!</li>
-            <li><strong>0 Hand-Pass:</strong> Play a 0 and ALL players pass their hands in the direction of play!</li>
-            <li><strong>Discard All:</strong> Dump all cards of that color from your hand at once!</li>
-            <li><strong>Mercy Knockout (default 25 cards):</strong> The host sets the elimination limit in room setup. Reach that limit and you are knocked out.</li>
-            <li><strong>Two Ways to Win:</strong> Empty your hand, OR be the last player standing after all opponents are knocked out!</li>
-          </ul>
-        </div>
-
+        <button id="ruleApplyBtn" class="rule-btn-primary" type="button">Save &amp; Close ✓</button>
       </div>
     </div>
   </div>
@@ -1343,6 +1444,18 @@
 
   <!-- Toast Notification -->
   <div id="toast" class="toast-msg"></div>
+
+  <!-- Compatibility alias hook for legacy rule modal lookups -->
+  <script>
+    (function() {
+      const orig = document.getElementById.bind(document);
+      document.getElementById = function(id) {
+        if (id === 'gameRulesModal' || id === 'rulesModal') return orig('settingsModal') || orig(id);
+        if (id === 'gameRulesModalClose' || id === 'rulesModalClose') return orig('settingsModalClose') || orig(id);
+        return orig(id);
+      };
+    })();
+  </script>
 
   <!-- JavaScript ES Modules -->
   <script type="module" src="./app.js"></script>

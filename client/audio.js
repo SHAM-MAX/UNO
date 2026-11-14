@@ -1,7 +1,10 @@
 class SoundSynthesizer {
   constructor() {
     this.ctx = null;
+    this.masterGain = null;
     this.enabled = localStorage.getItem('uno_arena_sound') !== 'false';
+    const savedVol = Number(localStorage.getItem('uno_arena_volume'));
+    this.volume = !isNaN(savedVol) && savedVol >= 0 && savedVol <= 1 ? savedVol : 0.8;
   }
 
   init() {
@@ -11,13 +14,27 @@ class SoundSynthesizer {
         this.ctx = new AudioCtx();
       }
     }
+    if (this.ctx && !this.masterGain) {
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+      this.masterGain.connect(this.ctx.destination);
+    }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
     }
   }
 
+  getMasterGain() {
+    this.init();
+    return this.masterGain;
+  }
+
   toggle() {
-    this.enabled = !this.enabled;
+    return this.setEnabled(!this.enabled);
+  }
+
+  setEnabled(enabled) {
+    this.enabled = Boolean(enabled);
     localStorage.setItem('uno_arena_sound', this.enabled ? 'true' : 'false');
     if (this.enabled) {
       this.playSnap(440, 0.08);
@@ -25,8 +42,31 @@ class SoundSynthesizer {
     return this.enabled;
   }
 
+  setVolume(vol) {
+    const v = Math.max(0, Math.min(1, Number(vol) || 0));
+    this.volume = v;
+    localStorage.setItem('uno_arena_volume', String(v));
+    if (this.ctx && this.masterGain) {
+      this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+    }
+    return this.volume;
+  }
+
+  getVolume() {
+    return this.volume;
+  }
+
   isEnabled() {
     return this.enabled;
+  }
+
+  connectGain(node) {
+    const master = this.getMasterGain();
+    if (master) {
+      node.connect(master);
+    } else if (this.ctx) {
+      node.connect(this.ctx.destination);
+    }
   }
 
   playSnap(freq = 320, duration = 0.08) {
@@ -45,7 +85,7 @@ class SoundSynthesizer {
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    this.connectGain(gain);
 
     osc.start();
     osc.stop(this.ctx.currentTime + duration);
@@ -71,7 +111,7 @@ class SoundSynthesizer {
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.14);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    this.connectGain(gain);
 
     osc.start();
     osc.stop(this.ctx.currentTime + 0.14);
@@ -94,7 +134,7 @@ class SoundSynthesizer {
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    this.connectGain(gain);
 
     osc.start();
     osc.stop(this.ctx.currentTime + 0.35);
@@ -118,7 +158,7 @@ class SoundSynthesizer {
       gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.45);
 
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      this.connectGain(gain);
 
       osc.start(this.ctx.currentTime + idx * 0.05);
       osc.stop(this.ctx.currentTime + 0.5);
@@ -141,7 +181,7 @@ class SoundSynthesizer {
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    this.connectGain(gain);
 
     osc.start();
     osc.stop(this.ctx.currentTime + 0.3);
@@ -163,7 +203,7 @@ class SoundSynthesizer {
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.6);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    this.connectGain(gain);
 
     osc.start();
     osc.stop(this.ctx.currentTime + 0.6);
@@ -186,7 +226,7 @@ class SoundSynthesizer {
       gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.12 + 0.4);
 
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      this.connectGain(gain);
 
       osc.start(this.ctx.currentTime + i * 0.12);
       osc.stop(this.ctx.currentTime + i * 0.12 + 0.45);

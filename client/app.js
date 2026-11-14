@@ -42,6 +42,14 @@ class UnoArenaApp {
     this.lastRenderedDrawKey = null;
     this.quickMatchTimerInterval = null;
     this.quickMatchStartMs = 0;
+    this.playerAvatar = localStorage.getItem('uno_arena_avatar') || 'fox';
+    const savedVol = localStorage.getItem('uno_arena_volume');
+    if (savedVol !== null && !isNaN(Number(savedVol))) {
+      sounds.setVolume(Number(savedVol));
+    }
+    if (localStorage.getItem('uno_arena_reduced_motion') === 'true') {
+      document.body.classList.add('reduced-motion');
+    }
 
     this.initElements();
     this.initEvents();
@@ -267,6 +275,32 @@ class UnoArenaApp {
       mobileAiRulesStatusBadge: document.getElementById('mobileAiRulesStatusBadge'),
       aiRulesSummaryText: document.getElementById('aiRulesSummaryText'),
       mobileAiRulesSummaryText: document.getElementById('mobileAiRulesSummaryText'),
+
+      // Unified Settings Modal
+      settingsBtn: document.getElementById('settingsBtn'),
+      mobileNavSettingsBtn: document.getElementById('mobileNavSettingsBtn'),
+      noMercySettingsBtn: document.getElementById('noMercySettingsBtn'),
+      settingsModal: document.getElementById('settingsModal'),
+      settingsModalTitle: document.getElementById('settingsModalTitle'),
+      settingsModalClose: document.getElementById('settingsModalClose'),
+      tabBtnGeneral: document.getElementById('tabBtnGeneral'),
+      tabBtnGameRules: document.getElementById('tabBtnGameRules'),
+      tabBtnHowToPlay: document.getElementById('tabBtnHowToPlay'),
+      tabContentGeneral: document.getElementById('tabContentGeneral'),
+      tabContentGameRules: document.getElementById('tabContentGameRules'),
+      tabContentHowToPlay: document.getElementById('tabContentHowToPlay'),
+      howToPlayTabs: document.getElementById('howToPlayTabs'),
+      settingSoundToggle: document.getElementById('settingSoundToggle'),
+      settingVolumeSlider: document.getElementById('settingVolumeSlider'),
+      settingVolumeValue: document.getElementById('settingVolumeValue'),
+      settingPlayerNameInput: document.getElementById('settingPlayerNameInput'),
+      settingAvatarPreview: document.getElementById('settingAvatarPreview'),
+      settingAvatarEmoji: document.getElementById('settingAvatarEmoji'),
+      settingAvatarImg: document.getElementById('settingAvatarImg'),
+      settingAvatarUpload: document.getElementById('settingAvatarUpload'),
+      settingAvatarRemoveBtn: document.getElementById('settingAvatarRemoveBtn'),
+      avatarPresetsGrid: document.getElementById('avatarPresetsGrid'),
+      settingReducedMotion: document.getElementById('settingReducedMotion'),
     };
   }
 
@@ -304,16 +338,26 @@ class UnoArenaApp {
       });
     }
 
-    this.el.soundToggleBtn.addEventListener('click', () => {
-      const enabled = sounds.toggle();
-      this.updateSoundIcon(enabled);
-      this.showToast(enabled ? 'Sound Enabled 🔊' : 'Sound Muted 🔇');
-    });
+    if (this.el.soundToggleBtn) {
+      this.el.soundToggleBtn.addEventListener('click', () => {
+        const enabled = sounds.toggle();
+        this.updateSoundIcon(enabled);
+        if (this.el.settingSoundToggle) this.el.settingSoundToggle.checked = enabled;
+        this.showToast(enabled ? 'Sound Enabled 🔊' : 'Sound Muted 🔇');
+      });
+    }
     this.updateSoundIcon(sounds.isEnabled());
 
-    // How to Play modal
-    this.el.howToPlayBtn.addEventListener('click', () => this.openRulesModal());
-    this.el.rulesModalClose.addEventListener('click', () => this.closeRulesModal());
+    // Legacy How to Play button triggers
+    if (this.el.howToPlayBtn) {
+      this.el.howToPlayBtn.addEventListener('click', () => this.openRulesModal());
+    }
+    if (this.el.rulesModalClose) {
+      this.el.rulesModalClose.addEventListener('click', () => this.closeRulesModal());
+    }
+
+    // Initialize unified settings modal
+    this.initSettingsModal();
 
     // Color Roulette modal actions
     if (this.el.rouletteActionBtn) {
@@ -1422,7 +1466,7 @@ class UnoArenaApp {
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hostName, mode, houseRules }),
+        body: JSON.stringify({ hostName, mode, houseRules, avatar: this.playerAvatar }),
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data && data.success) {
@@ -1443,6 +1487,7 @@ class UnoArenaApp {
         const initialHost = {
           id: this.playerId,
           name: hostName,
+          avatar: this.playerAvatar,
           isHost: true,
           isReady: true,
           isConnected: true,
@@ -1485,14 +1530,23 @@ class UnoArenaApp {
   }
 
   openAiSetup() {
-    this.aiSetup = {
-      mode: null,
-      totalPlayers: null,
-      selectedBots: [],
-    };
-    document.querySelectorAll('.ai-mode-card, .ai-mode-option, .ai-player-pill, .ai-count-pill').forEach((b) => {
-      b.classList.remove('selected');
-    });
+    if (!this.aiSetup) {
+      this.aiSetup = {
+        mode: null,
+        totalPlayers: null,
+        selectedBots: [],
+      };
+    }
+    if (this.aiSetup.mode) {
+      document.querySelectorAll('.ai-mode-card, .ai-mode-option').forEach((b) => {
+        b.classList.toggle('selected', b.dataset.mode === this.aiSetup.mode);
+      });
+    }
+    if (this.aiSetup.totalPlayers) {
+      document.querySelectorAll('.ai-player-pill, .ai-count-pill').forEach((b) => {
+        b.classList.toggle('selected', Number(b.dataset.count) === Number(this.aiSetup.totalPlayers));
+      });
+    }
     this.updateAiSetupState();
 
     const homePlaybox = document.getElementById('homePlaybox') || this.el.homePlaybox;
@@ -1558,7 +1612,7 @@ class UnoArenaApp {
       const res = await fetch('/api/rooms/bot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hostName, mode, botCount, houseRules, botNames }),
+        body: JSON.stringify({ hostName, mode, botCount, houseRules, botNames, avatar: this.playerAvatar }),
       });
       const data = await res.json().catch(() => null);
       if (res.ok && data && data.success) {
@@ -1628,6 +1682,7 @@ class UnoArenaApp {
           playerId,
           sessionToken,
           playerName: playerName || this.playerName,
+          avatar: this.playerAvatar,
         });
       }
       // Flush any messages queued while connection was establishing
@@ -2021,9 +2076,46 @@ class UnoArenaApp {
     else if (focusedMode || focusedResponse) (content.querySelector(`[data-rematch-mode="${focusedMode}"]`) || content.querySelector('[data-rematch-mode]') || document.getElementById('rematchCloseBtn')).focus();
   }
 
-  classicAvatarHTML(player, active) {
+  classicAvatarInner(player) {
+    if (!player) return '👤';
+    if (player.isBot) return '🤖';
+    const avatar = player.avatar || (player.id === this.playerId ? this.playerAvatar : null);
+    if (avatar) {
+      if (avatar.startsWith('data:image/')) {
+        return `<img src="${avatar}" alt="${escapeHtml(player.name)}" class="avatar-face-img">`;
+      }
+      const presetEmojis = {
+        fox: '🦊', panda: '🐼', lion: '🦁', frog: '🐸', robot: '🤖',
+        wizard: '🧙', crown: '👑', lightning: '⚡', rocket: '🚀', tiger: '🐯'
+      };
+      if (presetEmojis[avatar]) return presetEmojis[avatar];
+    }
     const initials = player.name.trim().split(/\s+/).map(part => part[0]).slice(0, 2).join('').toUpperCase();
-    return `<span class="classic-avatar-initials">${escapeHtml(initials)}</span>${active ? '<svg class="classic-profile-ring" viewBox="0 0 54 54" aria-label="Active player countdown"><circle cx="27" cy="27" r="22" fill="none" stroke-dasharray="138.23"/></svg><span class="classic-profile-seconds"></span>' : ''}`;
+    return escapeHtml(initials || 'P');
+  }
+
+  classicAvatarHTML(player, active) {
+    const content = this.classicAvatarInner(player);
+    return `<span class="classic-avatar-initials">${content}</span>${active ? '<svg class="classic-profile-ring" viewBox="0 0 54 54" aria-label="Active player countdown"><circle cx="27" cy="27" r="22" fill="none" stroke-dasharray="138.23"/></svg><span class="classic-profile-seconds"></span>' : ''}`;
+  }
+
+  renderAvatarHtml(player, className = 'player-avatar-badge') {
+    if (player.isBot) {
+      return `<span class="${className} avatar-bot">🤖</span>`;
+    }
+    const avatar = player.avatar || (player.id === this.playerId ? this.playerAvatar : null);
+    if (avatar) {
+      if (avatar.startsWith('data:image/')) {
+        return `<span class="${className} avatar-custom-img"><img src="${avatar}" alt="${escapeHtml(player.name)}" class="avatar-face-img"></span>`;
+      }
+      const presetEmojis = {
+        fox: '🦊', panda: '🐼', lion: '🦁', frog: '🐸', robot: '🤖',
+        wizard: '🧙', crown: '👑', lightning: '⚡', rocket: '🚀', tiger: '🐯'
+      };
+      const emoji = presetEmojis[avatar] || avatar;
+      return `<span class="${className} avatar-preset-emoji">${emoji}</span>`;
+    }
+    return `<span class="${className} avatar-default">${player.isHost ? '👑' : '👤'}</span>`;
   }
 
   renderClassicLocalProfile() {
@@ -2208,7 +2300,7 @@ class UnoArenaApp {
         (p) => `
         <div class="lobby-player-row">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span>${p.isHost ? '👑' : (p.isBot ? '🤖' : '👤')}</span>
+            ${this.renderAvatarHtml(p, 'lobby-player-avatar')}
             <strong>${escapeHtml(p.name)}</strong>
             ${p.isBot ? '<span class="bot-badge" style="font-size: 0.7rem; background: #3B82F6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 800;">BOT</span>' : ''}
             ${p.id === this.playerId ? '<span style="font-size: 0.75rem; color: #F59E0B;">(You)</span>' : ''}
@@ -2414,7 +2506,7 @@ class UnoArenaApp {
         this.el.localPlayerProfile.innerHTML = `
           <div class="local-profile-left">
             <div class="local-avatar">
-              ${escapeHtml(me?.name?.charAt(0)?.toUpperCase() || 'P')}
+              ${this.classicAvatarInner(me)}
               ${isMyTurn && gameState.status === 'playing' && !!gameState.turnDeadline ? `
                 <div class="avatar-turn-timer-wrap" aria-label="Turn timer">
                   <svg class="avatar-turn-ring" viewBox="0 0 54 54">
@@ -2524,12 +2616,12 @@ class UnoArenaApp {
       }
       avatar.style.background = isCurrent ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : avatarColor;
 
-      const avatarChar = p.isBot ? '🤖' : escapeHtml(p.name.charAt(0).toUpperCase());
+      const avatarContent = this.classicAvatarInner(p);
       const needsTimer = isCurrent && gameState.status === 'playing' && !!gameState.turnDeadline;
       let timerWrap = avatar.querySelector('.avatar-turn-timer-wrap');
       if (needsTimer) {
         if (!timerWrap) {
-          avatar.innerHTML = `${avatarChar}
+          avatar.innerHTML = `<span class="avatar-content">${avatarContent}</span>
             <div class="avatar-turn-timer-wrap" aria-label="Turn timer">
               <svg class="avatar-turn-ring" viewBox="0 0 54 54">
                 <circle class="avatar-turn-bg" cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="4"></circle>
@@ -2540,13 +2632,7 @@ class UnoArenaApp {
         }
       } else {
         if (timerWrap) timerWrap.remove();
-        if (avatar.childNodes[0]?.nodeType === Node.TEXT_NODE) {
-          if (avatar.childNodes[0].textContent !== (p.isBot ? '🤖' : p.name.charAt(0).toUpperCase())) {
-            avatar.childNodes[0].textContent = p.isBot ? '🤖' : p.name.charAt(0).toUpperCase();
-          }
-        } else {
-          avatar.innerHTML = avatarChar;
-        }
+        avatar.innerHTML = `<span class="avatar-content">${avatarContent}</span>`;
       }
 
       // Info
@@ -3407,11 +3493,11 @@ class UnoArenaApp {
       this.openGameRulesModal('arena', this.gameState.mode);
       return;
     }
-    this.el.rulesModal.classList.add('active');
+    this.openSettingsModal('how_to_play');
   }
 
   closeRulesModal() {
-    this.el.rulesModal.classList.remove('active');
+    this.closeSettingsModal();
   }
 
   leaveRoom() {
@@ -3574,20 +3660,11 @@ class UnoArenaApp {
       : (this.gameState?.houseRules || defaultHouseRules(targetMode));
 
     this.syncGameRulesModalInputs(targetMode, rules, isReadOnly, isHost);
-
-    if (this.el.gameRulesModal) {
-      this.el.gameRulesModal.classList.add('active');
-      this.el.gameRulesModal.setAttribute('aria-hidden', 'false');
-    }
-    sounds.playSnap?.(440, 0.08);
+    this.openSettingsModal('rules');
   }
 
   closeGameRulesModal() {
-    if (this.el.gameRulesModal) {
-      this.el.gameRulesModal.classList.remove('active');
-      this.el.gameRulesModal.setAttribute('aria-hidden', 'true');
-    }
-    sounds.playSnap?.(380, 0.08);
+    this.closeSettingsModal();
   }
 
   syncGameRulesModalInputs(mode, rules, isReadOnly, isHost) {
@@ -3786,6 +3863,277 @@ class UnoArenaApp {
     if (this.el.gameRulesModal?.classList.contains('active') && this.rulesModalContext === 'lobby') {
       this.syncGameRulesModalInputs(mode, rules, !isHost, isHost);
     }
+  }
+
+  initSettingsModal() {
+    const openGeneral = () => this.openSettingsModal('general');
+    this.el.settingsBtn?.addEventListener('click', openGeneral);
+    this.el.mobileNavSettingsBtn?.addEventListener('click', openGeneral);
+    this.el.noMercySettingsBtn?.addEventListener('click', openGeneral);
+
+    // Tab buttons
+    this.el.tabBtnGeneral?.addEventListener('click', () => this.switchSettingsTab('general'));
+    this.el.tabBtnGameRules?.addEventListener('click', () => this.switchSettingsTab('rules'));
+    this.el.tabBtnHowToPlay?.addEventListener('click', () => this.switchSettingsTab('how_to_play'));
+
+    // Modal Close
+    this.el.settingsModalClose?.addEventListener('click', () => this.closeSettingsModal());
+    this.el.settingsModal?.addEventListener('click', (e) => {
+      if (e.target === this.el.settingsModal) this.closeSettingsModal();
+    });
+
+    // How to Play tabs
+    if (this.el.howToPlayTabs) {
+      this.el.howToPlayTabs.querySelectorAll('.rule-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const tab = btn.dataset.tab;
+          this.el.howToPlayTabs.querySelectorAll('.rule-tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
+          ['classic', 'flip', 'no_mercy'].forEach((m) => {
+            const block = document.getElementById(`tab-${m}`);
+            if (block) block.style.display = m === tab ? 'block' : 'none';
+          });
+        });
+      });
+    }
+
+    // Sound toggle
+    this.el.settingSoundToggle?.addEventListener('change', (e) => {
+      const enabled = sounds.setEnabled(e.target.checked);
+      this.updateSoundIcon(enabled);
+      if (enabled) sounds.playSnap?.(520, 0.08);
+      this.showToast(enabled ? 'Sound Enabled 🔊' : 'Sound Muted 🔇');
+    });
+
+    // Volume slider
+    this.el.settingVolumeSlider?.addEventListener('input', (e) => {
+      const val = Number(e.target.value);
+      if (this.el.settingVolumeValue) this.el.settingVolumeValue.textContent = `${val}%`;
+      sounds.setVolume(val / 100);
+    });
+    this.el.settingVolumeSlider?.addEventListener('change', (e) => {
+      const val = Number(e.target.value);
+      sounds.setVolume(val / 100);
+      localStorage.setItem('uno_arena_volume', String(val / 100));
+      sounds.playSnap?.(440, 0.08);
+    });
+
+    // Display Name input
+    const handleNameSync = (e) => {
+      const val = (e.target.value || '').trim().slice(0, 18);
+      if (val) {
+        this.playerName = val;
+        localStorage.setItem('uno_arena_name', val);
+        localStorage.setItem('uno_arena_player_name', val);
+        if (this.el.playerNameInput && this.el.playerNameInput !== e.target) this.el.playerNameInput.value = val;
+        if (this.el.mobilePlayerNameInput && this.el.mobilePlayerNameInput !== e.target) this.el.mobilePlayerNameInput.value = val;
+        if (this.roomId && this.playerId) {
+          this.send({ type: 'update_profile', data: { name: val, avatar: this.playerAvatar } });
+        }
+      }
+    };
+    this.el.settingPlayerNameInput?.addEventListener('input', handleNameSync);
+    this.el.settingPlayerNameInput?.addEventListener('change', handleNameSync);
+
+    // Avatar Presets
+    if (this.el.avatarPresetsGrid) {
+      this.el.avatarPresetsGrid.querySelectorAll('.avatar-preset-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const avatarId = btn.dataset.avatarId;
+          if (avatarId) this.setPlayerAvatar(avatarId);
+        });
+      });
+    }
+
+    // Avatar Upload
+    this.el.settingAvatarUpload?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+        this.showToast('Please upload a PNG, JPEG or WebP image');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const size = 96;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          const minDim = Math.min(img.width, img.height);
+          const sx = (img.width - minDim) / 2;
+          const sy = (img.height - minDim) / 2;
+          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          this.setPlayerAvatar(dataUrl);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
+
+    // Avatar Remove
+    this.el.settingAvatarRemoveBtn?.addEventListener('click', () => {
+      this.setPlayerAvatar('fox');
+    });
+
+    // Reduced motion toggle
+    this.el.settingReducedMotion?.addEventListener('change', (e) => {
+      const reduced = e.target.checked;
+      document.body.classList.toggle('reduced-motion', reduced);
+      localStorage.setItem('uno_arena_reduced_motion', String(reduced));
+      this.showToast(reduced ? 'Reduced Motion Enabled' : 'Standard Animations Enabled');
+    });
+
+    // Global Escape Key to close settings
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.el.settingsModal?.classList.contains('active')) {
+        this.closeSettingsModal();
+      }
+    });
+  }
+
+  setPlayerAvatar(avatar) {
+    this.playerAvatar = avatar;
+    localStorage.setItem('uno_arena_avatar', avatar);
+    this.updateAvatarUI();
+    if (this.roomId && this.playerId) {
+      this.send({ type: 'update_profile', data: { name: this.playerName, avatar } });
+    }
+    sounds.playSnap?.(560, 0.08);
+  }
+
+  updateAvatarUI() {
+    const avatar = this.playerAvatar || 'fox';
+    const isCustomImage = avatar.startsWith('data:image/');
+    const presetEmojis = {
+      fox: '🦊', panda: '🐼', lion: '🦁', frog: '🐸', robot: '🤖',
+      wizard: '🧙', crown: '👑', lightning: '⚡', rocket: '🚀', tiger: '🐯'
+    };
+
+    if (this.el.avatarPresetsGrid) {
+      this.el.avatarPresetsGrid.querySelectorAll('.avatar-preset-btn').forEach((btn) => {
+        btn.classList.toggle('active', !isCustomImage && btn.dataset.avatarId === avatar);
+      });
+    }
+
+    if (this.el.settingAvatarEmoji && this.el.settingAvatarImg) {
+      if (isCustomImage) {
+        this.el.settingAvatarEmoji.style.display = 'none';
+        this.el.settingAvatarImg.src = avatar;
+        this.el.settingAvatarImg.style.display = 'block';
+      } else {
+        this.el.settingAvatarEmoji.textContent = presetEmojis[avatar] || '🦊';
+        this.el.settingAvatarEmoji.style.display = 'block';
+        this.el.settingAvatarImg.style.display = 'none';
+      }
+    }
+
+    if (this.el.settingAvatarRemoveBtn) {
+      this.el.settingAvatarRemoveBtn.style.display = isCustomImage ? 'inline-block' : 'none';
+    }
+
+    const localAvatar = document.querySelector('.local-avatar');
+    if (localAvatar) {
+      const timer = localAvatar.querySelector('.avatar-turn-timer-wrap');
+      if (isCustomImage) {
+        localAvatar.innerHTML = `<img src="${avatar}" alt="Avatar" class="avatar-face-img">`;
+      } else {
+        localAvatar.innerHTML = presetEmojis[avatar] || '🦊';
+      }
+      if (timer) localAvatar.appendChild(timer);
+    }
+  }
+
+  switchSettingsTab(tab = 'general') {
+    const tabs = [
+      { id: 'general', btn: this.el.tabBtnGeneral, content: this.el.tabContentGeneral },
+      { id: 'rules', btn: this.el.tabBtnGameRules, content: this.el.tabContentGameRules },
+      { id: 'how_to_play', btn: this.el.tabBtnHowToPlay, content: this.el.tabContentHowToPlay },
+    ];
+
+    tabs.forEach((t) => {
+      const isMatch = t.id === tab;
+      if (t.btn) {
+        t.btn.classList.toggle('active', isMatch);
+        t.btn.setAttribute('aria-selected', String(isMatch));
+      }
+      if (t.content) {
+        t.content.classList.toggle('active', isMatch);
+      }
+    });
+
+    const isPlaying = this.gameState?.status === 'playing';
+    const isHost = this.rulesModalContext === 'ai' ? true : (this.gameState?.players?.find((p) => p.id === this.playerId)?.isHost || false);
+    const isReadOnly = isPlaying || !isHost;
+
+    if (tab === 'rules') {
+      if (this.el.gameRulesModeBadge) this.el.gameRulesModeBadge.style.display = 'inline-block';
+      if (this.el.gameRulesTypeBadge) this.el.gameRulesTypeBadge.style.display = 'inline-block';
+      if (this.el.ruleRestoreDefaultsBtn) {
+        this.el.ruleRestoreDefaultsBtn.style.display = isReadOnly ? 'none' : 'inline-flex';
+      }
+      if (this.el.ruleApplyBtn) {
+        this.el.ruleApplyBtn.textContent = isReadOnly ? 'Close ✕' : 'Save & Close ✓';
+      }
+    } else {
+      if (this.el.gameRulesModeBadge) this.el.gameRulesModeBadge.style.display = 'none';
+      if (this.el.gameRulesTypeBadge) this.el.gameRulesTypeBadge.style.display = 'none';
+      if (this.el.ruleRestoreDefaultsBtn) {
+        this.el.ruleRestoreDefaultsBtn.style.display = 'none';
+      }
+      if (this.el.ruleApplyBtn) {
+        this.el.ruleApplyBtn.textContent = 'Done ✓';
+      }
+    }
+
+    if (this.el.settingsModalTitle) {
+      if (tab === 'general') {
+        this.el.settingsModalTitle.textContent = '⚙️ Settings';
+      } else if (tab === 'rules') {
+        this.el.settingsModalTitle.textContent = isPlaying
+          ? '🔒 Active Match Rules'
+          : (this.rulesModalContext === 'ai' ? '⚙️ Play vs AI Rules' : '⚙️ Lobby Game Rules');
+      } else if (tab === 'how_to_play') {
+        this.el.settingsModalTitle.textContent = '📖 How to Play';
+      }
+    }
+  }
+
+  openSettingsModal(tab = 'general') {
+    this.switchSettingsTab(tab);
+
+    if (this.el.settingSoundToggle) {
+      this.el.settingSoundToggle.checked = sounds.isEnabled();
+    }
+    if (this.el.settingVolumeSlider) {
+      const vol = Math.round(sounds.getVolume() * 100);
+      this.el.settingVolumeSlider.value = String(vol);
+      if (this.el.settingVolumeValue) this.el.settingVolumeValue.textContent = `${vol}%`;
+    }
+    if (this.el.settingPlayerNameInput) {
+      this.el.settingPlayerNameInput.value = this.playerName || 'Player 1';
+    }
+    this.updateAvatarUI();
+    if (this.el.settingReducedMotion) {
+      this.el.settingReducedMotion.checked = document.body.classList.contains('reduced-motion');
+    }
+
+    if (this.el.settingsModal) {
+      this.el.settingsModal.classList.add('active');
+      this.el.settingsModal.setAttribute('aria-hidden', 'false');
+    }
+    sounds.playSnap?.(440, 0.08);
+  }
+
+  closeSettingsModal() {
+    if (this.el.settingsModal) {
+      this.el.settingsModal.classList.remove('active');
+      this.el.settingsModal.setAttribute('aria-hidden', 'true');
+    }
+    sounds.playSnap?.(380, 0.08);
   }
 }
 

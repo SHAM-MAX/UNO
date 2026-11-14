@@ -181,6 +181,18 @@ app.put('/api/rooms/:roomId/rules', (req, res) => {
   res.json(result);
 });
 
+// Update Player Profile REST endpoint
+app.put('/api/rooms/:roomId/profile', (req, res) => {
+  const { playerId, name, avatar } = req.body;
+  const cleanRoomId = (req.params.roomId || '').toUpperCase();
+  const result = roomManager.updatePlayerProfile(cleanRoomId, playerId, { name, avatar });
+  if (!result.success) {
+    return res.status(400).json(result);
+  }
+  broadcastRoomState(cleanRoomId);
+  res.json(result);
+});
+
 // Serve shared constants and rules to client
 const sharedDir = path.resolve(__dirname, '../../shared');
 app.use('/shared', express.static(sharedDir));
@@ -227,7 +239,7 @@ wss.on('connection', (ws, req) => {
           return;
         }
         try {
-          const created = roomManager.createRoom(playerName || 'Host', data?.mode || 'classic', data?.houseRules, cleanRoomId || undefined);
+          const created = roomManager.createRoom(playerName || 'Host', data?.mode || 'classic', data?.houseRules, cleanRoomId || undefined, data?.avatar || null);
           playerId = created.playerId;
           roomManager.attachSocket(created.roomId, playerId, ws);
           clientSockets.set(ws, { roomId: created.roomId, playerId });
@@ -250,6 +262,9 @@ wss.on('connection', (ws, req) => {
             : null;
           const botCount = botNames ? botNames.length : Math.max(1, Math.min(5, Number(data?.botCount) || 3));
           const created = roomManager.createBotRoom(playerName || 'Player', data?.mode || 'classic', botCount, data?.houseRules, botNames);
+          if (data?.avatar) {
+            roomManager.updatePlayerProfile(created.roomId, created.playerId, { avatar: data.avatar });
+          }
           playerId = created.playerId;
           roomManager.attachSocket(created.roomId, playerId, ws);
           clientSockets.set(ws, { roomId: created.roomId, playerId });
@@ -299,7 +314,7 @@ wss.on('connection', (ws, req) => {
           sendError(ws, 'Enter a valid room code.');
           return;
         }
-        const joined = roomManager.joinRoom(cleanRoomId, playerName, sessionToken);
+        const joined = roomManager.joinRoom(cleanRoomId, playerName, sessionToken, data?.avatar || null);
         if (!joined.success) {
           sendError(ws, joined.error);
           return;
@@ -435,6 +450,13 @@ wss.on('connection', (ws, req) => {
 
         case 'shuffle_seats': {
           const res = roomManager.shuffleSeats(cleanRoomId, playerId);
+          if (!res.success) sendError(ws, res.error);
+          else broadcastRoomState(cleanRoomId);
+          break;
+        }
+
+        case 'update_profile': {
+          const res = roomManager.updatePlayerProfile(cleanRoomId, playerId, data || {});
           if (!res.success) sendError(ws, res.error);
           else broadcastRoomState(cleanRoomId);
           break;
