@@ -31,7 +31,7 @@
   <!-- Top Navigation Bar -->
   <header class="top-nav">
     <div class="nav-left">
-      <button id="flipBackToModesBtn" class="flip-nav-back-btn" type="button" aria-label="Game modes" title="Game modes" style="display: none;">
+      <button id="flipBackToModesBtn" class="flip-nav-back-btn" type="button" aria-label="Game modes" title="Game modes">
         <span class="flip-nav-back-arrow" aria-hidden="true">←</span>
       </button>
       <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="UNO Arena home" title="UNO Arena">
@@ -609,16 +609,14 @@
           </div>
         </div>
 
-        <!-- Compact Read-only Mode Indicator -->
-        <div id="lobbyModeDisplay" class="lobby-mode-display">
-          <div class="lobby-mode-badge-card">
-            <div class="lobby-mode-info">
-              <span class="lobby-mode-tag-pill classic">🎴 CLASSIC UNO</span>
-              <span class="lobby-mode-summary-text">Standard 108 cards · Official rules · Up to 10 players</span>
-            </div>
-          </div>
+        <!-- Lobby Mode Selection (for Direct Create Room flow) -->
+        <div id="lobbyModeSelectContainer" style="display: none;">
+          <div id="lobbyModeSelectHeading" style="font-size: 0.85rem; font-weight: 800; color: #1e3a2f; text-transform: uppercase; margin-bottom: 8px;">Select Game Mode</div>
+          <div id="modeSelectorGrid" class="mode-selector-grid"></div>
         </div>
-        <div id="modeSelectorGrid" class="mode-selector-grid" style="display: none;" aria-hidden="true"></div>
+
+        <!-- Compact Read-only Mode Indicator (for mode-specific setup flow) -->
+        <div id="lobbyModeDisplay" class="lobby-mode-display" style="display: none;"></div>
 
         <div style="margin: 20px 0;">
           <div id="lobbyPlayersHeading" style="font-size: 0.85rem; font-weight: 800; color: #1e3a2f; text-transform: uppercase; margin-bottom: 8px;">Players in Lobby (1/10)</div>
@@ -1000,38 +998,7 @@
     </section>
   </div>
 
-  <!-- CHOOSE GAME MODE MODAL (Prompt when Create Room is clicked without prior mode selection) -->
-  <div id="chooseModeModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="chooseModeModalTitle" style="display: none;">
-    <div class="modal-card choose-mode-modal-card">
-      <div class="modal-header choose-mode-header">
-        <h3 id="chooseModeModalTitle" class="modal-title">Choose Game Mode</h3>
-        <button id="chooseModeModalClose" class="modal-close-btn" type="button" aria-label="Close mode selection">&times;</button>
-      </div>
-      <div class="modal-body choose-mode-body">
-        <p class="choose-mode-desc">Select which UNO ruleset you want to play for this room:</p>
-        <div class="choose-mode-grid">
-          <button class="choose-mode-card" type="button" data-select-mode="classic">
-            <span class="choose-mode-badge badge-classic">STANDARD</span>
-            <img src="./assets/game-modes/classic-card.png" alt="" class="choose-mode-img" draggable="false">
-            <h4 class="choose-mode-title">CLASSIC UNO</h4>
-            <p class="choose-mode-subtitle">Standard 108 cards · Official rules · Up to 10 players</p>
-          </button>
-          <button class="choose-mode-card" type="button" data-select-mode="flip">
-            <span class="choose-mode-badge badge-flip">DUAL-SIDED</span>
-            <img src="./assets/game-modes/flip-card.png" alt="" class="choose-mode-img" draggable="false">
-            <h4 class="choose-mode-title">UNO FLIP</h4>
-            <p class="choose-mode-subtitle">Light &amp; Dark sides · Flip card · Up to 6 players</p>
-          </button>
-          <button class="choose-mode-card" type="button" data-select-mode="no_mercy">
-            <span class="choose-mode-badge badge-mercy">HIGH STAKES</span>
-            <img src="./assets/game-modes/no-mercy-card.png" alt="" class="choose-mode-img" draggable="false">
-            <h4 class="choose-mode-title">NO MERCY</h4>
-            <p class="choose-mode-subtitle">168 cards · Stacking &amp; Knockout · Up to 6 players</p>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <!-- UNIFIED SETTINGS MODAL: GENERAL | GAME RULES | HOW TO PLAY -->
   <div id="settingsModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">

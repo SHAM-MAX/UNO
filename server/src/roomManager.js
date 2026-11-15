@@ -218,10 +218,11 @@ export class RoomManager {
     return code;
   }
 
-  createRoom(hostName, mode = 'classic', houseRulesInput = {}, providedCode = null, avatar = null) {
+  createRoom(hostName, mode = 'classic', houseRulesInput = {}, providedCode = null, avatar = null, modeSelectionPolicy = 'selectable') {
     const roomId = (providedCode || this.generateRoomCode()).toUpperCase();
     if (this.rooms.has(roomId)) throw new Error('Room code is already in use. Choose another code.');
     mode = ['classic', 'flip', 'no_mercy'].includes(mode) ? mode : 'classic';
+    const policy = modeSelectionPolicy === 'fixed' ? 'fixed' : 'selectable';
     const playerId = `p-${randomUUID()}`;
     const sessionToken = randomBytes(32).toString('base64url');
 
@@ -245,6 +246,7 @@ export class RoomManager {
     const room = {
       roomId,
       mode,
+      modeSelectionPolicy: policy,
       houseRules: rules,
       status: 'lobby',
       players: [hostPlayer],
@@ -416,7 +418,7 @@ export class RoomManager {
   }
 
   createBotRoom(hostName, mode = 'classic', botCount = 3, houseRulesInput = {}, botNames = null) {
-    const created = this.createRoom(hostName, mode, houseRulesInput);
+    const created = this.createRoom(hostName, mode, houseRulesInput, null, null, 'fixed');
     if (Array.isArray(botNames) && botNames.length > 0) {
       for (const name of botNames) {
         this.addBot(created.roomId, name);
@@ -2133,6 +2135,7 @@ export class RoomManager {
       actionVersion: room.actionVersion || 0,
       matchId: room.matchId,
       mode: room.mode,
+      modeSelectionPolicy: room.modeSelectionPolicy || 'selectable',
       houseRules: room.houseRules,
       status: room.status,
       players: publicPlayers,

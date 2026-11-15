@@ -315,6 +315,7 @@ test('Game Rules: 7-Swap and 0-Pass toggles in Classic and No Mercy', () => {
 
     manager.startGame(roomId, hostId);
     const room = manager.getRoom(roomId);
+    room.pendingAction = null;
 
     // Give host a 7 card
     const sevenCard = { id: 'card-seven', color: 'red', type: 'number', value: 7 };

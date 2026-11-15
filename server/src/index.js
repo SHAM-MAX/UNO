@@ -99,9 +99,9 @@ app.get(['/health', '/api/health'], (req, res) => {
 
 // Create Room REST endpoint
 app.post('/api/rooms', (req, res) => {
-  const { hostName, mode, houseRules } = req.body;
+  const { hostName, mode, houseRules, avatar, modeSelectionPolicy } = req.body;
   try {
-    const result = roomManager.createRoom(hostName, mode, houseRules);
+    const result = roomManager.createRoom(hostName, mode, houseRules, null, avatar, modeSelectionPolicy);
     res.status(201).json({
       success: true,
       roomId: result.roomId,
@@ -250,7 +250,8 @@ wss.on('connection', (ws, req) => {
           return;
         }
         try {
-          const created = roomManager.createRoom(playerName || 'Host', data?.mode || 'classic', data?.houseRules, cleanRoomId || undefined, data?.avatar || null);
+          const policy = data?.modeSelectionPolicy || (data?.entryFlow === 'mode_setup' ? 'fixed' : 'selectable');
+          const created = roomManager.createRoom(playerName || 'Host', data?.mode || 'classic', data?.houseRules, cleanRoomId || undefined, data?.avatar || null, policy);
           playerId = created.playerId;
           roomManager.attachSocket(created.roomId, playerId, ws);
           clientSockets.set(ws, { roomId: created.roomId, playerId });
