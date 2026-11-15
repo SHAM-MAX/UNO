@@ -59,11 +59,48 @@ class UnoArenaApp {
   }
 
   initPWA() {
+    // Proactively purge legacy v1 cache from client window
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      window.caches.keys().then((keys) => {
+        keys.forEach((k) => {
+          if (k !== 'uno-arena-v2.2.0') {
+            window.caches.delete(k).catch(() => {});
+          }
+        });
+      }).catch(() => {});
+    }
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('[PWA] Service Worker registered:', reg.scope))
+          .then((reg) => {
+            console.log('[PWA] Service Worker registered:', reg.scope);
+            reg.update().catch(() => {});
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                });
+              }
+            });
+          })
           .catch((err) => console.warn('[PWA] Service Worker registration notice:', err));
+      });
+
+      let isInitialController = !navigator.serviceWorker.controller;
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (isInitialController) {
+          isInitialController = false;
+          return;
+        }
+        if (!refreshing && (!this.gameState || this.gameState.status === 'idle')) {
+          refreshing = true;
+          window.location.reload();
+        }
       });
     }
   }

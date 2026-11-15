@@ -197,12 +197,23 @@ app.put('/api/rooms/:roomId/profile', (req, res) => {
 const sharedDir = path.resolve(__dirname, '../../shared');
 app.use('/shared', express.static(sharedDir));
 
-// Serve frontend static assets from client directory
+// Serve frontend static assets from client directory with strict cache controls for shell files
 const clientDir = path.resolve(__dirname, '../../client');
-app.use(express.static(clientDir));
+app.use(express.static(clientDir, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('sw.js') || filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
-// Fallback to index.html for client-side routing
+// Fallback to index.html for client-side routing (never cache HTML)
 app.get('*', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(path.join(clientDir, 'index.html'));
 });
 

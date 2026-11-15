@@ -1,14 +1,18 @@
-// UNO Arena Service Worker
-const CACHE_NAME = 'uno-arena-v1';
+// UNO Arena Service Worker — Version 2.2.0
+const CACHE_NAME = 'uno-arena-v2.2.0';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
-  '/style.css',
-  '/home.css',
-  '/lobby.css',
-  '/arena.css',
-  '/mobile.css',
-  '/app.js',
+  '/style.css?v=2.2.0',
+  '/home.css?v=2.2.0',
+  '/lobby.css?v=2.2.0',
+  '/arena.css?v=2.2.0',
+  '/mobile.css?v=2.2.0',
+  '/app.js?v=2.2.0',
+  '/audio.js',
+  '/cardGraphics.js',
+  '/shared/constants.js',
+  '/shared/rules.js',
   '/manifest.json',
   '/assets/tabletop-wood.jpg',
   '/assets/uno-arena-mobile-hero.png',
@@ -35,6 +39,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('[SW] Purging outdated cache:', key);
             return caches.delete(key);
           }
         })
@@ -42,6 +47,12 @@ self.addEventListener('activate', (event) => {
     })
   );
   self.clients.claim();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (event) => {
@@ -67,7 +78,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-while-revalidate for static assets (CSS, JS, images)
+  // Network-first with cache fallback for code assets (CSS, JS) to guarantee latest styles/logic
+  const isCodeAsset = url.pathname.endsWith('.css') || url.pathname.endsWith('.js') || url.search.includes('v=');
+  if (isCodeAsset) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for static media assets (images, audio, fonts)
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)
@@ -86,4 +116,3 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
-
