@@ -2291,8 +2291,12 @@ class UnoArenaApp {
       });
     }
 
-    // Render lobby rules panel for current mode
-    this.renderLobbyRulesPanel(isHost);
+    // Sync Game Rules modal if open while in lobby
+    if (this.el.settingsModal?.classList.contains('active') && this.rulesModalContext === 'lobby') {
+      const mode = this.gameState.mode || 'classic';
+      const rules = this.gameState.houseRules || defaultHouseRules(mode);
+      this.syncGameRulesModalInputs(mode, rules, !isHost, isHost);
+    }
 
     // Render Players
     this.el.lobbyPlayersList.innerHTML = this.gameState.players
@@ -2341,8 +2345,15 @@ class UnoArenaApp {
     }
 
     // Ready button state
-    this.el.readyBtn.textContent = me?.isReady ? 'CANCEL READY' : 'I AM READY ✓';
-    this.el.readyBtn.style.background = me?.isReady ? '#475569' : '#10B981';
+    if (me?.isReady) {
+      this.el.readyBtn.classList.add('is-ready');
+      this.el.readyBtn.textContent = 'CANCEL READY ✕';
+      this.el.readyBtn.style.background = '#b25900';
+    } else {
+      this.el.readyBtn.classList.remove('is-ready');
+      this.el.readyBtn.textContent = 'I AM READY ✓';
+      this.el.readyBtn.style.background = '#107E3E';
+    }
   }
 
   renderArena() {
@@ -3493,6 +3504,10 @@ class UnoArenaApp {
       this.openGameRulesModal('arena', this.gameState.mode);
       return;
     }
+    if (this.gameState?.status === 'lobby') {
+      this.openGameRulesModal('lobby', this.gameState.mode);
+      return;
+    }
     this.openSettingsModal('how_to_play');
   }
 
@@ -3808,68 +3823,24 @@ class UnoArenaApp {
   }
 
   renderLobbyRulesPanel(isHost) {
-    if (!this.el.lobbyRulesPanel) return;
-    this.el.lobbyRulesPanel.hidden = false;
-
-    const mode = this.gameState.mode || 'classic';
-    const rules = this.gameState.houseRules || defaultHouseRules(mode);
-    const isCustom = this.isCustomRules(mode, rules);
-    const modeLabels = { classic: 'Classic UNO', flip: 'UNO Flip', no_mercy: 'No Mercy' };
-
-    const chips = [
-      `<span class="lobby-rule-chip">🚨 Missed UNO: <strong>${rules.missedUnoPenalty || 2} cards</strong></span>`,
-      `<span class="lobby-rule-chip">🃏 Hand: <strong>${rules.startingHandSize || 7} cards</strong></span>`,
-      `<span class="lobby-rule-chip">⏱️ Turn: <strong>${rules.turnDuration || 30}s</strong></span>`,
-    ];
-
-    if (mode === 'classic') {
-      chips.push(`<span class="lobby-rule-chip">⚡ Stacking: <strong>${rules.stackingAllowed ? 'ON' : 'OFF'}</strong></span>`);
-      chips.push(`<span class="lobby-rule-chip">🔄 Draw: <strong>${rules.drawUntilPlayable ? 'Until Playable' : 'Draw 1'}</strong></span>`);
-      if (rules.sevenZeroSwap) chips.push('<span class="lobby-rule-chip">🔄 7-0 Swap/Pass: <strong>ON</strong></span>');
-      if (rules.wildDraw4Challenge === false) chips.push('<span class="lobby-rule-chip">🛡️ WD4 Challenge: <strong>OFF</strong></span>');
-    } else if (mode === 'flip') {
-      chips.push(`<span class="lobby-rule-chip">⚡ Stacking: <strong>${rules.stackingAllowed ? 'ON' : 'OFF'}</strong></span>`);
-      chips.push(`<span class="lobby-rule-chip">🔄 Draw: <strong>${rules.drawUntilPlayable ? 'Until Playable' : 'Draw 1'}</strong></span>`);
-    } else if (mode === 'no_mercy') {
-      chips.push(`<span class="lobby-rule-chip">⚡ Stacking: <strong>${rules.stackingAllowed !== false ? 'ON' : 'OFF'}</strong></span>`);
-      chips.push(`<span class="lobby-rule-chip">🔄 Draw: <strong>${rules.drawUntilPlayable !== false ? 'Until Playable' : 'Draw 1'}</strong></span>`);
-      chips.push(`<span class="lobby-rule-chip">🔄 7-0 Swap: <strong>${rules.sevenZeroSwap !== false ? 'ON' : 'OFF'}</strong></span>`);
-      chips.push(`<span class="lobby-rule-chip">💥 Knockout: <strong>${rules.mercyKnockout !== false ? `${rules.mercyKnockoutLimit || 25} cards` : 'OFF'}</strong></span>`);
-    }
-
-    this.el.lobbyRulesPanel.innerHTML = `
-      <div class="lobby-rules-header">
-        <div class="lobby-rules-title">
-          <span>⚙️</span>
-          <span>${modeLabels[mode] || mode.toUpperCase()} RULES</span>
-          <span class="lobby-rules-badge ${isCustom ? 'is-custom' : ''}">${isCustom ? 'Custom House Rules' : 'Official Rules'}</span>
-        </div>
-        <div class="lobby-rules-actions">
-          <button id="lobbyRulesBtn" class="lobby-rules-btn" type="button">
-            ${isHost ? '⚙️ Customize Rules' : '👁️ View Rules'}
-          </button>
-        </div>
-      </div>
-      <div class="lobby-rules-chips">
-        ${chips.join('')}
-      </div>
-    `;
-
-    const lobbyRulesBtn = document.getElementById('lobbyRulesBtn');
-    lobbyRulesBtn?.addEventListener('click', () => {
-      this.openGameRulesModal('lobby', mode);
-    });
-
-    if (this.el.gameRulesModal?.classList.contains('active') && this.rulesModalContext === 'lobby') {
+    if (this.el.settingsModal?.classList.contains('active') && this.rulesModalContext === 'lobby') {
+      const mode = this.gameState.mode || 'classic';
+      const rules = this.gameState.houseRules || defaultHouseRules(mode);
       this.syncGameRulesModalInputs(mode, rules, !isHost, isHost);
     }
   }
 
   initSettingsModal() {
-    const openGeneral = () => this.openSettingsModal('general');
-    this.el.settingsBtn?.addEventListener('click', openGeneral);
-    this.el.mobileNavSettingsBtn?.addEventListener('click', openGeneral);
-    this.el.noMercySettingsBtn?.addEventListener('click', openGeneral);
+    const openSettings = () => {
+      if (this.gameState?.status === 'lobby') {
+        this.openGameRulesModal('lobby', this.gameState.mode);
+      } else {
+        this.openSettingsModal('general');
+      }
+    };
+    this.el.settingsBtn?.addEventListener('click', openSettings);
+    this.el.mobileNavSettingsBtn?.addEventListener('click', openSettings);
+    this.el.noMercySettingsBtn?.addEventListener('click', openSettings);
 
     // Tab buttons
     this.el.tabBtnGeneral?.addEventListener('click', () => this.switchSettingsTab('general'));
@@ -4078,6 +4049,11 @@ class UnoArenaApp {
       if (this.el.ruleApplyBtn) {
         this.el.ruleApplyBtn.textContent = isReadOnly ? 'Close ✕' : 'Save & Close ✓';
       }
+      const targetMode = this.activeRulesModalMode || this.gameState?.mode || this.aiSetup?.mode || 'classic';
+      const rules = this.rulesModalContext === 'ai'
+        ? this.getSelectedHouseRules(targetMode)
+        : (this.gameState?.houseRules || defaultHouseRules(targetMode));
+      this.syncGameRulesModalInputs(targetMode, rules, isReadOnly, isHost);
     } else {
       if (this.el.gameRulesModeBadge) this.el.gameRulesModeBadge.style.display = 'none';
       if (this.el.gameRulesTypeBadge) this.el.gameRulesTypeBadge.style.display = 'none';
@@ -4138,6 +4114,10 @@ class UnoArenaApp {
 }
 
 // Bootstrap app when DOM is ready
-window.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', () => {
+    window.app = new UnoArenaApp();
+  });
+} else {
   window.app = new UnoArenaApp();
-});
+}

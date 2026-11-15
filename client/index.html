@@ -14,6 +14,17 @@
   <link rel="stylesheet" href="./arena.css">
   <link rel="stylesheet" href="./mobile.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23EF4444'/><text x='50' y='65' font-size='42' font-weight='900' fill='white' text-anchor='middle'>A</text></svg>">
+  <script>
+    (function() {
+      const orig = document.getElementById.bind(document);
+      document.getElementById = function(id) {
+        if (id === 'gameRulesModal' || id === 'rulesModal') return orig('settingsModal') || orig(id);
+        if (id === 'gameRulesModalClose' || id === 'rulesModalClose') return orig('settingsModalClose') || orig(id);
+        if (id === 'lobbyRulesBtn') return orig('settingsBtn') || orig(id);
+        return orig(id);
+      };
+    })();
+  </script>
 </head>
 <body>
 
@@ -50,7 +61,6 @@
         <button id="howToPlayBtn" type="button"></button>
         <button id="rulesModalClose" type="button"></button>
         <button id="gameRulesModalClose" type="button"></button>
-        <div id="rulesModal"></div>
       </div>
     </div>
   </header>
@@ -583,23 +593,22 @@
         <div>
           <div style="font-size: 0.85rem; font-weight: 800; color: #CBD5E1; text-transform: uppercase;">Select Game Mode</div>
           <div id="modeSelectorGrid" class="mode-selector-grid"></div>
-          <div id="lobbyRulesPanel" class="lobby-rules-panel" hidden></div>
         </div>
 
         <div style="margin: 20px 0;">
           <div style="font-size: 0.85rem; font-weight: 800; color: #CBD5E1; text-transform: uppercase; margin-bottom: 8px;">Players in Lobby (2-6)</div>
           <div id="lobbyPlayersList" class="lobby-players-list"></div>
           <div id="lobbyHostControls" class="lobby-host-controls" style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
-            <button id="addBotBtn" class="nav-btn" type="button" title="Add an AI bot to this lobby">+ ADD BOT 🤖</button>
-            <button id="shuffleSeatsBtn" class="nav-btn" type="button" title="Shuffle player seating order">🔀 SHUFFLE SEATS</button>
+            <button id="addBotBtn" class="nav-btn uno-btn uno-btn-blue" type="button" title="Add an AI bot to this lobby">+ ADD BOT 🤖</button>
+            <button id="shuffleSeatsBtn" class="nav-btn uno-btn uno-btn-yellow" type="button" title="Shuffle player seating order">🔀 SHUFFLE SEATS</button>
           </div>
         </div>
 
         <div style="display: flex; gap: 12px; justify-content: center; margin-top: 24px;">
-          <button id="readyBtn" class="action-btn" style="background: #10B981; color: white; padding: 12px 24px;">
+          <button id="readyBtn" class="action-btn uno-btn uno-btn-green" style="padding: 12px 24px;">
             I AM READY ✓
           </button>
-          <button id="startGameBtn" class="action-btn" style="background: linear-gradient(135deg, #F59E0B, #D97706); color: #1F2937; padding: 12px 28px; font-weight: 900; display: none;">
+          <button id="startGameBtn" class="action-btn uno-btn uno-btn-green" style="padding: 12px 28px; display: none;">
             START GAME ▶
           </button>
         </div>
@@ -1444,18 +1453,6 @@
 
   <!-- Toast Notification -->
   <div id="toast" class="toast-msg"></div>
-
-  <!-- Compatibility alias hook for legacy rule modal lookups -->
-  <script>
-    (function() {
-      const orig = document.getElementById.bind(document);
-      document.getElementById = function(id) {
-        if (id === 'gameRulesModal' || id === 'rulesModal') return orig('settingsModal') || orig(id);
-        if (id === 'gameRulesModalClose' || id === 'rulesModalClose') return orig('settingsModalClose') || orig(id);
-        return orig(id);
-      };
-    })();
-  </script>
 
   <!-- JavaScript ES Modules -->
   <script type="module" src="./app.js"></script>

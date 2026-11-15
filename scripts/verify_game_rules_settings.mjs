@@ -49,6 +49,12 @@ class CDPClient {
 
     this.ws.on('message', (raw) => {
       const msg = JSON.parse(raw);
+      if (msg.method === 'Runtime.consoleAPICalled') {
+        console.log(`[${this.tag} Console]`, ...msg.params.args.map((a) => a.value ?? a.description ?? ''));
+      }
+      if (msg.method === 'Runtime.exceptionThrown') {
+        console.error(`[${this.tag} Exception]`, msg.params.exceptionDetails?.exception?.description || msg.params.exceptionDetails?.text);
+      }
       if (msg.id && this.callbacks.has(msg.id)) {
         const cb = this.callbacks.get(msg.id);
         this.callbacks.delete(msg.id);
@@ -77,6 +83,7 @@ class CDPClient {
       awaitPromise: true,
     });
     if (res.exceptionDetails) {
+      console.error(`[Eval error details]`, JSON.stringify(res.exceptionDetails));
       throw new Error(`Eval error: ${res.exceptionDetails.text || res.exceptionDetails.exception?.description}`);
     }
     return res.result ? res.result.value : undefined;

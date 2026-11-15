@@ -1302,20 +1302,28 @@ body::before {
 }
 
 .rule-tab-btn.active {
-  background: var(--bg-tertiary);
-  color: white;
+  background: #0066CC !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  font-weight: 800 !important;
 }
 
 .rule-content-block {
   line-height: 1.6;
   font-size: 0.92rem;
-  color: #CBD5E1;
+  color: #12372a;
 }
 
 .rule-content-block h4 {
-  color: white;
+  color: #082c22;
+  font-weight: 900;
   margin: 14px 0 6px;
   font-size: 1.05rem;
+}
+
+.rule-content-block strong {
+  color: #082c22;
+  font-weight: 800;
 }
 
 .rule-content-block ul {
@@ -1325,6 +1333,7 @@ body::before {
 
 .rule-content-block li {
   margin-bottom: 6px;
+  color: #12372a;
 }
 
 /* Responsive adjustments */
@@ -1382,17 +1391,451 @@ body::before {
 
 
 /* ==========================================================================
-   SETTINGS -> GAME RULES MODAL & CONTROLS
+   UNIVERSAL UNO-STYLE ACTION BUTTON ARCHITECTURE
    ========================================================================== */
+.uno-btn,
+button.uno-btn,
+#createRoomBtn,
+.home-create,
+#mobileCreateRoomBtn,
+#noMercyCreateRoomBtn,
+#playVsAiBtn,
+.home-ai,
+#mobilePlayVsAiBtn,
+#settingsBtn,
+#mobileNavSettingsBtn,
+#noMercySettingsBtn,
+#joinRoomBtn,
+.home-join,
+#mobileJoinRoomBtn,
+#noMercyJoinRoomBtn,
+#startGameBtn,
+.ai-start-btn,
+#ruleApplyBtn,
+#ruleRestoreDefaultsBtn,
+#shuffleSeatsBtn,
+#addBotBtn,
+#fullscreenToggleBtn,
+#mobileNavFullscreenBtn,
+#flipBackToModesBtn,
+#leaveBtn,
+#confirmLeaveBtn,
+.leave-now-btn,
+#cancelLeaveBtn,
+.leave-stay-btn,
+.avatar-btn-upload,
+.avatar-btn-remove,
+.ai-cancel-btn,
+#copyInviteBtn,
+#readyBtn,
+#aiCustomizeRulesBtn,
+#btnDrawAction,
+#btnPassAction,
+#btnUnoAction,
+#btnCatchAction,
+#btnViewVictory {
+  font-family: inherit;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.28), 0 3px 6px rgba(0, 0, 0, 0.12) !important;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease, filter 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease !important;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* Hover: Slightly darken background color, no layout shifts, preserve white border and white text */
+@media (hover: hover) and (pointer: fine) {
+  .uno-btn:hover:not(:disabled),
+  #createRoomBtn:hover:not(:disabled),
+  .home-create:hover:not(:disabled),
+  #mobileCreateRoomBtn:hover:not(:disabled),
+  #noMercyCreateRoomBtn:hover:not(:disabled),
+  #playVsAiBtn:hover:not(:disabled),
+  .home-ai:hover:not(:disabled),
+  #mobilePlayVsAiBtn:hover:not(:disabled),
+  #settingsBtn:hover:not(:disabled),
+  #mobileNavSettingsBtn:hover:not(:disabled),
+  #noMercySettingsBtn:hover:not(:disabled),
+  #joinRoomBtn:hover:not(:disabled),
+  .home-join:hover:not(:disabled),
+  #mobileJoinRoomBtn:hover:not(:disabled),
+  #noMercyJoinRoomBtn:hover:not(:disabled),
+  #startGameBtn:hover:not(:disabled),
+  .ai-start-btn:hover:not(:disabled),
+  #ruleApplyBtn:hover:not(:disabled),
+  #ruleRestoreDefaultsBtn:hover:not(:disabled),
+  #shuffleSeatsBtn:hover:not(:disabled),
+  #addBotBtn:hover:not(:disabled),
+  #fullscreenToggleBtn:hover:not(:disabled),
+  #mobileNavFullscreenBtn:hover:not(:disabled),
+  #flipBackToModesBtn:hover:not(:disabled),
+  #leaveBtn:hover:not(:disabled),
+  #confirmLeaveBtn:hover:not(:disabled),
+  .leave-now-btn:hover:not(:disabled),
+  #cancelLeaveBtn:hover:not(:disabled),
+  .leave-stay-btn:hover:not(:disabled),
+  .avatar-btn-upload:hover:not(:disabled),
+  .avatar-btn-remove:hover:not(:disabled),
+  .ai-cancel-btn:hover:not(:disabled),
+  #copyInviteBtn:hover:not(:disabled),
+  #readyBtn:hover:not(:disabled),
+  #aiCustomizeRulesBtn:hover:not(:disabled),
+  #btnDrawAction:hover:not(:disabled),
+  #btnPassAction:hover:not(:disabled),
+  #btnUnoAction:hover:not(:disabled),
+  #btnCatchAction:hover:not(:disabled),
+  #btnViewVictory:hover:not(:disabled) {
+    transform: none !important;
+    filter: brightness(0.88) !important;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.28), 0 3px 6px rgba(0, 0, 0, 0.12) !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+  }
+}
+
+/* Active / Pressed: Small downward movement with compressed shadow */
+.uno-btn:active:not(:disabled),
+#createRoomBtn:active:not(:disabled),
+.home-create:active:not(:disabled),
+#mobileCreateRoomBtn:active:not(:disabled),
+#noMercyCreateRoomBtn:active:not(:disabled),
+#playVsAiBtn:active:not(:disabled),
+.home-ai:active:not(:disabled),
+#mobilePlayVsAiBtn:active:not(:disabled),
+#settingsBtn:active:not(:disabled),
+#mobileNavSettingsBtn:active:not(:disabled),
+#noMercySettingsBtn:active:not(:disabled),
+#joinRoomBtn:active:not(:disabled),
+.home-join:active:not(:disabled),
+#mobileJoinRoomBtn:active:not(:disabled),
+#noMercyJoinRoomBtn:active:not(:disabled),
+#startGameBtn:active:not(:disabled),
+.ai-start-btn:active:not(:disabled),
+#ruleApplyBtn:active:not(:disabled),
+#ruleRestoreDefaultsBtn:active:not(:disabled),
+#shuffleSeatsBtn:active:not(:disabled),
+#addBotBtn:active:not(:disabled),
+#fullscreenToggleBtn:active:not(:disabled),
+#mobileNavFullscreenBtn:active:not(:disabled),
+#flipBackToModesBtn:active:not(:disabled),
+#leaveBtn:active:not(:disabled),
+#confirmLeaveBtn:active:not(:disabled),
+.leave-now-btn:active:not(:disabled),
+#cancelLeaveBtn:active:not(:disabled),
+.leave-stay-btn:active:not(:disabled),
+.avatar-btn-upload:active:not(:disabled),
+.avatar-btn-remove:active:not(:disabled),
+.ai-cancel-btn:active:not(:disabled),
+#copyInviteBtn:active:not(:disabled),
+#readyBtn:active:not(:disabled),
+#aiCustomizeRulesBtn:active:not(:disabled),
+#btnDrawAction:active:not(:disabled),
+#btnPassAction:active:not(:disabled),
+#btnUnoAction:active:not(:disabled),
+#btnCatchAction:active:not(:disabled),
+#btnViewVictory:active:not(:disabled) {
+  transform: translateY(2px) !important;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.28) !important;
+}
+
+/* Keyboard Focus: clearly visible gold outline */
+.uno-btn:focus-visible,
+#createRoomBtn:focus-visible,
+.home-create:focus-visible,
+#mobileCreateRoomBtn:focus-visible,
+#noMercyCreateRoomBtn:focus-visible,
+#playVsAiBtn:focus-visible,
+.home-ai:focus-visible,
+#mobilePlayVsAiBtn:focus-visible,
+#settingsBtn:focus-visible,
+#mobileNavSettingsBtn:focus-visible,
+#noMercySettingsBtn:focus-visible,
+#joinRoomBtn:focus-visible,
+.home-join:focus-visible,
+#mobileJoinRoomBtn:focus-visible,
+#noMercyJoinRoomBtn:focus-visible,
+#startGameBtn:focus-visible,
+.ai-start-btn:focus-visible,
+#ruleApplyBtn:focus-visible,
+#ruleRestoreDefaultsBtn:focus-visible,
+#shuffleSeatsBtn:focus-visible,
+#addBotBtn:focus-visible,
+#fullscreenToggleBtn:focus-visible,
+#mobileNavFullscreenBtn:focus-visible,
+#flipBackToModesBtn:focus-visible,
+#leaveBtn:focus-visible,
+#confirmLeaveBtn:focus-visible,
+.leave-now-btn:focus-visible,
+#cancelLeaveBtn:focus-visible,
+.leave-stay-btn:focus-visible,
+.avatar-btn-upload:focus-visible,
+.avatar-btn-remove:focus-visible,
+.ai-cancel-btn:focus-visible,
+#copyInviteBtn:focus-visible,
+#readyBtn:focus-visible,
+#aiCustomizeRulesBtn:focus-visible,
+#btnDrawAction:focus-visible,
+#btnPassAction:focus-visible,
+#btnUnoAction:focus-visible,
+#btnCatchAction:focus-visible,
+#btnViewVictory:focus-visible {
+  outline: 3px solid #f5b92f !important;
+  outline-offset: 2px !important;
+}
+
+/* Disabled State */
+.uno-btn:disabled,
+#createRoomBtn:disabled,
+.home-create:disabled,
+#mobileCreateRoomBtn:disabled,
+#noMercyCreateRoomBtn:disabled,
+#playVsAiBtn:disabled,
+.home-ai:disabled,
+#mobilePlayVsAiBtn:disabled,
+#settingsBtn:disabled,
+#mobileNavSettingsBtn:disabled,
+#noMercySettingsBtn:disabled,
+#joinRoomBtn:disabled,
+.home-join:disabled,
+#mobileJoinRoomBtn:disabled,
+#noMercyJoinRoomBtn:disabled,
+#startGameBtn:disabled,
+.ai-start-btn:disabled,
+#ruleApplyBtn:disabled,
+#ruleRestoreDefaultsBtn:disabled,
+#shuffleSeatsBtn:disabled,
+#addBotBtn:disabled,
+#fullscreenToggleBtn:disabled,
+#mobileNavFullscreenBtn:disabled,
+#flipBackToModesBtn:disabled,
+#leaveBtn:disabled,
+#confirmLeaveBtn:disabled,
+.leave-now-btn:disabled,
+#cancelLeaveBtn:disabled,
+.leave-stay-btn:disabled,
+.avatar-btn-upload:disabled,
+.avatar-btn-remove:disabled,
+.ai-cancel-btn:disabled,
+#copyInviteBtn:disabled,
+#readyBtn:disabled,
+#aiCustomizeRulesBtn:disabled,
+#btnDrawAction:disabled,
+#btnPassAction:disabled,
+#btnUnoAction:disabled,
+#btnCatchAction:disabled,
+#btnViewVictory:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: grayscale(0.2) !important;
+}
+
+/* --- ACTION COLOR: UNO RED (#D72638) ---
+   Create Room, Leave, Destructive actions, Cancel */
+.uno-btn-red,
+#createRoomBtn,
+.home-create,
+#mobileCreateRoomBtn,
+#noMercyCreateRoomBtn,
+#leaveBtn,
+#confirmLeaveBtn,
+.leave-now-btn,
+.avatar-btn-remove,
+.ai-cancel-btn,
+#settingsModalClose {
+  background: #D72638 !important;
+  background-color: #D72638 !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  .uno-btn-red:hover:not(:disabled),
+  #createRoomBtn:hover:not(:disabled),
+  .home-create:hover:not(:disabled),
+  #mobileCreateRoomBtn:hover:not(:disabled),
+  #noMercyCreateRoomBtn:hover:not(:disabled),
+  #leaveBtn:hover:not(:disabled),
+  #confirmLeaveBtn:hover:not(:disabled),
+  .leave-now-btn:hover:not(:disabled),
+  .avatar-btn-remove:hover:not(:disabled),
+  .ai-cancel-btn:hover:not(:disabled),
+  #settingsModalClose:hover:not(:disabled) {
+    background: #B91C1C !important;
+    background-color: #B91C1C !important;
+  }
+}
+
+/* --- ACTION COLOR: UNO BLUE (#0066CC) ---
+   Play vs AI, Settings, Fullscreen, Add Bot, Modes */
+.uno-btn-blue,
+#playVsAiBtn,
+.home-ai,
+#mobilePlayVsAiBtn,
+#settingsBtn,
+#mobileNavSettingsBtn,
+#noMercySettingsBtn,
+#fullscreenToggleBtn,
+#mobileNavFullscreenBtn,
+#flipBackToModesBtn,
+#addBotBtn,
+#aiCustomizeRulesBtn,
+.avatar-btn-upload {
+  background: #0066CC !important;
+  background-color: #0066CC !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  .uno-btn-blue:hover:not(:disabled),
+  #playVsAiBtn:hover:not(:disabled),
+  .home-ai:hover:not(:disabled),
+  #mobilePlayVsAiBtn:hover:not(:disabled),
+  #settingsBtn:hover:not(:disabled),
+  #mobileNavSettingsBtn:hover:not(:disabled),
+  #noMercySettingsBtn:hover:not(:disabled),
+  #fullscreenToggleBtn:hover:not(:disabled),
+  #mobileNavFullscreenBtn:hover:not(:disabled),
+  #flipBackToModesBtn:hover:not(:disabled),
+  #addBotBtn:hover:not(:disabled),
+  #aiCustomizeRulesBtn:hover:not(:disabled),
+  .avatar-btn-upload:hover:not(:disabled) {
+    background: #004C99 !important;
+    background-color: #004C99 !important;
+  }
+}
+
+/* --- ACTION COLOR: UNO GREEN (#107E3E) ---
+   Join Room, Start, Save & Close / Done, Ready (unready), Stay */
+.uno-btn-green,
+#joinRoomBtn,
+.home-join,
+#mobileJoinRoomBtn,
+#noMercyJoinRoomBtn,
+#startGameBtn,
+.ai-start-btn,
+#ruleApplyBtn,
+#copyInviteBtn,
+#cancelLeaveBtn,
+.leave-stay-btn,
+#readyBtn:not(.is-ready),
+#btnDrawAction,
+#btnPassAction {
+  background: #107E3E !important;
+  background-color: #107E3E !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  .uno-btn-green:hover:not(:disabled),
+  #joinRoomBtn:hover:not(:disabled),
+  .home-join:hover:not(:disabled),
+  #mobileJoinRoomBtn:hover:not(:disabled),
+  #noMercyJoinRoomBtn:hover:not(:disabled),
+  #startGameBtn:hover:not(:disabled),
+  .ai-start-btn:hover:not(:disabled),
+  #ruleApplyBtn:hover:not(:disabled),
+  #copyInviteBtn:hover:not(:disabled),
+  #cancelLeaveBtn:hover:not(:disabled),
+  .leave-stay-btn:hover:not(:disabled),
+  #readyBtn:not(.is-ready):hover:not(:disabled),
+  #btnDrawAction:hover:not(:disabled),
+  #btnPassAction:hover:not(:disabled) {
+    background: #0B6330 !important;
+    background-color: #0B6330 !important;
+  }
+}
+
+/* --- ACTION COLOR: DEEP UNO YELLOW (#b25900) ---
+   Restore Defaults, Shuffle Seats, Cancel Ready, Call UNO, Catch UNO */
+.uno-btn-yellow,
+#ruleRestoreDefaultsBtn,
+#shuffleSeatsBtn,
+#readyBtn.is-ready,
+#btnUnoAction,
+#btnCallUnoContextual,
+#btnCatchAction,
+#btnViewVictory {
+  background: #b25900 !important;
+  background-color: #b25900 !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  .uno-btn-yellow:hover:not(:disabled),
+  #ruleRestoreDefaultsBtn:hover:not(:disabled),
+  #shuffleSeatsBtn:hover:not(:disabled),
+  #readyBtn.is-ready:hover:not(:disabled),
+  #btnUnoAction:hover:not(:disabled),
+  #btnCallUnoContextual:hover:not(:disabled),
+  #btnCatchAction:hover:not(:disabled),
+  #btnViewVictory:hover:not(:disabled) {
+    background: #8f4700 !important;
+    background-color: #8f4700 !important;
+  }
+}
+
+/* Sizing for specific button types */
+#settingsBtn {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  height: 36px;
+}
+#fullscreenToggleBtn {
+  padding: 6px 10px;
+  font-size: 1rem;
+  height: 36px;
+  min-width: 36px;
+}
+#leaveBtn {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  height: 36px;
+}
+#mobileNavSettingsBtn,
+#mobileNavFullscreenBtn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 1rem;
+}
+#settingsModalClose {
+  width: 32px;
+  height: 32px;
+  border-radius: 50% !important;
+  font-size: 1.3rem;
+  line-height: 1;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+/* ==========================================================================
+   RESTYLED SETTINGS & GAME RULES MODAL (WARM CREAM LANDING THEME)
+   ========================================================================== */
+.settings-modal-card,
 .game-rules-modal-card {
-  max-width: 660px;
+  max-width: 740px;
   width: 95%;
-  background: linear-gradient(135deg, #24140b 0%, #170d07 100%);
-  border: 2px solid #d4af37;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: #fbf8f0;
+  border: 2px solid #e0d4be;
   border-radius: 20px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 30px rgba(212, 175, 55, 0.2);
-  color: #f8fafc;
-  padding: 20px clamp(16px, 3vw, 28px);
+  box-shadow: 0 20px 50px rgba(18, 55, 42, 0.25), 0 0 0 1px rgba(224, 212, 190, 0.6);
+  color: #082c22;
+  padding: 20px 24px;
+  box-sizing: border-box;
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid #e0d4be;
+  flex-shrink: 0;
 }
 
 .rules-modal-title-wrap {
@@ -1402,15 +1845,24 @@ body::before {
   flex-wrap: wrap;
 }
 
+#settingsModalTitle {
+  color: #082c22;
+  font-weight: 900;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
 .rules-mode-badge {
   font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: 999px;
-  background: #3b82f6;
+  background: #0066CC;
   color: #ffffff;
+  border: 1.5px solid #ffffff;
 }
 
 .rules-type-badge {
@@ -1418,73 +1870,213 @@ body::before {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(16, 185, 129, 0.2);
-  border: 1px solid #10b981;
-  color: #34d399;
+  background: #107E3E;
+  color: #ffffff;
+  border: 1.5px solid #ffffff;
 }
 
 .rules-type-badge.is-custom {
-  background: rgba(245, 158, 11, 0.2);
-  border-color: #f59e0b;
-  color: #fbbf24;
+  background: #b25900;
 }
 
+/* Navigation Tabs: General | Game Rules | How to Play */
+.settings-nav-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1.5px solid #e0d4be;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.settings-nav-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.settings-tab-btn {
+  padding: 8px 18px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: 10px;
+  border: 1.5px solid #dfd3bc;
+  background: #f0e6d2;
+  color: #12372a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.settings-tab-btn:hover {
+  background: #e6dac2;
+  color: #082c22;
+  border-color: #d4c4a5;
+}
+
+.settings-tab-btn.active {
+  background: #0066CC !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25) !important;
+}
+
+.settings-tab-content {
+  display: none;
+}
+
+.settings-tab-content.active {
+  display: block;
+}
+
+/* Mode Selector Tabs (For Game Rules) */
+.rule-tabs {
+  background: #eee4ce;
+  border: 1px solid #dfd3bc;
+  border-radius: 12px;
+  padding: 4px;
+  display: inline-flex;
+  gap: 6px;
+  margin: 10px 0 14px 0;
+  flex-shrink: 0;
+}
+
+.rule-tab-btn {
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: #12372a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rule-tab-btn:hover {
+  background: #e2d6be;
+  color: #082c22;
+}
+
+.rule-tab-btn.active {
+  background: #0066CC !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Status Banners */
 .rules-status-banner {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
   border-radius: 12px;
-  font-size: 0.85rem;
-  margin-bottom: 14px;
+  font-size: 0.88rem;
+  margin: 10px 0 14px 0;
+  flex-shrink: 0;
 }
 
 .rules-status-banner.banner-locked {
-  background: rgba(185, 28, 28, 0.15);
-  border: 1px solid #dc2626;
-  color: #fca5a5;
+  background: #fee2e2;
+  border: 1.5px solid #ef4444;
+  color: #991b1b;
 }
 
 .rules-status-banner.banner-guest {
-  background: rgba(217, 119, 6, 0.15);
-  border: 1px solid #f59e0b;
-  color: #fde68a;
+  background: #fef3c7;
+  border: 1.5px solid #f59e0b;
+  color: #92400e;
 }
 
+/* Modal Body & Custom Scrollbar */
+.settings-modal-body,
 .rules-modal-body {
+  flex: 1 1 auto;
   overflow-y: auto;
-  max-height: clamp(340px, 58vh, 520px);
-  padding-right: 6px;
-  margin-bottom: 16px;
+  padding: 14px 6px 14px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #c9bda5 #f5eee0;
 }
 
+.settings-modal-body::-webkit-scrollbar,
 .rules-modal-body::-webkit-scrollbar {
   width: 6px;
 }
+.settings-modal-body::-webkit-scrollbar-track,
 .rules-modal-body::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
+  background: #f5eee0;
   border-radius: 10px;
 }
+.settings-modal-body::-webkit-scrollbar-thumb,
 .rules-modal-body::-webkit-scrollbar-thumb {
-  background: #d4af37;
+  background: #c9bda5;
   border-radius: 10px;
 }
 
+/* Section Cards & Headings */
+.settings-section,
 .rules-group {
-  margin-bottom: 18px;
+  background: #fffdf8;
+  border: 1.5px solid #e0d4be;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(18, 55, 42, 0.04);
 }
 
+.settings-section-title,
 .rules-group-heading {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: #d4af37;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   margin: 0 0 10px 0;
-  padding-bottom: 4px;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  font-size: 0.98rem;
+  font-weight: 900;
+  color: #082c22;
+  letter-spacing: 0.02em;
+  border-bottom: 1.5px solid #ede3d1;
+  padding-bottom: 8px;
+}
+
+/* Setting Rows & Labels */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.setting-row:not(:last-child) {
+  border-bottom: 1px solid #f0e6d2;
+}
+
+.setting-col {
+  padding: 10px 0;
+}
+
+.setting-info,
+.rule-setting-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.setting-title,
+.rule-setting-label {
+  font-weight: 800;
+  font-size: 0.94rem;
+  color: #082c22;
+  display: block;
+}
+
+.setting-desc,
+.rule-setting-desc {
+  font-size: 0.8rem;
+  color: #4b5f54;
+  margin: 2px 0 0;
+  line-height: 1.35;
 }
 
 .rule-setting-row {
@@ -1492,70 +2084,76 @@ body::before {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #fcf9f2;
+  border: 1px solid #e8decb;
   margin-bottom: 8px;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .rule-setting-row:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(212, 175, 55, 0.3);
-}
-
-.rule-setting-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.rule-setting-label {
-  display: block;
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #f1f5f9;
-  margin-bottom: 2px;
-}
-
-.rule-setting-desc {
-  margin: 0;
-  font-size: 0.8rem;
-  color: #94a3b8;
-  line-height: 1.35;
+  background: #f7f0e1;
+  border-color: #d4c4a5;
 }
 
 .rule-setting-control {
   flex-shrink: 0;
 }
 
+/* Controls: Text inputs & Selects */
+.setting-text-field,
 .rule-select {
-  background: #180f08;
-  color: #f8fafc;
-  border: 1.5px solid #d4af37;
+  background: #ffffff;
+  border: 1.5px solid #c9bda5;
   border-radius: 10px;
+  color: #082c22;
   padding: 8px 12px;
   font-family: inherit;
-  font-size: 0.88rem;
-  font-weight: 600;
-  outline: none;
-  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-sizing: border-box;
   min-height: 38px;
+  outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.setting-text-field:focus,
 .rule-select:focus {
-  border-color: #fbbf24;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+  border-color: #0066CC;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
 }
 
-.rule-select:disabled {
+.rule-select:disabled,
+.setting-text-field:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  border-color: #64748b;
+  background: #f5efe3;
+  border-color: #d8cebe;
 }
 
-/* Custom Toggle Switch */
+/* Controls: Volume slider */
+.volume-ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setting-range {
+  accent-color: #0066CC;
+  cursor: pointer;
+  width: 130px;
+}
+
+.volume-val-badge {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #082c22;
+  min-width: 44px;
+  text-align: right;
+}
+
+/* Controls: Custom Toggle Switch */
 .rule-toggle {
   position: relative;
   display: inline-block;
@@ -1573,8 +2171,8 @@ body::before {
 .rule-toggle-slider {
   position: absolute;
   inset: 0;
-  background-color: #334155;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background-color: #cfc5b4;
+  border: 1.5px solid #b8ac98;
   border-radius: 34px;
   transition: 0.2s ease;
 }
@@ -1585,20 +2183,20 @@ body::before {
   height: 20px;
   width: 20px;
   left: 3px;
-  bottom: 3px;
+  bottom: 2.5px;
   background-color: white;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .rule-toggle input:checked + .rule-toggle-slider {
-  background-color: #10b981;
-  border-color: #059669;
+  background-color: #107E3E;
+  border-color: #0b6330;
 }
 
 .rule-toggle input:focus + .rule-toggle-slider {
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.35);
 }
 
 .rule-toggle input:checked + .rule-toggle-slider:before {
@@ -1610,262 +2208,7 @@ body::before {
   cursor: not-allowed;
 }
 
-.rules-modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(212, 175, 55, 0.25);
-}
-
-.rule-btn-secondary {
-  background: transparent;
-  color: #fbbf24;
-  border: 1.5px solid rgba(245, 158, 11, 0.4);
-  border-radius: 12px;
-  padding: 8px 16px;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.rule-btn-secondary:hover:not(:disabled) {
-  background: rgba(245, 158, 11, 0.12);
-  border-color: #f59e0b;
-}
-
-.rule-btn-secondary:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.rule-btn-primary {
-  background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
-  color: #170d07;
-  border: none;
-  border-radius: 12px;
-  padding: 8px 24px;
-  font-family: inherit;
-  font-size: 0.95rem;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.rule-btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.45);
-}
-
-/* Compact Mobile Rules Modal */
-@media (max-width: 600px) {
-  .game-rules-modal-card {
-    padding: 16px;
-    max-height: 94vh;
-  }
-  .rule-setting-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .rule-setting-control {
-    width: 100%;
-  }
-  .rule-select {
-    width: 100%;
-  }
-  .rules-modal-footer {
-    flex-direction: column-reverse;
-    gap: 8px;
-  }
-  .rule-btn-primary, .rule-btn-secondary {
-    width: 100%;
-    text-align: center;
-  }
-}
-
-/* ==========================================================================
-   UNIFIED SETTINGS MODAL STYLES (GENERAL | GAME RULES | HOW TO PLAY)
-   ========================================================================== */
-.settings-modal-card {
-  max-width: 740px;
-  width: 95%;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  background: #1e130c;
-  border: 1.5px solid #d4af37;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75), 0 0 30px rgba(212, 175, 55, 0.2);
-  color: #fdf6e2;
-  padding: 20px 24px;
-  box-sizing: border-box;
-}
-
-.settings-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-}
-
-.settings-nav-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.settings-nav-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.settings-tab-btn {
-  padding: 8px 18px;
-  font-family: inherit;
-  font-weight: 800;
-  font-size: 0.9rem;
-  border-radius: 10px;
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  background: rgba(255, 255, 255, 0.05);
-  color: #cbd5e1;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.settings-tab-btn:hover {
-  background: rgba(212, 175, 55, 0.15);
-  color: #fff;
-  border-color: #d4af37;
-}
-
-.settings-tab-btn.active {
-  background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
-  color: #170d07;
-  border-color: #d4af37;
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.35);
-}
-
-.settings-tab-content {
-  display: none;
-}
-
-.settings-tab-content.active {
-  display: block;
-}
-
-.settings-modal-body {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  padding: 14px 4px 14px 0;
-  scrollbar-width: thin;
-  scrollbar-color: #d4af37 rgba(255, 255, 255, 0.05);
-}
-
-.settings-modal-body::-webkit-scrollbar {
-  width: 6px;
-}
-.settings-modal-body::-webkit-scrollbar-thumb {
-  background: #d4af37;
-  border-radius: 4px;
-}
-
-.settings-section {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(212, 175, 55, 0.18);
-  border-radius: 14px;
-  padding: 14px 16px;
-  margin-bottom: 16px;
-}
-
-.settings-section-title {
-  margin: 0 0 10px 0;
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: #fbbf24;
-  letter-spacing: 0.02em;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-  padding-bottom: 6px;
-}
-
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 8px 0;
-}
-
-.setting-row:not(:last-child) {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.setting-col {
-  padding: 8px 0;
-}
-
-.setting-info {
-  flex: 1 1 auto;
-}
-
-.setting-title {
-  font-weight: 700;
-  font-size: 0.92rem;
-  color: #f1f5f9;
-  display: block;
-}
-
-.setting-desc {
-  font-size: 0.78rem;
-  color: #94a3b8;
-  margin: 2px 0 0;
-}
-
-.volume-ctrl-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.setting-range {
-  accent-color: #f59e0b;
-  cursor: pointer;
-  width: 120px;
-}
-
-.volume-val-badge {
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: #fbbf24;
-  min-width: 40px;
-  text-align: right;
-}
-
-.setting-text-field {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1.5px solid rgba(212, 175, 55, 0.35);
-  border-radius: 8px;
-  color: #fff;
-  padding: 6px 10px;
-  font-family: inherit;
-  font-weight: 700;
-  font-size: 0.9rem;
-  width: 160px;
-  box-sizing: border-box;
-}
-.setting-text-field:focus {
-  outline: none;
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
-}
-
+/* Avatar Management Box */
 .avatar-manager-box {
   display: flex;
   flex-direction: column;
@@ -1880,16 +2223,16 @@ body::before {
 }
 
 .avatar-preview-circle {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: #2b1a11;
-  border: 3px solid #d4af37;
+  background: #fbf8f0;
+  border: 3px solid #0066CC;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
   flex-shrink: 0;
 }
 
@@ -1911,39 +2254,6 @@ body::before {
   flex-wrap: wrap;
 }
 
-.avatar-btn-upload {
-  background: rgba(212, 175, 55, 0.15);
-  color: #fbbf24;
-  border: 1.5px solid rgba(245, 158, 11, 0.5);
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  transition: all 0.15s ease;
-}
-.avatar-btn-upload:hover {
-  background: rgba(212, 175, 55, 0.3);
-  border-color: #f59e0b;
-}
-
-.avatar-btn-remove {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.avatar-btn-remove:hover {
-  background: rgba(239, 68, 68, 0.3);
-}
-
 .avatar-presets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
@@ -1954,8 +2264,8 @@ body::before {
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid #dfd3bc;
+  background: #f0e6d2;
   font-size: 1.35rem;
   display: flex;
   align-items: center;
@@ -1963,14 +2273,128 @@ body::before {
   cursor: pointer;
   transition: transform 0.1s, border-color 0.1s, background 0.1s;
 }
+
 .avatar-preset-btn:hover {
-  border-color: #d4af37;
+  border-color: #c9bda5;
+  background: #e6dac2;
   transform: scale(1.06);
 }
+
 .avatar-preset-btn.active {
-  border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.25);
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.5);
+  background: #0066CC !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 2px 6px rgba(0, 102, 204, 0.4) !important;
+}
+
+/* Modal Footers */
+.settings-modal-footer,
+.rules-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1.5px solid #e0d4be;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+#ruleRestoreDefaultsBtn {
+  padding: 9px 18px;
+  font-size: 0.88rem;
+}
+
+#ruleApplyBtn {
+  padding: 9px 24px;
+  font-size: 0.92rem;
+}
+
+/* Mobile Settings & Rules Modal */
+@media (max-width: 600px) {
+  .settings-modal-card,
+  .game-rules-modal-card {
+    padding: 14px;
+    max-height: 94vh;
+  }
+  .settings-nav-tabs {
+    padding: 6px 0;
+    gap: 6px;
+  }
+  .settings-tab-btn {
+    padding: 6px 12px;
+    font-size: 0.82rem;
+  }
+  .rule-tabs {
+    margin: 6px 0 10px 0;
+    padding: 3px;
+    gap: 4px;
+  }
+  .rule-tab-btn {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+  .rule-setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .rule-setting-control {
+    width: 100%;
+  }
+  .rule-select {
+    width: 100%;
+  }
+  .settings-modal-footer,
+  .rules-modal-footer {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  #ruleRestoreDefaultsBtn,
+  #ruleApplyBtn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-height: 520px) {
+  .settings-modal-card,
+  .game-rules-modal-card {
+    padding: 10px 14px;
+    max-height: 96vh;
+  }
+  .settings-modal-header {
+    padding-bottom: 6px;
+  }
+  .settings-nav-tabs {
+    padding: 4px 0;
+    gap: 6px;
+  }
+  .settings-tab-btn {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+  .rule-tabs {
+    margin: 4px 0 8px 0;
+    padding: 2px;
+    gap: 4px;
+  }
+  .rule-tab-btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+  .settings-modal-body,
+  .rules-modal-body {
+    padding: 8px 4px 8px 0;
+  }
+  .settings-section,
+  .rules-group {
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .settings-modal-footer,
+  .rules-modal-footer {
+    padding-top: 8px;
+  }
 }
 
 /* Reduced Motion Mode */
