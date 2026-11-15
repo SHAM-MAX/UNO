@@ -17,6 +17,8 @@ class UnoArenaApp {
     this.sessionToken = null;
     this.playerName = localStorage.getItem('uno_arena_name') || '';
     this.preferredMode = localStorage.getItem('uno_arena_mode') || 'classic';
+    this.explicitlySelectedLandingMode = null;
+    this.pendingCreateRoomPlayerName = null;
     this.mercyKnockoutLimit = Number(localStorage.getItem('uno_arena_mercy_limit')) || 25;
     this.gameState = null;
     this.clientView = null;
@@ -108,6 +110,7 @@ class UnoArenaApp {
   initElements() {
     this.el = {
       banner: document.getElementById('connectionBanner'),
+      navRoomDetails: document.getElementById('navRoomDetails'),
       navRoomCode: document.getElementById('navRoomCode'),
       navModeTag: document.getElementById('navModeTag'),
       soundToggleBtn: document.getElementById('soundToggleBtn'),
@@ -180,12 +183,18 @@ class UnoArenaApp {
       noMercyMobileSoundBtn: document.getElementById('noMercyMobileSoundBtn'),
       noMercyMobileRulesBtn: document.getElementById('noMercyMobileRulesBtn'),
 
+      // Choose Game Mode Modal
+      chooseModeModal: document.getElementById('chooseModeModal'),
+      chooseModeModalClose: document.getElementById('chooseModeModalClose'),
+
       // Lobby
       lobbySection: document.getElementById('lobbySection'),
       lobbyCodeBadge: document.getElementById('lobbyCodeBadge'),
       lobbyCodeText: document.getElementById('lobbyCodeText'),
       copyInviteBtn: document.getElementById('copyInviteBtn'),
       modeSelectorGrid: document.getElementById('modeSelectorGrid'),
+      lobbyModeDisplay: document.getElementById('lobbyModeDisplay'),
+      lobbyPlayersHeading: document.getElementById('lobbyPlayersHeading'),
       lobbyRulesPanel: document.getElementById('lobbyRulesPanel'),
       lobbyPlayersList: document.getElementById('lobbyPlayersList'),
       readyBtn: document.getElementById('readyBtn'),
@@ -663,18 +672,14 @@ class UnoArenaApp {
       }
     });
 
-    // Choose a mode before creating a room. The lobby still lets the host change it.
+    // Landing game mode cards
     document.querySelectorAll('[data-home-mode]').forEach((button) => {
-      const selected = button.dataset.homeMode === this.preferredMode;
-      button.classList.toggle('is-selected', selected);
-      button.setAttribute('aria-pressed', String(selected));
       button.addEventListener('click', () => {
-        this.openModeSetup(button.dataset.homeMode);
-        document.querySelectorAll('[data-home-mode]').forEach((tile) => {
-          const isSelected = tile === button;
-          tile.classList.toggle('is-selected', isSelected);
-          tile.setAttribute('aria-pressed', String(isSelected));
-        });
+        const mode = button.dataset.homeMode;
+        this.explicitlySelectedLandingMode = mode;
+        this.preferredMode = mode;
+        localStorage.setItem('uno_arena_mode', mode);
+        this.highlightSelectedMode(mode);
       });
     });
 
@@ -683,7 +688,11 @@ class UnoArenaApp {
       const name = this.el.playerNameInput.value.trim() || 'Player 1';
       this.playerName = name;
       localStorage.setItem('uno_arena_name', name);
-      this.createRoom(name, this.preferredMode, this.getSelectedHouseRules());
+      if (this.explicitlySelectedLandingMode) {
+        this.createRoom(name, this.explicitlySelectedLandingMode, this.getSelectedHouseRules());
+      } else {
+        this.openChooseModeModal(name);
+      }
     });
 
     this.el.playerNameInput.addEventListener('keydown', (e) => {
@@ -786,7 +795,27 @@ class UnoArenaApp {
         this.el.playerNameInput.value = name;
         if (this.el.mobilePlayerNameInput) this.el.mobilePlayerNameInput.value = name;
         localStorage.setItem('uno_arena_name', name);
-        this.createRoom(name, this.preferredMode, this.getSelectedHouseRules());
+        if (this.explicitlySelectedLandingMode) {
+          this.createRoom(name, this.explicitlySelectedLandingMode, this.getSelectedHouseRules());
+        } else {
+          this.openChooseModeModal(name);
+        }
+      });
+    }
+
+    // Choose Game Mode Modal
+    if (this.el.chooseModeModal) {
+      this.el.chooseModeModal.querySelectorAll('[data-select-mode]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const mode = btn.dataset.selectMode;
+          this.selectModeAndCreateRoom(mode);
+        });
+      });
+      if (this.el.chooseModeModalClose) {
+        this.el.chooseModeModalClose.addEventListener('click', () => this.closeChooseModeModal());
+      }
+      this.el.chooseModeModal.addEventListener('click', (e) => {
+        if (e.target === this.el.chooseModeModal) this.closeChooseModeModal();
       });
     }
 
@@ -1268,8 +1297,19 @@ class UnoArenaApp {
     const isFull = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
     document.body.classList.toggle('is-fullscreen', isFull);
     const fsIcon = isFull ? '🗗' : '⛶';
-    if (this.el.fullscreenIcon) this.el.fullscreenIcon.textContent = fsIcon;
-    if (this.el.mobileNavFullscreenBtn) this.el.mobileNavFullscreenBtn.textContent = fsIcon;
+    const fsSvg = isFull
+      ? `<svg class="nav-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>`
+      : `<svg class="nav-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`;
+    if (this.el.fullscreenToggleBtn) {
+      this.el.fullscreenToggleBtn.innerHTML = `${fsSvg}<span id="fullscreenIcon" class="sr-only">${isFull ? 'Exit Fullscreen' : 'Toggle Fullscreen'}</span>`;
+      this.el.fullscreenToggleBtn.setAttribute('title', isFull ? 'Exit Fullscreen' : 'Toggle Fullscreen');
+      this.el.fullscreenToggleBtn.setAttribute('aria-label', isFull ? 'Exit Fullscreen' : 'Toggle Fullscreen');
+    }
+    if (this.el.mobileNavFullscreenBtn) {
+      this.el.mobileNavFullscreenBtn.innerHTML = fsSvg;
+      this.el.mobileNavFullscreenBtn.setAttribute('title', isFull ? 'Exit Fullscreen' : 'Toggle Fullscreen');
+      this.el.mobileNavFullscreenBtn.setAttribute('aria-label', isFull ? 'Exit Fullscreen' : 'Toggle Fullscreen');
+    }
     const arenaFsText = this.el.arenaFullscreenBtn?.querySelector('.arena-fs-text');
     if (arenaFsText) arenaFsText.textContent = isFull ? 'EXIT FULL' : 'FULLSCREEN';
     const arenaFsIcon = this.el.arenaFullscreenBtn?.querySelector('.arena-fs-icon');
@@ -1357,6 +1397,39 @@ class UnoArenaApp {
     this.toastTimer = setTimeout(() => {
       this.el.toast.classList.remove('show');
     }, 2800);
+  }
+
+  highlightSelectedMode(mode) {
+    document.querySelectorAll('[data-home-mode]').forEach((tile) => {
+      const isSelected = tile.dataset.homeMode === mode;
+      tile.classList.toggle('is-selected', isSelected);
+      tile.setAttribute('aria-pressed', String(isSelected));
+    });
+  }
+
+  openChooseModeModal(name) {
+    this.pendingCreateRoomPlayerName = name;
+    if (this.el.chooseModeModal) {
+      this.el.chooseModeModal.style.display = 'flex';
+      this.el.chooseModeModal.classList.add('active');
+    }
+  }
+
+  closeChooseModeModal() {
+    if (this.el.chooseModeModal) {
+      this.el.chooseModeModal.style.display = 'none';
+      this.el.chooseModeModal.classList.remove('active');
+    }
+  }
+
+  selectModeAndCreateRoom(mode) {
+    this.explicitlySelectedLandingMode = mode;
+    this.preferredMode = mode;
+    localStorage.setItem('uno_arena_mode', mode);
+    this.highlightSelectedMode(mode);
+    this.closeChooseModeModal();
+    const name = this.pendingCreateRoomPlayerName || (this.el.playerNameInput?.value || '').trim() || 'Player 1';
+    this.createRoom(name, mode, this.getSelectedHouseRules());
   }
 
   openModeSetup(mode) {
@@ -1983,6 +2056,9 @@ class UnoArenaApp {
     }
 
     // Update Top Bar
+    if (this.el.navRoomDetails) {
+      this.el.navRoomDetails.style.display = 'inline-flex';
+    }
     this.el.navRoomCode.textContent = `ROOM: ${this.gameState.roomId}`;
     this.el.navRoomCode.style.display = 'inline-flex';
     this.el.navModeTag.textContent = this.gameState.mode.replace('_', ' ');
@@ -2297,35 +2373,54 @@ class UnoArenaApp {
 
     this.el.lobbyCodeText.textContent = this.gameState.roomId;
 
-    // Render Mode selector
+    // Render Compact Mode indicator
     const me = this.gameState.players.find((p) => p.id === this.playerId);
     const isHost = me?.isHost || false;
 
-    this.el.modeSelectorGrid.innerHTML = `
-      <button class="mode-card-btn ${this.gameState.mode === 'classic' ? 'selected' : ''}" data-mode="classic" ${!isHost ? 'disabled' : ''}>
-        <span class="lobby-mode-art mode-art-classic" aria-hidden="true"><svg viewBox="0 0 80 100"><rect x="7" y="16" width="46" height="68" rx="8" fill="#f5b92f" stroke="#12372a" stroke-width="4" transform="rotate(-14 30 50)"/><rect x="21" y="9" width="48" height="72" rx="8" fill="#176cb0" stroke="#12372a" stroke-width="4" transform="rotate(9 45 45)"/><rect x="13" y="13" width="50" height="76" rx="9" fill="#d83227" stroke="#f8e9c9" stroke-width="4" transform="rotate(-5 38 50)"/><ellipse cx="38" cy="51" rx="13" ry="25" fill="none" stroke="#fff1d4" stroke-width="2" transform="rotate(-5 38 51)"/><text x="38" y="58" text-anchor="middle" fill="#fff1d4" stroke="#17362b" stroke-width="1.5" paint-order="stroke" font-family="Arial" font-size="12" font-weight="900" transform="rotate(-5 38 51)">UNO</text><text x="20" y="29" fill="white" font-family="Arial" font-size="10" font-weight="900" transform="rotate(-5 20 29)">1</text></svg></span>
-        <strong>Classic</strong>
-        <span style="font-size: 0.72rem; color: #94A3B8;">108 Cards • Standard UNO</span>
-      </button>
-      <button class="mode-card-btn ${this.gameState.mode === 'flip' ? 'selected' : ''}" data-mode="flip" ${!isHost ? 'disabled' : ''}>
-        <span class="lobby-mode-art mode-art-flip" aria-hidden="true"><svg viewBox="0 0 80 100"><rect x="12" y="8" width="54" height="82" rx="10" fill="#10191f" stroke="#f4d052" stroke-width="3" transform="rotate(-8 39 49)"/><rect x="20" y="16" width="38" height="66" rx="15" fill="#71318d" transform="rotate(-8 39 49)"/><path d="M28 44c3-12 19-15 26-5l4 5m0-9v10h-10M51 56c-4 11-19 14-26 4l-3-5m0 9V54h10" fill="none" stroke="#fff0ce" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><text x="38" y="28" text-anchor="middle" fill="#fff1d5" font-family="Arial" font-size="8" font-weight="900" transform="rotate(-8 38 28)">FLIP</text></svg></span>
-        <strong>UNO Flip</strong>
-        <span style="font-size: 0.72rem; color: #94A3B8;">Double-Sided • Dark Side</span>
-      </button>
-      <button class="mode-card-btn ${this.gameState.mode === 'no_mercy' ? 'selected' : ''}" data-mode="no_mercy" ${!isHost ? 'disabled' : ''}>
-        <span class="lobby-mode-art mode-art-mercy" aria-hidden="true"><svg viewBox="0 0 80 100"><rect x="11" y="8" width="56" height="84" rx="10" fill="#17191c" stroke="#e6d5b4" stroke-width="3" transform="rotate(-7 39 50)"/><ellipse cx="39" cy="49" rx="16" ry="28" fill="none" stroke="#bc2e26" stroke-width="3" transform="rotate(-7 39 49)"/><text x="38" y="35" text-anchor="middle" fill="#fff0cf" font-family="Arial" font-size="17" font-weight="900" transform="rotate(-7 38 35)">+10</text><path d="M43 42 29 63h11l-3 15 18-25H44z" fill="#f3b92d" stroke="#091f18" stroke-width="2" stroke-linejoin="round" transform="rotate(-7 40 60)"/></svg></span>
-        <strong>No Mercy</strong>
-        <span style="font-size: 0.72rem; color: #94A3B8;">168 Cards • Knockout</span>
-      </button>
-    `;
+    const modeDetails = {
+      classic: {
+        title: 'CLASSIC UNO',
+        desc: 'Standard 108 cards · Official rules · Up to 10 players',
+        icon: '🎴'
+      },
+      flip: {
+        title: 'UNO FLIP',
+        desc: 'Dual-sided cards · Light & Dark sides · Up to 6 players',
+        icon: '🔄'
+      },
+      no_mercy: {
+        title: "SHOW 'EM NO MERCY",
+        desc: '168 cards · Stacking & Knockout · Up to 6 players',
+        icon: '🔥'
+      }
+    };
+    const currentModeInfo = modeDetails[this.gameState.mode] || modeDetails.classic;
 
-    if (isHost) {
-      this.el.modeSelectorGrid.querySelectorAll('.mode-card-btn').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
-          const mode = e.currentTarget.dataset.mode;
-          this.send({ type: 'set_mode', data: { mode } });
+    if (this.el.lobbyModeDisplay) {
+      this.el.lobbyModeDisplay.innerHTML = `
+        <div class="lobby-mode-badge-card">
+          <div class="lobby-mode-info">
+            <span class="lobby-mode-tag-pill ${this.gameState.mode}">${currentModeInfo.icon} ${currentModeInfo.title}</span>
+            <span class="lobby-mode-summary-text">${currentModeInfo.desc}</span>
+          </div>
+          ${isHost ? '<button id="lobbyCustomizeRulesBtn" class="lobby-rules-btn" type="button" title="Customize rules for this match">⚙️ Rules</button>' : ''}
+        </div>
+      `;
+      const custBtn = this.el.lobbyModeDisplay.querySelector('#lobbyCustomizeRulesBtn');
+      if (custBtn) {
+        custBtn.addEventListener('click', () => {
+          this.openGameRulesModal('lobby');
         });
-      });
+      }
+    }
+    if (this.el.modeSelectorGrid) {
+      this.el.modeSelectorGrid.style.display = 'none';
+    }
+
+    const maxPlayers = this.gameState.mode === 'classic' ? 10 : 6;
+    const playerCount = this.gameState.players.length;
+    if (this.el.lobbyPlayersHeading) {
+      this.el.lobbyPlayersHeading.textContent = `Players in Lobby (${playerCount}/${maxPlayers})`;
     }
 
     // Sync Game Rules modal if open while in lobby

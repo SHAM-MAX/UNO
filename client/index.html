@@ -30,29 +30,39 @@
 
   <!-- Top Navigation Bar -->
   <header class="top-nav">
-    <button id="flipBackToModesBtn" class="flip-nav-back-btn" type="button" aria-label="Game modes" title="Game modes">
-      <span class="flip-nav-back-arrow" aria-hidden="true">←</span>
-    </button>
-    <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="Toggle navigation menu" title="Toggle menu">
-      <span class="logo-badge">ARENA</span>
-      <span>UNO</span>
-      <span class="nav-toggle-cue" aria-hidden="true">▾</span>
-    </button>
+    <div class="nav-left">
+      <button id="flipBackToModesBtn" class="flip-nav-back-btn" type="button" aria-label="Game modes" title="Game modes" style="display: none;">
+        <span class="flip-nav-back-arrow" aria-hidden="true">←</span>
+      </button>
+      <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="UNO Arena home" title="UNO Arena">
+        <span class="brand-uno">UNO</span>
+        <span class="logo-badge">ARENA</span>
+        <span class="nav-toggle-cue" aria-hidden="true" style="display: none;">▾</span>
+      </button>
+    </div>
+
+    <div id="navRoomDetails" class="nav-room-details" style="display: none;">
+      <span id="navRoomCode" class="room-code-badge" title="Room Code"></span>
+      <span id="navModeTag" class="mode-tag classic">CLASSIC</span>
+    </div>
 
     <div class="nav-controls">
-      <span id="navRoomCode" class="room-code-badge" style="display: none; font-size: 0.95rem; padding: 4px 10px;"></span>
-      <span id="navModeTag" class="mode-tag classic" style="display: none;">CLASSIC</span>
-      
-      <button id="fullscreenToggleBtn" class="nav-btn" type="button" title="Toggle Fullscreen / Landscape" aria-label="Toggle Fullscreen">
-        <span id="fullscreenIcon">⛶</span>
-      </button>
-
-      <button id="settingsBtn" class="nav-btn" type="button" title="Settings &amp; Rules" aria-label="Settings">
-        <span>⚙️ Settings</span>
-      </button>
-
-      <button id="leaveBtn" class="nav-btn" style="display: none; background: rgba(239, 68, 68, 0.2); color: #EF4444; border-color: rgba(239, 68, 68, 0.4);">
+      <button id="leaveBtn" class="nav-btn nav-btn-leave" type="button" style="display: none;" title="Leave Room" aria-label="Leave Room">
         <span>Leave</span>
+      </button>
+
+      <button id="fullscreenToggleBtn" class="nav-btn nav-btn-icon nav-btn-fullscreen" type="button" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
+        <svg class="nav-icon-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+        <span id="fullscreenIcon" class="sr-only">Toggle Fullscreen</span>
+      </button>
+
+      <button id="settingsBtn" class="nav-btn nav-btn-icon nav-btn-settings" type="button" title="Settings &amp; Game Rules" aria-label="Settings">
+        <svg class="nav-icon-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
       </button>
 
       <!-- Hidden proxy elements for backwards compatibility with tests and legacy triggers -->
@@ -240,7 +250,7 @@
           </div>
         </section>
         <section class="home-modes" aria-label="Choose a game mode">
-          <button class="home-mode mode-classic is-selected" type="button" data-home-mode="classic" aria-label="Classic UNO. Classic rules. Unpredictable fun.">
+          <button class="home-mode mode-classic" type="button" data-home-mode="classic" aria-label="Classic UNO. Classic rules. Unpredictable fun.">
             <picture>
               <source media="(max-width: 640px), (hover: none) and (pointer: coarse) and (max-width: 1024px)" srcset="./assets/game-modes/classic-card.png">
               <img class="mode-reference-image" src="./assets/classic-reference.png" alt="" draggable="false">
@@ -269,8 +279,17 @@
               <span class="mobile-brand-arena">ARENA</span>
             </div>
             <div class="mobile-nav-actions">
-              <button id="mobileNavFullscreenBtn" class="mobile-nav-action-btn" type="button" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">⛶</button>
-              <button id="mobileNavSettingsBtn" class="mobile-nav-action-btn" type="button" aria-label="Settings" title="Settings">⚙️</button>
+              <button id="mobileNavFullscreenBtn" class="mobile-nav-action-btn nav-btn-icon" type="button" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">
+                <svg class="nav-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+              </button>
+              <button id="mobileNavSettingsBtn" class="mobile-nav-action-btn nav-btn-icon" type="button" aria-label="Settings" title="Settings">
+                <svg class="nav-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+              </button>
             </div>
           </header>
 
@@ -590,13 +609,19 @@
           </div>
         </div>
 
-        <div>
-          <div style="font-size: 0.85rem; font-weight: 800; color: #CBD5E1; text-transform: uppercase;">Select Game Mode</div>
-          <div id="modeSelectorGrid" class="mode-selector-grid"></div>
+        <!-- Compact Read-only Mode Indicator -->
+        <div id="lobbyModeDisplay" class="lobby-mode-display">
+          <div class="lobby-mode-badge-card">
+            <div class="lobby-mode-info">
+              <span class="lobby-mode-tag-pill classic">🎴 CLASSIC UNO</span>
+              <span class="lobby-mode-summary-text">Standard 108 cards · Official rules · Up to 10 players</span>
+            </div>
+          </div>
         </div>
+        <div id="modeSelectorGrid" class="mode-selector-grid" style="display: none;" aria-hidden="true"></div>
 
         <div style="margin: 20px 0;">
-          <div style="font-size: 0.85rem; font-weight: 800; color: #CBD5E1; text-transform: uppercase; margin-bottom: 8px;">Players in Lobby (2-6)</div>
+          <div id="lobbyPlayersHeading" style="font-size: 0.85rem; font-weight: 800; color: #1e3a2f; text-transform: uppercase; margin-bottom: 8px;">Players in Lobby (1/10)</div>
           <div id="lobbyPlayersList" class="lobby-players-list"></div>
           <div id="lobbyHostControls" class="lobby-host-controls" style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
             <button id="addBotBtn" class="nav-btn uno-btn uno-btn-blue" type="button" title="Add an AI bot to this lobby">+ ADD BOT 🤖</button>
@@ -973,6 +998,39 @@
       <button id="rematchCloseBtn" class="rematch-close" type="button" aria-label="Close rematch invitation">×</button>
       <div id="rematchProposalContent"></div>
     </section>
+  </div>
+
+  <!-- CHOOSE GAME MODE MODAL (Prompt when Create Room is clicked without prior mode selection) -->
+  <div id="chooseModeModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="chooseModeModalTitle" style="display: none;">
+    <div class="modal-card choose-mode-modal-card">
+      <div class="modal-header choose-mode-header">
+        <h3 id="chooseModeModalTitle" class="modal-title">Choose Game Mode</h3>
+        <button id="chooseModeModalClose" class="modal-close-btn" type="button" aria-label="Close mode selection">&times;</button>
+      </div>
+      <div class="modal-body choose-mode-body">
+        <p class="choose-mode-desc">Select which UNO ruleset you want to play for this room:</p>
+        <div class="choose-mode-grid">
+          <button class="choose-mode-card" type="button" data-select-mode="classic">
+            <span class="choose-mode-badge badge-classic">STANDARD</span>
+            <img src="./assets/game-modes/classic-card.png" alt="" class="choose-mode-img" draggable="false">
+            <h4 class="choose-mode-title">CLASSIC UNO</h4>
+            <p class="choose-mode-subtitle">Standard 108 cards · Official rules · Up to 10 players</p>
+          </button>
+          <button class="choose-mode-card" type="button" data-select-mode="flip">
+            <span class="choose-mode-badge badge-flip">DUAL-SIDED</span>
+            <img src="./assets/game-modes/flip-card.png" alt="" class="choose-mode-img" draggable="false">
+            <h4 class="choose-mode-title">UNO FLIP</h4>
+            <p class="choose-mode-subtitle">Light &amp; Dark sides · Flip card · Up to 6 players</p>
+          </button>
+          <button class="choose-mode-card" type="button" data-select-mode="no_mercy">
+            <span class="choose-mode-badge badge-mercy">HIGH STAKES</span>
+            <img src="./assets/game-modes/no-mercy-card.png" alt="" class="choose-mode-img" draggable="false">
+            <h4 class="choose-mode-title">NO MERCY</h4>
+            <p class="choose-mode-subtitle">168 cards · Stacking &amp; Knockout · Up to 6 players</p>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- UNIFIED SETTINGS MODAL: GENERAL | GAME RULES | HOW TO PLAY -->

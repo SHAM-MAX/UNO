@@ -44,21 +44,36 @@ body.in-room::after {
 }
 
 .in-room .brand-logo {
-    font-size: 2rem;
+    font-size: 1.6rem;
     letter-spacing: .015em;
     color: #f8e9c6;
-    text-shadow: 0 2px #54341e
+    text-shadow: 0 2px #54341e;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.in-room .brand-logo>span:last-child {
-    color: #ef3528;
-    text-shadow: 1px 2px #53231b
+.in-room .brand-logo .brand-uno {
+    color: #f8e9c6;
+    font-weight: 900;
 }
 
 .in-room .logo-badge {
-    font-size: 2rem;
-    color: #f3bc39;
-    text-shadow: 0 2px #60411f
+    order: unset !important;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #EF4444, #F59E0B, #10B981, #3B82F6) !important;
+    color: #ffffff !important;
+    padding: 2px 8px !important;
+    border-radius: 6px !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.5px !important;
+    text-shadow: none !important;
+    transform: rotate(-2deg);
+    display: inline-block !important;
+}
+
+.in-room .brand-logo .nav-toggle-cue {
+    display: none !important;
 }
 
 .in-room .nav-controls {
