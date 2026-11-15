@@ -184,6 +184,15 @@ class UnoArenaApp {
       noMercyMobileRulesBtn: document.getElementById('noMercyMobileRulesBtn'),
 
       // Lobby
+      genericLobbySlot: document.getElementById('genericLobbySlot'),
+      noMercyLobbySlot: document.getElementById('noMercyLobbySlot'),
+      flipLobbySlot: document.getElementById('flipLobbySlot'),
+      classicLobbySlot: document.getElementById('classicLobbySlot'),
+      modeLobbyHeader: document.getElementById('modeLobbyHeader'),
+      modeLobbyBadge: document.getElementById('modeLobbyBadge'),
+      modeLobbyFullscreenBtn: document.getElementById('modeLobbyFullscreenBtn'),
+      modeLobbySettingsBtn: document.getElementById('modeLobbySettingsBtn'),
+      modeLobbyLeaveBtn: document.getElementById('modeLobbyLeaveBtn'),
       lobbySection: document.getElementById('lobbySection'),
       lobbyCodeBadge: document.getElementById('lobbyCodeBadge'),
       lobbyCodeText: document.getElementById('lobbyCodeText'),
@@ -417,6 +426,8 @@ class UnoArenaApp {
     this.el.fullscreenToggleBtn?.addEventListener('click', () => this.toggleFullscreen());
     this.el.mobileNavFullscreenBtn?.addEventListener('click', () => this.toggleFullscreen());
     this.el.arenaFullscreenBtn?.addEventListener('click', () => this.toggleFullscreen());
+    this.el.modeLobbyFullscreenBtn?.addEventListener('click', () => this.toggleFullscreen());
+    this.el.modeLobbyLeaveBtn?.addEventListener('click', () => this.leaveRoom());
     document.addEventListener('fullscreenchange', () => this.syncFullscreenState());
     document.addEventListener('webkitfullscreenchange', () => this.syncFullscreenState());
     window.addEventListener('orientationchange', () => this.handleOrientationOrResize());
@@ -1402,10 +1413,37 @@ class UnoArenaApp {
 
     const isNoMercy = mode === 'no_mercy';
     const isFlip = mode === 'flip';
+    const isClassic = mode === 'classic';
+
+    // Ensure central form components are visible and lobby slots hidden
+    const nmCard = document.querySelector('.nm-card-container');
+    const nmBack = document.getElementById('noMercyBackBtn');
+    if (nmCard) nmCard.style.display = '';
+    if (nmBack) nmBack.style.display = '';
+    if (this.el.noMercyLobbySlot) this.el.noMercyLobbySlot.style.display = 'none';
+
+    const flipCard = document.getElementById('flipCardWrapper');
+    const flipBack = document.getElementById('flipBackToModesBtn');
+    if (flipCard) flipCard.style.display = '';
+    if (flipBack) flipBack.style.display = '';
+    if (this.el.flipLobbySlot) this.el.flipLobbySlot.style.display = 'none';
+
+    const classicHeading = document.querySelector('.mode-setup-heading');
+    const classicLayout = document.querySelector('.mode-setup-layout');
+    const classicBack = document.getElementById('backToModesBtn');
+    if (classicHeading) classicHeading.style.display = '';
+    if (classicLayout) classicLayout.style.display = '';
+    if (classicBack) classicBack.style.display = '';
+    if (this.el.classicLobbySlot) this.el.classicLobbySlot.style.display = 'none';
+
     this.el.modeSetupSection.classList.toggle('mode-no-mercy-setup', isNoMercy);
     document.body.classList.toggle('in-no-mercy-setup', isNoMercy);
     this.el.modeSetupSection.classList.toggle('mode-flip-setup', isFlip);
     document.body.classList.toggle('in-flip-setup', isFlip);
+    this.el.modeSetupSection.classList.toggle('mode-classic-setup', isClassic);
+    document.body.classList.toggle('in-classic-setup', isClassic);
+    document.body.classList.add('in-mode-setup');
+    document.body.classList.remove('in-mode-lobby', 'in-room');
 
     if (isNoMercy) {
       if (this.el.noMercyPlayerNameInput) this.el.noMercyPlayerNameInput.value = currentName;
@@ -1438,12 +1476,38 @@ class UnoArenaApp {
     }
     this.roomEntryFlow = null;
     this.selectedSetupMode = null;
-    this.el.modeSetupSection.classList.remove('mode-no-mercy-setup');
-    document.body.classList.remove('in-no-mercy-setup');
-    this.el.modeSetupSection.classList.remove('mode-flip-setup');
-    document.body.classList.remove('in-flip-setup');
+    this.el.modeSetupSection.classList.remove('mode-no-mercy-setup', 'mode-flip-setup', 'mode-classic-setup');
+    document.body.classList.remove('in-no-mercy-setup', 'in-flip-setup', 'in-classic-setup', 'in-mode-setup', 'in-mode-lobby');
     this.el.modeSetupSection.hidden = true;
     this.el.modeHomeScreen.hidden = false;
+
+    if (this.el.genericLobbySlot && this.el.lobbySection && this.el.lobbySection.parentElement !== this.el.genericLobbySlot) {
+      this.el.genericLobbySlot.appendChild(this.el.lobbySection);
+    }
+    if (this.el.lobbySection) this.el.lobbySection.style.display = 'none';
+    if (this.el.entryView) this.el.entryView.style.display = 'block';
+    const entryForm = document.getElementById('entryFormSection');
+    if (entryForm) entryForm.style.display = '';
+
+    const nmCard = document.querySelector('.nm-card-container');
+    const nmBack = document.getElementById('noMercyBackBtn');
+    if (nmCard) nmCard.style.display = '';
+    if (nmBack) nmBack.style.display = '';
+    if (this.el.noMercyLobbySlot) this.el.noMercyLobbySlot.style.display = 'none';
+
+    const flipCard = document.getElementById('flipCardWrapper');
+    const flipBack = document.getElementById('flipBackToModesBtn');
+    if (flipCard) flipCard.style.display = '';
+    if (flipBack) flipBack.style.display = '';
+    if (this.el.flipLobbySlot) this.el.flipLobbySlot.style.display = 'none';
+
+    const classicHeading = document.querySelector('.mode-setup-heading');
+    const classicLayout = document.querySelector('.mode-setup-layout');
+    const classicBack = document.getElementById('backToModesBtn');
+    if (classicHeading) classicHeading.style.display = '';
+    if (classicLayout) classicLayout.style.display = '';
+    if (classicBack) classicBack.style.display = '';
+    if (this.el.classicLobbySlot) this.el.classicLobbySlot.style.display = 'none';
   }
 
   triggerFlipCreate() {
@@ -2311,26 +2375,16 @@ class UnoArenaApp {
 
   renderLobby() {
     if (this.gameState.mode === 'classic') { this.clearClassicAnimations(); clearInterval(this.turnTimerInterval); this.turnTimerInterval = null; }
-    document.body.classList.add('in-room');
-    document.body.classList.remove('in-arena');
-    document.body.classList.remove('in-no-mercy-setup');
-    document.body.classList.remove('in-flip-setup');
-    this.el.entryView.style.display = 'block';
-    this.el.arenaView.style.display = 'none';
-    this.el.modeSetupSection.hidden = true;
-    this.el.modeSetupSection.classList.remove('mode-no-mercy-setup');
-    this.el.modeSetupSection.classList.remove('mode-flip-setup');
-    this.el.modeHomeScreen.hidden = true;
-    this.el.lobbySection.style.display = 'block';
-    document.getElementById('entryFormSection').style.display = 'none';
 
-    this.el.lobbyCodeText.textContent = this.gameState.roomId;
+    if (this.el.lobbyCodeText) {
+      this.el.lobbyCodeText.textContent = this.gameState.roomId || this.roomId || '------';
+    }
 
-    // Render Mode Selection or Compact Mode Indicator depending on modeSelectionPolicy
     const me = this.gameState.players.find((p) => p.id === this.playerId);
     const isHost = me?.isHost || false;
     const policy = this.gameState.modeSelectionPolicy || 'selectable';
     const playerCount = this.gameState.players.length;
+    const mode = this.gameState.mode || 'classic';
 
     const modeDetails = {
       classic: {
@@ -2349,27 +2403,102 @@ class UnoArenaApp {
         icon: '🔥'
       }
     };
-    const currentModeInfo = modeDetails[this.gameState.mode] || modeDetails.classic;
+    const currentModeInfo = modeDetails[mode] || modeDetails.classic;
 
-    if (policy === 'selectable') {
-      // Flow 1: Direct Create Room -> Lobby with 3 mode choices
-      if (this.el.lobbyModeSelectContainer) {
-        this.el.lobbyModeSelectContainer.style.display = 'block';
+    if (policy === 'fixed') {
+      // Flow: Mode-Specific Setup -> Players lobby within the exact same mode background
+      document.body.classList.remove('in-room');
+      document.body.classList.remove('in-arena');
+      document.body.classList.add('in-mode-lobby');
+      document.body.classList.toggle('in-flip-setup', mode === 'flip');
+      document.body.classList.toggle('in-no-mercy-setup', mode === 'no_mercy');
+      document.body.classList.toggle('in-classic-setup', mode === 'classic');
+
+      this.el.arenaView.style.display = 'none';
+      this.el.modeHomeScreen.hidden = true;
+      document.getElementById('entryFormSection').style.display = 'none';
+      this.el.modeSetupSection.hidden = false;
+      this.el.modeSetupSection.classList.toggle('mode-flip-setup', mode === 'flip');
+      this.el.modeSetupSection.classList.toggle('mode-no-mercy-setup', mode === 'no_mercy');
+      this.el.modeSetupSection.classList.toggle('mode-classic-setup', mode === 'classic');
+
+      // Hide center forms & back buttons in all containers; show lobby slot in active container
+      const nmCard = document.querySelector('.nm-card-container');
+      const nmBack = document.getElementById('noMercyBackBtn');
+      if (nmCard) nmCard.style.display = 'none';
+      if (nmBack) nmBack.style.display = 'none';
+
+      const flipCard = document.getElementById('flipCardWrapper');
+      const flipBack = document.getElementById('flipBackToModesBtn');
+      if (flipCard) flipCard.style.display = 'none';
+      if (flipBack) flipBack.style.display = 'none';
+
+      const classicHeading = document.querySelector('.mode-setup-heading');
+      const classicLayout = document.querySelector('.mode-setup-layout');
+      const classicBack = document.getElementById('backToModesBtn');
+      if (classicHeading) classicHeading.style.display = 'none';
+      if (classicLayout) classicLayout.style.display = 'none';
+      if (classicBack) classicBack.style.display = 'none';
+
+      // Move #lobbySection into the active mode lobby slot
+      let targetSlot = this.el.classicLobbySlot;
+      if (mode === 'flip') targetSlot = this.el.flipLobbySlot;
+      else if (mode === 'no_mercy') targetSlot = this.el.noMercyLobbySlot;
+
+      if (targetSlot && this.el.lobbySection.parentElement !== targetSlot) {
+        targetSlot.appendChild(this.el.lobbySection);
       }
-      if (this.el.lobbyModeDisplay) {
-        this.el.lobbyModeDisplay.style.display = 'none';
+      if (this.el.noMercyLobbySlot) this.el.noMercyLobbySlot.style.display = mode === 'no_mercy' ? 'block' : 'none';
+      if (this.el.flipLobbySlot) this.el.flipLobbySlot.style.display = mode === 'flip' ? 'block' : 'none';
+      if (this.el.classicLobbySlot) this.el.classicLobbySlot.style.display = mode === 'classic' ? 'block' : 'none';
+
+      this.el.lobbySection.style.display = 'block';
+      this.el.lobbySection.className = `mode-specific-lobby lobby-theme-${mode}`;
+
+      // Mode Lobby Header Controls
+      if (this.el.modeLobbyHeader) this.el.modeLobbyHeader.style.display = 'flex';
+      if (this.el.modeLobbyBadge) {
+        this.el.modeLobbyBadge.className = `mode-lobby-pill ${mode}`;
+        this.el.modeLobbyBadge.textContent = `${currentModeInfo.icon} ${currentModeInfo.title}`;
       }
+
+      // Hide 3-mode selector and generic compact display
+      if (this.el.lobbyModeSelectContainer) this.el.lobbyModeSelectContainer.style.display = 'none';
+      if (this.el.modeSelectorGrid) this.el.modeSelectorGrid.style.display = 'none';
+      if (this.el.lobbyModeDisplay) this.el.lobbyModeDisplay.style.display = 'none';
+
+    } else {
+      // Flow: Direct Create Room -> Generic wooden lobby with 3 mode choices
+      document.body.classList.add('in-room');
+      document.body.classList.remove('in-arena');
+      document.body.classList.remove('in-mode-lobby', 'in-mode-setup', 'in-no-mercy-setup', 'in-flip-setup', 'in-classic-setup');
+
+      this.el.entryView.style.display = 'block';
+      this.el.arenaView.style.display = 'none';
+      this.el.modeSetupSection.hidden = true;
+      this.el.modeSetupSection.classList.remove('mode-no-mercy-setup', 'mode-flip-setup', 'mode-classic-setup');
+      this.el.modeHomeScreen.hidden = true;
+      document.getElementById('entryFormSection').style.display = 'none';
+
+      // Move #lobbySection back to generic slot if needed
+      if (this.el.genericLobbySlot && this.el.lobbySection.parentElement !== this.el.genericLobbySlot) {
+        this.el.genericLobbySlot.appendChild(this.el.lobbySection);
+      }
+      this.el.lobbySection.style.display = 'block';
+      this.el.lobbySection.className = '';
+
+      if (this.el.modeLobbyHeader) this.el.modeLobbyHeader.style.display = 'none';
+
+      // 3-mode selector for Direct Create Room
+      if (this.el.lobbyModeSelectContainer) this.el.lobbyModeSelectContainer.style.display = 'block';
+      if (this.el.lobbyModeDisplay) this.el.lobbyModeDisplay.style.display = 'none';
       if (this.el.lobbyModeSelectHeading) {
         this.el.lobbyModeSelectHeading.textContent = isHost ? 'Select Game Mode' : 'Game Mode';
       }
-
       if (this.el.modeSelectorGrid) {
         this.el.modeSelectorGrid.style.display = 'grid';
         this.el.modeSelectorGrid.removeAttribute('aria-hidden');
-
-        // Check if Flip / No Mercy should be disabled due to player count > 6
         const disableFlipAndMercy = playerCount > 6;
-
         this.el.modeSelectorGrid.innerHTML = `
           <button class="mode-card-btn ${this.gameState.mode === 'classic' ? 'selected' : ''}" data-mode="classic" ${!isHost ? 'disabled' : ''} type="button" title="${isHost ? 'Select Classic UNO' : 'Current Mode: Classic UNO'}">
             <span class="lobby-mode-art mode-art-classic" aria-hidden="true"><svg viewBox="0 0 80 100"><rect x="7" y="16" width="46" height="68" rx="8" fill="#f5b92f" stroke="#12372a" stroke-width="4" transform="rotate(-14 30 50)"/><rect x="21" y="9" width="48" height="72" rx="8" fill="#176cb0" stroke="#12372a" stroke-width="4" transform="rotate(9 45 45)"/><rect x="13" y="13" width="50" height="76" rx="9" fill="#d83227" stroke="#f8e9c9" stroke-width="4" transform="rotate(-5 38 50)"/><ellipse cx="38" cy="51" rx="13" ry="25" fill="none" stroke="#fff1d4" stroke-width="2" transform="rotate(-5 38 51)"/><text x="38" y="58" text-anchor="middle" fill="#fff1d4" stroke="#17362b" stroke-width="1.5" paint-order="stroke" font-family="Arial" font-size="12" font-weight="900" transform="rotate(-5 38 51)">UNO</text><text x="20" y="29" fill="white" font-family="Arial" font-size="10" font-weight="900" transform="rotate(-5 20 29)">1</text></svg></span>
@@ -2387,33 +2516,16 @@ class UnoArenaApp {
             <span style="font-size: 0.72rem; color: #94A3B8;">168 Cards • Knockout</span>
           </button>
         `;
-
         if (isHost) {
           this.el.modeSelectorGrid.querySelectorAll('.mode-card-btn:not(:disabled)').forEach((btn) => {
             btn.addEventListener('click', (e) => {
-              const mode = e.currentTarget.dataset.mode;
-              if (mode && mode !== this.gameState.mode) {
-                this.send({ type: 'set_mode', data: { mode } });
+              const selectedMode = e.currentTarget.dataset.mode;
+              if (selectedMode && selectedMode !== this.gameState.mode) {
+                this.send({ type: 'set_mode', data: { mode: selectedMode } });
               }
             });
           });
         }
-      }
-    } else {
-      // Flow 2: Mode-Specific Setup -> Players-only lobby with compact read-only mode label
-      if (this.el.lobbyModeSelectContainer) {
-        this.el.lobbyModeSelectContainer.style.display = 'none';
-      }
-      if (this.el.modeSelectorGrid) {
-        this.el.modeSelectorGrid.style.display = 'none';
-      }
-      if (this.el.lobbyModeDisplay) {
-        this.el.lobbyModeDisplay.style.display = 'block';
-        this.el.lobbyModeDisplay.innerHTML = `
-          <div class="lobby-mode-badge-card">
-            <span class="lobby-mode-tag-pill ${this.gameState.mode}">${currentModeInfo.icon} ${currentModeInfo.title}</span>
-          </div>
-        `;
       }
     }
 
@@ -2490,6 +2602,8 @@ class UnoArenaApp {
   renderArena() {
     document.body.classList.add('in-room');
     document.body.classList.add('in-arena');
+    document.body.classList.remove('in-mode-lobby', 'in-mode-setup');
+    if (this.el.modeSetupSection) this.el.modeSetupSection.hidden = true;
     document.body.classList.toggle('no-mercy-arena', this.gameState.mode === 'no_mercy');
     document.body.classList.toggle('classic-arena', this.gameState.mode === 'classic');
     document.body.classList.toggle('classic-many-players', this.gameState.mode === 'classic' && this.gameState.players.length > 6);
@@ -3680,7 +3794,12 @@ class UnoArenaApp {
       this.ws.onerror = null;
       this.ws.close();
     }
-    window.location.search = '';
+    this.el.leaveConfirmModal?.classList.remove('active');
+    document.body.classList.remove('in-mode-lobby', 'in-mode-setup', 'in-no-mercy-setup', 'in-flip-setup', 'in-classic-setup', 'in-room', 'in-arena');
+    this.showModePicker();
+    if (window.location.search) {
+      window.location.search = '';
+    }
   }
 
   copyInviteLink() {
@@ -3972,6 +4091,7 @@ class UnoArenaApp {
     this.el.settingsBtn?.addEventListener('click', openSettings);
     this.el.mobileNavSettingsBtn?.addEventListener('click', openSettings);
     this.el.noMercySettingsBtn?.addEventListener('click', openSettings);
+    this.el.modeLobbySettingsBtn?.addEventListener('click', openSettings);
 
     // Tab buttons
     this.el.tabBtnGeneral?.addEventListener('click', () => this.switchSettingsTab('general'));

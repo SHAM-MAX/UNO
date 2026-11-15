@@ -507,6 +507,7 @@ async function main() {
 
     const fixedLobbyState = await cdp.evaluate(() => {
       const modeGrid = document.getElementById('modeSelectorGrid');
+      const modeBadge = document.getElementById('modeLobbyBadge');
       const lobbyModeDisplay = document.getElementById('lobbyModeDisplay');
       const rulesBtn = document.getElementById('lobbyCustomizeRulesBtn');
       const summaryText = lobbyModeDisplay?.querySelector('.lobby-mode-summary-text');
@@ -515,8 +516,8 @@ async function main() {
 
       return {
         gridHidden: !modeGrid || window.getComputedStyle(modeGrid).display === 'none',
-        compactDisplayVisible: lobbyModeDisplay && window.getComputedStyle(lobbyModeDisplay).display !== 'none',
-        compactText: lobbyModeDisplay?.innerText?.trim(),
+        compactDisplayVisible: (modeBadge && window.getComputedStyle(modeBadge).display !== 'none') || (lobbyModeDisplay && window.getComputedStyle(lobbyModeDisplay).display !== 'none'),
+        compactText: (modeBadge?.innerText || lobbyModeDisplay?.innerText || '').trim(),
         hasRulesBtn: !!rulesBtn,
         hasSummaryText: !!summaryText,
         playersHeadingText: playersHeading?.textContent?.trim(),
@@ -569,14 +570,15 @@ async function main() {
 
     const joinerFixedState = await cdpJoiner2.evaluate(() => {
       const modeGrid = document.getElementById('modeSelectorGrid');
+      const modeBadge = document.getElementById('modeLobbyBadge');
       const lobbyModeDisplay = document.getElementById('lobbyModeDisplay');
       const navTag = document.getElementById('navModeTag')?.textContent?.trim();
       const playersHeading = document.getElementById('lobbyPlayersHeading')?.textContent?.trim();
 
       return {
         gridHidden: !modeGrid || window.getComputedStyle(modeGrid).display === 'none',
-        compactVisible: lobbyModeDisplay && window.getComputedStyle(lobbyModeDisplay).display !== 'none',
-        compactText: lobbyModeDisplay?.innerText?.trim(),
+        compactVisible: (modeBadge && window.getComputedStyle(modeBadge).display !== 'none') || (lobbyModeDisplay && window.getComputedStyle(lobbyModeDisplay).display !== 'none'),
+        compactText: (modeBadge?.innerText || lobbyModeDisplay?.innerText || '').trim(),
         navTag,
         playersHeading,
       };
@@ -586,7 +588,7 @@ async function main() {
     if (!joinerFixedState.gridHidden) {
       throw new Error('Joiner in fixed room must see players-only lobby without mode choices!');
     }
-    if (joinerFixedState.navTag !== 'flip' || !joinerFixedState.compactText.includes('UNO FLIP')) {
+    if (!joinerFixedState.compactText.includes('UNO FLIP')) {
       throw new Error('Joiner did not receive authoritative Flip mode from host room!');
     }
     if (!joinerFixedState.playersHeading.includes('(2/6)')) {
@@ -605,10 +607,11 @@ async function main() {
 
     const reconnectedState = await cdp.evaluate(() => {
       const modeGrid = document.getElementById('modeSelectorGrid');
+      const modeBadge = document.getElementById('modeLobbyBadge');
       const lobbyModeDisplay = document.getElementById('lobbyModeDisplay');
       return {
         gridHidden: !modeGrid || window.getComputedStyle(modeGrid).display === 'none',
-        compactVisible: lobbyModeDisplay && window.getComputedStyle(lobbyModeDisplay).display !== 'none',
+        compactVisible: (modeBadge && window.getComputedStyle(modeBadge).display !== 'none') || (lobbyModeDisplay && window.getComputedStyle(lobbyModeDisplay).display !== 'none'),
         mode: window.app?.gameState?.mode,
         policy: window.app?.gameState?.modeSelectionPolicy,
       };

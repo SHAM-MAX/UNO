@@ -31,9 +31,6 @@
   <!-- Top Navigation Bar -->
   <header class="top-nav">
     <div class="nav-left">
-      <button id="flipBackToModesBtn" class="flip-nav-back-btn" type="button" aria-label="Game modes" title="Game modes">
-        <span class="flip-nav-back-arrow" aria-hidden="true">←</span>
-      </button>
       <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="UNO Arena home" title="UNO Arena">
         <span class="brand-uno">UNO</span>
         <span class="logo-badge">ARENA</span>
@@ -446,25 +443,14 @@
       <section id="modeSetupSection" class="mode-setup-screen" hidden aria-labelledby="setupModeTitle">
         <!-- DEDICATED NO MERCY ROOM SETUP (Strictly scoped to No Mercy mode) -->
         <div id="noMercySetupContainer" class="no-mercy-setup-container">
-          <!-- TOP NAVIGATION BAR -->
-          <nav class="nm-top-nav" aria-label="No Mercy Setup Navigation">
-            <div class="nm-nav-left">
-              <button id="noMercyBackBtn" class="nm-nav-btn nm-nav-back" type="button" aria-label="Game modes">
-                <span class="nm-nav-back-arrow">←</span>
-                <span class="nm-nav-back-label">Game modes</span>
-              </button>
-              <div class="nm-nav-brand">
-                <span class="nm-brand-uno">UNO</span>
-                <span class="nm-brand-sub">ARENA</span>
-              </div>
-            </div>
-            <div class="nm-nav-right">
-              <button id="noMercySettingsBtn" class="nm-nav-btn nm-nav-rules" type="button" aria-label="Settings">
-                <span>⚙️</span>
-                <span>SETTINGS</span>
-              </button>
-            </div>
-          </nav>
+          <!-- Back to game modes control (standalone button, not a navbar) -->
+          <div class="mode-setup-top-action">
+            <button id="noMercyBackBtn" class="mode-setup-back-btn" type="button" aria-label="Back to game modes">
+              <span class="back-arrow" aria-hidden="true">←</span>
+              <span>Game modes</span>
+            </button>
+            <button id="noMercySettingsBtn" type="button" style="display: none;" aria-hidden="true"></button>
+          </div>
 
           <!-- THE AUTHENTIC RED UNO NO MERCY CARD -->
           <div class="nm-card-container">
@@ -536,10 +522,21 @@
               </button>
             </div>
           </div>
+
+          <!-- Replacement Lobby Slot for No Mercy -->
+          <div id="noMercyLobbySlot" class="mode-lobby-slot" style="display: none;"></div>
         </div>
 
         <!-- DEDICATED UNO FLIP IMAGE-BASED ROOM SETUP CONTAINER -->
         <div id="flipSetupContainer" class="flip-setup-container" aria-label="UNO Flip room setup">
+          <!-- Back to game modes control (standalone button, not a navbar) -->
+          <div class="mode-setup-top-action">
+            <button id="flipBackToModesBtn" class="mode-setup-back-btn" type="button" aria-label="Back to game modes">
+              <span class="back-arrow" aria-hidden="true">←</span>
+              <span>Game modes</span>
+            </button>
+          </div>
+
           <div class="flip-card-wrapper" id="flipCardWrapper">
             <img src="./assets/uno-flip-card-form.jpg" class="flip-card-bg-img" alt="UNO Flip Card Room Setup" />
             <form class="flip-form-layer" onsubmit="return false;">
@@ -568,11 +565,20 @@
               </button>
             </form>
           </div>
+
+          <!-- Replacement Lobby Slot for UNO Flip -->
+          <div id="flipLobbySlot" class="mode-lobby-slot" style="display: none;"></div>
         </div>
 
         <!-- STANDARD SETUP LAYOUT FOR CLASSIC AND FLIP MODES (Unchanged) -->
         <div id="standardSetupLayout" class="standard-setup-layout">
-          <button id="backToModesBtn" class="setup-back-btn" type="button">← <span>All game modes</span></button>
+          <!-- Back to game modes control (standalone button, not a navbar) -->
+          <div class="mode-setup-top-action">
+            <button id="backToModesBtn" class="setup-back-btn mode-setup-back-btn" type="button">
+              <span class="back-arrow" aria-hidden="true">←</span>
+              <span>All game modes</span>
+            </button>
+          </div>
           <div class="mode-setup-heading">
             <span class="setup-kicker">ROOM SETUP</span>
             <h1 id="setupModeTitle">Classic UNO</h1>
@@ -592,10 +598,38 @@
               <p>A player is eliminated as soon as their hand reaches this limit. You can also change it in the lobby.</p>
             </aside>
           </div>
+
+          <!-- Replacement Lobby Slot for Classic UNO -->
+          <div id="classicLobbySlot" class="mode-lobby-slot" style="display: none;"></div>
         </div>
       </section>
-      <!-- Active Lobby Section (When inside a room before start) -->
-      <div id="lobbySection" style="display: none;">
+
+      <!-- Generic Lobby Slot (wraps lobbySection for Direct Create Room flow) -->
+      <div id="genericLobbySlot">
+        <!-- Active Lobby Section (When inside a room before start) -->
+        <div id="lobbySection" style="display: none;">
+          <!-- Mode Lobby Panel Header (Controls for fullscreen, settings, leave when navbar is hidden) -->
+          <div id="modeLobbyHeader" class="mode-lobby-header" style="display: none;">
+            <div class="mode-lobby-header-left">
+              <span id="modeLobbyBadge" class="mode-lobby-pill classic">🎴 CLASSIC UNO</span>
+            </div>
+            <div class="mode-lobby-header-right">
+              <button id="modeLobbyFullscreenBtn" class="mode-panel-btn" type="button" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+              </button>
+              <button id="modeLobbySettingsBtn" class="mode-panel-btn" type="button" aria-label="Settings" title="Settings &amp; Game Rules">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+              </button>
+              <button id="modeLobbyLeaveBtn" class="mode-panel-btn mode-panel-btn-leave" type="button" aria-label="Leave Room" title="Leave Room">
+                <span>Leave</span>
+              </button>
+            </div>
+          </div>
         <div style="text-align: center; margin-bottom: 20px;">
           <div style="font-size: 0.8rem; color: #94A3B8; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">ROOM CODE</div>
           <div id="lobbyCodeBadge" class="room-code-badge" title="Click to copy invite link">
@@ -635,6 +669,7 @@
             START GAME ▶
           </button>
         </div>
+      </div>
       </div>
 
     </div>

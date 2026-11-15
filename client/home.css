@@ -2030,9 +2030,9 @@ body.in-flip-setup::before {
   flex-direction: column;
   position: relative;
   width: 100%;
-  min-height: calc(100vh - var(--nav-height, 56px));
+  min-height: 100vh;
   box-sizing: border-box;
-  padding: 12px 16px 16px;
+  padding: 24px 16px;
   align-items: center;
   justify-content: center;
 }
@@ -2051,49 +2051,7 @@ body.in-flip-setup::before {
 
 /* Back navigation button in main top nav for UNO Flip setup */
 .flip-nav-back-btn {
-  display: none;
-}
-
-body.in-flip-setup .flip-nav-back-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  border: 1px solid #d3c39f;
-  border-radius: 10px;
-  background: #fff8e8;
-  color: #174332;
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.25rem;
-  font-weight: 900;
-  line-height: 1;
-  cursor: pointer;
-  margin-right: 14px;
-  flex-shrink: 0;
-  transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.12s ease;
-  user-select: none;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-body.in-flip-setup .flip-nav-back-btn:hover {
-  background: #fbf0d8;
-  border-color: #bfae85;
-  transform: translateX(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-}
-
-body.in-flip-setup .flip-nav-back-btn:active {
-  transform: translateX(-1px) scale(0.96);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-body.in-flip-setup .flip-nav-back-btn:focus-visible {
-  outline: 2px solid #174332;
-  outline-offset: 2px;
+  display: none !important;
 }
 
 .flip-nav-back-arrow {
@@ -2356,10 +2314,7 @@ body.in-no-mercy-setup .top-nav {
   width: 100vw;
   height: 100vh;
   box-sizing: border-box;
-  padding-top: 50px;
-  padding-bottom: 0;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding: 24px 16px;
   overflow-y: auto;
   overflow-x: hidden;
   align-items: center;
@@ -2375,91 +2330,6 @@ body.in-no-mercy-setup .top-nav {
 
 .mode-setup-screen:not(.mode-no-mercy-setup) .no-mercy-setup-container {
   display: none !important;
-}
-
-/* TOP NAVIGATION BAR */
-.nm-top-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50px;
-  background: #fbf5e8;
-  border-bottom: 1.5px solid #dfd1b0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 18px;
-  z-index: 110;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
-}
-
-.nm-nav-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.nm-nav-brand {
-  font-family: 'Outfit', sans-serif;
-  font-size: 17px;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  color: #0d3829;
-  user-select: none;
-}
-
-.nm-brand-uno {
-  color: #bc211b;
-}
-
-.nm-brand-sub {
-  color: #0d3829;
-}
-
-.nm-nav-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.nm-nav-btn {
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 8px;
-  border: 1.5px solid #d4c5a0;
-  background: #f3ecda;
-  color: #0d3829;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color 0.15s ease, transform 0.08s ease;
-}
-
-.nm-nav-btn:hover {
-  background: #ebe2cb;
-}
-
-.nm-nav-btn:active {
-  transform: translateY(1px);
-}
-
-.nm-nav-icon {
-  width: 34px;
-  padding: 0;
-  font-size: 15px;
-}
-
-.nm-nav-back-arrow {
-  font-size: 16px;
-  font-weight: 900;
 }
 
 /* THE AUTHENTIC RED UNO NO MERCY CARD CONTAINER */
@@ -2829,4 +2699,267 @@ body.in-no-mercy-setup .top-nav {
   .nm-card-container {
     margin: 12px auto;
   }
+}
+
+/* ==========================================================================
+   MODE-SPECIFIC SETUP & LOBBY ENHANCEMENTS
+   ========================================================================== */
+
+/* 1. Complete top navbar removal and zero reserved space for mode setups and mode lobbies */
+body.in-mode-setup .top-nav,
+body.in-mode-lobby .top-nav,
+body.in-flip-setup .top-nav,
+body.in-no-mercy-setup .top-nav,
+body.in-classic-setup .top-nav {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
+body.in-mode-setup,
+body.in-mode-lobby,
+body.in-flip-setup,
+body.in-no-mercy-setup,
+body.in-classic-setup {
+  --nav-height: 0px !important;
+}
+
+body.in-mode-setup .main-content,
+body.in-mode-lobby .main-content,
+body.in-flip-setup .main-content,
+body.in-no-mercy-setup .main-content,
+body.in-classic-setup .main-content {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* 2. Mode backgrounds when in lobby or setup */
+body.in-classic-setup {
+  background-color: #f3ead4 !important;
+}
+body.in-classic-setup::before {
+  background: radial-gradient(ellipse at 15% 20%, rgba(255, 255, 255, .62), transparent 45%),
+    repeating-linear-gradient(0deg, rgba(106, 75, 29, .025) 0 1px, transparent 1px 4px),
+    #f3ead4 !important;
+  display: block !important;
+}
+
+body.in-flip-setup {
+  background-color: #0c0806 !important;
+}
+body.in-flip-setup::before {
+  background: url('./assets/uno-flip-setup-bg.jpg') no-repeat center center !important;
+  background-size: cover !important;
+  display: block !important;
+}
+
+body.in-no-mercy-setup {
+  background-color: #0c0806 !important;
+}
+body.in-no-mercy-setup::before {
+  background: #0c0806 url('./assets/no-mercy-setup-bg.jpg') no-repeat center center !important;
+  background-size: cover !important;
+  display: block !important;
+}
+
+/* Suppress the generic wooden lobby after-element (ivy flourish) when in mode lobby */
+body.in-mode-lobby::after,
+body.in-flip-setup::after,
+body.in-no-mercy-setup::after,
+body.in-classic-setup::after {
+  display: none !important;
+}
+
+/* 3. Small, consistently styled Back to game modes button (standalone, never a header bar) */
+.mode-setup-top-action {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0 auto 14px auto;
+  box-sizing: border-box;
+}
+
+.mode-setup-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1.5px solid rgba(211, 195, 159, 0.55);
+  border-radius: 12px;
+  background: rgba(255, 248, 232, 0.94);
+  color: #174332;
+  font: 800 0.88rem 'Outfit', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mode-setup-back-btn:hover {
+  background: #fff8e8;
+  border-color: rgba(211, 195, 159, 0.85);
+  transform: translateX(-2px);
+}
+
+.mode-setup-back-btn:active {
+  transform: translateX(-1px) scale(0.97);
+}
+
+.mode-setup-back-btn:focus-visible {
+  outline: 2px solid #174332;
+  outline-offset: 2px;
+}
+
+.mode-setup-back-btn .back-arrow {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+/* 4. Replacement Mode Lobby Slot & Panel */
+.mode-lobby-slot {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  animation: modeLobbyFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modeLobbyFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.985) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-lobby-slot {
+    animation: none;
+  }
+}
+
+#lobbySection.mode-specific-lobby {
+  background: rgba(253, 248, 237, 0.97);
+  border: 2px solid rgba(211, 195, 159, 0.7);
+  border-radius: 24px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.38);
+  padding: 24px 28px;
+  color: #174332;
+  box-sizing: border-box;
+  backdrop-filter: blur(14px);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-flip {
+  border-color: rgba(142, 68, 173, 0.6);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.52), 0 0 24px rgba(113, 49, 141, 0.25);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy {
+  border-color: rgba(188, 33, 27, 0.6);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.52), 0 0 24px rgba(188, 33, 27, 0.25);
+}
+
+/* 5. Mode Lobby Panel Header */
+.mode-lobby-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid rgba(223, 209, 176, 0.65);
+  gap: 12px;
+}
+
+.mode-lobby-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mode-lobby-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font: 800 0.85rem 'Outfit', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mode-lobby-pill.classic {
+  background: rgba(16, 126, 62, 0.12);
+  color: #0e5e2e;
+  border: 1px solid rgba(16, 126, 62, 0.3);
+}
+
+.mode-lobby-pill.flip {
+  background: rgba(113, 49, 141, 0.12);
+  color: #5c1d75;
+  border: 1px solid rgba(113, 49, 141, 0.3);
+}
+
+.mode-lobby-pill.no_mercy {
+  background: rgba(188, 33, 27, 0.12);
+  color: #931913;
+  border: 1px solid rgba(188, 33, 27, 0.3);
+}
+
+.mode-lobby-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-panel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1.5px solid #d3c39f;
+  border-radius: 10px;
+  background: #fff8e8;
+  color: #174332;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.12s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.mode-panel-btn:hover {
+  background: #fbf0d8;
+  transform: translateY(-1px);
+}
+
+.mode-panel-btn:focus-visible {
+  outline: 2px solid #174332;
+  outline-offset: 2px;
+}
+
+.mode-panel-btn-leave {
+  width: auto;
+  min-height: 40px;
+  padding: 0 16px;
+  font: 800 0.85rem 'Outfit', sans-serif;
+  color: #a8241f;
+  border-color: rgba(188, 33, 27, 0.35);
+  background: rgba(255, 245, 245, 0.95);
+}
+
+.mode-panel-btn-leave:hover {
+  background: #ffe8e8;
+  border-color: #bc211b;
 }
