@@ -29,9 +29,9 @@ function httpGetJson(url) {
   });
 }
 
-function httpPutJson(url) {
+function httpPutJson(url, timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
-    const req = http.request(url, { method: 'PUT' }, (res) => {
+    const req = http.request(url, { method: 'PUT', timeout: timeoutMs }, (res) => {
       let data = '';
       res.on('data', (chunk) => (data += chunk));
       res.on('end', () => {
@@ -41,6 +41,10 @@ function httpPutJson(url) {
           reject(e);
         }
       });
+    });
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error(`httpPutJson timed out after ${timeoutMs}ms: ${url}`));
     });
     req.on('error', reject);
     req.end();
@@ -357,8 +361,8 @@ async function main() {
     if (hostAfterSwitch.selectedMode !== 'flip' || guestAfterSwitch.selectedMode !== 'flip') {
       throw new Error('Mode switch to Flip did not synchronize to both host and guest!');
     }
-    if (!hostAfterSwitch.playersHeading.includes('(2/6)') || !guestAfterSwitch.playersHeading.includes('(2/6)')) {
-      throw new Error(`Expected capacity (2/6) after Flip switch, got host: ${hostAfterSwitch.playersHeading}, guest: ${guestAfterSwitch.playersHeading}`);
+    if (!hostAfterSwitch.playersHeading.includes('2/6') || !guestAfterSwitch.playersHeading.includes('2/6')) {
+      throw new Error(`Expected capacity 2/6 after Flip switch, got host: ${hostAfterSwitch.playersHeading}, guest: ${guestAfterSwitch.playersHeading}`);
     }
     if (!guestAfterSwitch.readyBtnText.includes('READY ✓')) {
       throw new Error('Mode change must unready guest players!');
@@ -538,8 +542,8 @@ async function main() {
     if (fixedLobbyState.hasSummaryText) {
       throw new Error('Duplicate rule summary text in lobby must be removed!');
     }
-    if (!fixedLobbyState.playersHeadingText.includes('(1/6)')) {
-      throw new Error(`Expected capacity (1/6) in Flip fixed lobby, got: ${fixedLobbyState.playersHeadingText}`);
+    if (!fixedLobbyState.playersHeadingText.includes('1/6')) {
+      throw new Error(`Expected capacity 1/6 in Flip fixed lobby, got: ${fixedLobbyState.playersHeadingText}`);
     }
 
     const fixedRoomCode = fixedLobbyState.roomId;
@@ -591,8 +595,8 @@ async function main() {
     if (!joinerFixedState.compactText.includes('UNO FLIP')) {
       throw new Error('Joiner did not receive authoritative Flip mode from host room!');
     }
-    if (!joinerFixedState.playersHeading.includes('(2/6)')) {
-      throw new Error(`Expected capacity (2/6), got: ${joinerFixedState.playersHeading}`);
+    if (!joinerFixedState.playersHeading.includes('2/6')) {
+      throw new Error(`Expected capacity 2/6, got: ${joinerFixedState.playersHeading}`);
     }
 
     cdpJoiner2.close();

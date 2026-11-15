@@ -94,6 +94,8 @@ app.get(['/health', '/api/health'], (req, res) => {
     uptime: process.uptime(),
     activeRooms: roomManager.getRoomCount(),
     timestamp: new Date().toISOString(),
+    commit: process.env.RENDER_GIT_COMMIT || null,
+    branch: process.env.RENDER_GIT_BRANCH || null,
   });
 });
 

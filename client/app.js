@@ -2531,7 +2531,7 @@ class UnoArenaApp {
 
     const maxPlayers = this.gameState.mode === 'classic' ? 10 : 6;
     if (this.el.lobbyPlayersHeading) {
-      this.el.lobbyPlayersHeading.textContent = `Players in Lobby (${playerCount}/${maxPlayers})`;
+      this.el.lobbyPlayersHeading.textContent = `Players · ${playerCount}/${maxPlayers}`;
     }
 
     // Sync Game Rules modal if open while in lobby
@@ -2542,26 +2542,56 @@ class UnoArenaApp {
     }
 
     // Render Players
-    this.el.lobbyPlayersList.innerHTML = this.gameState.players
+    const connectedPlayersHtml = this.gameState.players
       .map(
         (p) => `
-        <div class="lobby-player-row">
-          <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="lobby-player-row lobby-player-card ${p.id === this.playerId ? 'is-self' : ''}">
+          <div class="lobby-player-info">
             ${this.renderAvatarHtml(p, 'lobby-player-avatar')}
-            <strong>${escapeHtml(p.name)}</strong>
-            ${p.isBot ? '<span class="bot-badge" style="font-size: 0.7rem; background: #3B82F6; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 800;">BOT</span>' : ''}
-            ${p.id === this.playerId ? '<span style="font-size: 0.75rem; color: #F59E0B;">(You)</span>' : ''}
+            <div class="lobby-player-meta">
+              <strong class="lobby-player-name">${escapeHtml(p.name)}</strong>
+              <div class="lobby-player-tags">
+                ${p.isHost ? '<span class="player-role-badge host-badge">HOST 👑</span>' : ''}
+                ${p.isBot ? '<span class="player-role-badge bot-badge">BOT 🤖</span>' : ''}
+                ${p.id === this.playerId ? '<span class="player-role-badge self-badge">(You)</span>' : ''}
+              </div>
+            </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
+          <div class="lobby-player-status">
             <span class="ready-pill ${p.isReady ? 'ready' : 'waiting'}">
               ${p.isReady ? '✓ READY' : 'WAITING'}
             </span>
-            ${isHost && p.isBot ? `<button class="remove-bot-btn" data-bot-id="${p.id}" type="button" title="Remove bot" style="background: none; border: none; color: #EF4444; font-size: 1rem; cursor: pointer; padding: 2px 6px;">✕</button>` : ''}
+            ${isHost && p.isBot ? `<button class="remove-bot-btn" data-bot-id="${p.id}" type="button" aria-label="Remove bot" title="Remove bot">✕</button>` : ''}
           </div>
         </div>
       `
       )
       .join('');
+
+    const emptySlotsCount = Math.max(0, maxPlayers - playerCount);
+    let emptySlotsHtml = '';
+    for (let i = 0; i < emptySlotsCount; i++) {
+      emptySlotsHtml += `
+        <div class="lobby-player-empty lobby-player-card">
+          <div class="lobby-player-info">
+            <div class="lobby-empty-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="lobby-player-meta">
+              <span class="lobby-empty-label">Waiting for player…</span>
+            </div>
+          </div>
+          <div class="lobby-player-status">
+            <span class="empty-seat-pill">Open Seat</span>
+          </div>
+        </div>
+      `;
+    }
+
+    this.el.lobbyPlayersList.innerHTML = connectedPlayersHtml + emptySlotsHtml;
 
     this.el.lobbyPlayersList.querySelectorAll('.remove-bot-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -2575,14 +2605,26 @@ class UnoArenaApp {
       hostControls.style.display = isHost ? 'flex' : 'none';
     }
 
+    const allReady = this.gameState.players.length >= 2 && this.gameState.players.every((p) => p.isReady);
+    const unreadyPlayers = this.gameState.players.filter((p) => !p.isReady);
+
+    const startHint = document.getElementById('lobbyStartHint');
+    if (startHint) {
+      if (playerCount < 2) {
+        startHint.textContent = isHost ? 'Waiting for at least 2 players to start' : 'Waiting for more players to join…';
+      } else if (!allReady) {
+        const count = unreadyPlayers.length;
+        startHint.textContent = `Waiting for ${count === 1 ? '1 player' : `${count} players`} to be ready`;
+      } else {
+        startHint.textContent = isHost ? 'All players ready! Host can start the game.' : 'All players ready! Waiting for host to start.';
+      }
+    }
+
     // Host controls
     if (isHost) {
-      this.el.startGameBtn.style.display = 'block';
-      const allReady = this.gameState.players.length >= 2 && this.gameState.players.every((p) => p.isReady);
+      this.el.startGameBtn.style.display = 'inline-flex';
       this.el.startGameBtn.disabled = !allReady;
-      this.el.startGameBtn.textContent = allReady
-        ? 'START GAME ▶'
-        : `WAITING FOR PLAYERS (${this.gameState.players.length}/${this.gameState.mode === 'classic' ? 10 : 6})`;
+      this.el.startGameBtn.textContent = 'START GAME ▶';
     } else {
       this.el.startGameBtn.style.display = 'none';
     }
@@ -2591,11 +2633,11 @@ class UnoArenaApp {
     if (me?.isReady) {
       this.el.readyBtn.classList.add('is-ready');
       this.el.readyBtn.textContent = 'CANCEL READY ✕';
-      this.el.readyBtn.style.background = '#b25900';
+      this.el.readyBtn.style.background = '';
     } else {
       this.el.readyBtn.classList.remove('is-ready');
       this.el.readyBtn.textContent = 'I AM READY ✓';
-      this.el.readyBtn.style.background = '#107E3E';
+      this.el.readyBtn.style.background = '';
     }
   }
 
@@ -3806,7 +3848,19 @@ class UnoArenaApp {
     const url = `${window.location.origin}/?room=${this.gameState?.roomId || this.roomId}`;
     if (this.el.lobbyCodeBadge) {
       this.el.lobbyCodeBadge.classList.add('copied');
-      setTimeout(() => this.el.lobbyCodeBadge.classList.remove('copied'), 1200);
+      setTimeout(() => this.el.lobbyCodeBadge.classList.remove('copied'), 1500);
+    }
+    if (this.el.copyInviteBtn) {
+      this.el.copyInviteBtn.classList.add('copied');
+      const textSpan = this.el.copyInviteBtn.querySelector('.share-btn-text') || this.el.copyInviteBtn.querySelector('span');
+      if (textSpan) {
+        const orig = textSpan.textContent;
+        textSpan.textContent = 'Invite Link Copied! ✓';
+        setTimeout(() => {
+          this.el.copyInviteBtn.classList.remove('copied');
+          textSpan.textContent = orig;
+        }, 1500);
+      }
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(() => {

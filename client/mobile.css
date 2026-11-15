@@ -173,7 +173,59 @@
   .nm-card-container { width: min(100%, 392px); flex-shrink: 0; margin: 0 auto; }
   .nm-exact-input { font-size: 16px; }
   .mode-lobby-slot { width: 100%; }
-  #lobbySection.mode-specific-lobby { width: 100%; max-width: 100%; padding: 14px 10px; }
+  #lobbySection.mode-specific-lobby {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px 12px;
+    border-radius: 18px;
+  }
+  #lobbySection.mode-specific-lobby .mode-lobby-header {
+    gap: 6px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+  #lobbySection.mode-specific-lobby .mode-lobby-pill {
+    height: 34px;
+    padding: 0 10px;
+    font-size: 0.74rem;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+  #lobbySection.mode-specific-lobby .mode-panel-btn {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+  }
+  #lobbySection.mode-specific-lobby .mode-panel-btn-leave {
+    height: 34px;
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 0.78rem;
+  }
+  #lobbySection.mode-specific-lobby .room-code-badge {
+    padding: 6px 14px;
+  }
+  #lobbySection.mode-specific-lobby .room-code-badge #lobbyCodeText {
+    font-size: 1.35rem;
+    letter-spacing: 2px;
+  }
+  #lobbySection.mode-specific-lobby .lobby-player-card {
+    padding: 8px 10px;
+    min-height: 46px;
+  }
+  #lobbySection.mode-specific-lobby .lobby-player-name {
+    max-width: 120px;
+    font-size: 0.88rem;
+  }
+  #lobbySection.mode-specific-lobby .lobby-footer-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+  #lobbySection.mode-specific-lobby .lobby-action-btn {
+    width: 100%;
+    min-height: 46px;
+  }
 
   /* Lobby actions must not inherit a 145px flex basis in a vertical stack. */
   body.in-room:not(.in-arena) { background: var(--mobile-paper); color: var(--mobile-ink); }
