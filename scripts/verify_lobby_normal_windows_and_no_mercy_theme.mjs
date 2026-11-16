@@ -527,6 +527,22 @@ async function main() {
     }
     await cdp.screenshot(path.join(ARTIFACT_DIR, 'lobby_no_mercy_mobile_landscape.png'));
 
+    // Verify actions remain visible and usable on small phones, including rotation.
+    for (const [width, height] of [[320, 740], [360, 740], [390, 844], [667, 375], [844, 390]]) {
+      await cdp.setViewport(width, height, true);
+      await delay(200);
+      const mobile = await cdp.evaluate(() => {
+        const panel = document.getElementById('lobbySection').getBoundingClientRect();
+        const buttons = ['readyBtn', 'startGameBtn', 'copyInviteBtn', 'modeLobbySettingsBtn'].map(id => {
+          const r = document.getElementById(id).getBoundingClientRect();
+          return { id, visible: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight && r.bottom <= panel.bottom, touchHeight: r.height };
+        });
+        return { overflow: document.documentElement.scrollWidth > innerWidth, buttons };
+      });
+      console.log('Mobile action visibility', width, height, mobile);
+      if (mobile.overflow || mobile.buttons.some(b => !b.visible || b.touchHeight < 43)) throw new Error('Mobile controls clipped or too small at ' + width + 'x' + height);
+    }
+
     // Return to desktop
     await cdp.setViewport(1366, 650, false);
 
