@@ -4461,23 +4461,6 @@ body.in-mode-lobby .mode-setup-screen.mode-no-mercy-setup .no-mercy-setup-contai
 .flip-brand strong {font-size:78px;font-weight:900;letter-spacing:-6px;color:#ffe31b;-webkit-text-stroke:2px #09050d;text-shadow:2px 2px 0 #fff,-2px -2px 0 #fff;}
 .flip-brand span {font-size:40px;font-weight:900;color:white;-webkit-text-stroke:1px #100915;letter-spacing:-1px;}
 .flip-lobby-brand {display:none;}
-.mode-setup-screen.mode-flip-setup .flip-card-wrapper {
- width:min(420px,calc(100vw - 32px));aspect-ratio:auto;box-sizing:border-box;
- padding:26px 32px 32px;margin:0;isolation:isolate;overflow:hidden;
- border:9px solid #08050c;outline:2px solid #eee;border-radius:32px;
- background:radial-gradient(ellipse at 45% 35%,#b414e1 0,#7d08b0 55%,#360958 100%);
-}
-.flip-card-wrapper::before {content:'';position:absolute;inset:8% -8%;border:8px solid #100617;border-radius:50%;transform:rotate(28deg);z-index:-1;pointer-events:none;}
-.flip-card-wrapper .flip-card-bg-img {display:none;}
-.flip-setup-brand {margin:0 auto 28px;}
-.flip-card-wrapper .flip-form-layer {position:relative;inset:auto;width:100%;height:auto;display:flex;flex-direction:column;gap:12px;}
-.flip-card-wrapper .flip-name-label,.flip-card-wrapper .flip-code-label {position:static;width:auto;height:auto;color:#ffe226;font-size:15px;font-weight:900;text-shadow:0 2px 2px #000;}
-.flip-card-wrapper .flip-name-input,.flip-card-wrapper .flip-code-input {position:static;width:100%;height:48px;min-height:48px;padding:8px 12px;font-size:18px;background:#230a38cc;border:1px solid #d5a1ed;border-bottom:3px solid white;border-radius:8px;color:white;}
-.flip-card-wrapper .flip-name-input::placeholder,.flip-card-wrapper .flip-code-input::placeholder {color:#e2cbe9;}
-.flip-card-wrapper .flip-create-btn,.flip-card-wrapper .flip-join-btn {position:static;width:100%;height:50px;min-height:50px;font-size:18px;margin:4px 0;}
-.flip-card-wrapper .flip-separator {position:static;display:flex;align-items:center;gap:8px;width:100%;height:auto;margin:10px 0;color:#fff;font-size:12px;font-weight:800;}
-.flip-card-wrapper .flip-separator::before,.flip-card-wrapper .flip-separator::after {content:'';height:1px;background:#d7b4e8;flex:1;}
-.flip-card-wrapper input:focus-visible {outline:3px solid #ffe226;outline-offset:3px;}
 body.in-flip-setup::before {background-image:linear-gradient(#09041170,#090411aa),url('./assets/uno-flip-setup-bg.jpg') !important;}
 body.in-mode-lobby #flipLobbySlot {max-width:760px;}
 #lobbySection.mode-specific-lobby.lobby-theme-flip {
@@ -4522,7 +4505,7 @@ body.in-mode-lobby #flipLobbySlot {max-width:760px;}
  #lobbySection.mode-specific-lobby.lobby-theme-flip .lobby-invite-section,
  #lobbySection.mode-specific-lobby.lobby-theme-flip .lobby-players-section {padding:10px;}
  #lobbySection.mode-specific-lobby.lobby-theme-flip .lobby-players-list {max-height:125px;}
- .mode-setup-screen.mode-flip-setup .flip-card-wrapper {padding:24px;border-width:7px;}
+
 }
 @media (max-height:660px) and (min-width:601px) {
  #lobbySection.mode-specific-lobby.lobby-theme-flip {padding:12px 20px;}
@@ -4533,20 +4516,6 @@ body.in-mode-lobby #flipLobbySlot {max-width:760px;}
  #lobbySection.mode-specific-lobby.lobby-theme-flip .lobby-players-section {padding:8px 12px;margin-bottom:8px;}
  #lobbySection.mode-specific-lobby.lobby-theme-flip .lobby-players-list {max-height:120px;}
 }
-@media (max-height:500px) and (orientation:landscape) {
- .mode-setup-screen.mode-flip-setup .flip-setup-container {justify-content:flex-start;padding:12px;}
- .mode-setup-screen.mode-flip-setup .flip-card-wrapper {width:min(600px,94vw);padding:18px 28px;}
- .flip-setup-brand {margin-bottom:14px;}
- .flip-card-wrapper .flip-form-layer {display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;}
- .flip-card-wrapper .flip-name-label {grid-column:1;grid-row:1;}
- .flip-card-wrapper .flip-name-input {grid-column:1;grid-row:2;}
- .flip-card-wrapper .flip-create-btn {grid-column:1;grid-row:3;}
- .flip-card-wrapper .flip-code-label {grid-column:2;grid-row:1;}
- .flip-card-wrapper .flip-code-input {grid-column:2;grid-row:2;}
- .flip-card-wrapper .flip-join-btn {grid-column:2;grid-row:3;}
- .flip-card-wrapper .flip-separator {display:none;}
-}
-
 /* Flip landscape uses the same tested two-panel phone layout. */
 @media (max-width:899px) and (max-height:500px) and (orientation:landscape) {
  body.in-mode-lobby #flipLobbySlot {max-width:850px;width:100%;}
@@ -4593,3 +4562,47 @@ body.in-mode-lobby #flipLobbySlot {max-width:760px;}
 }
 /* Avoid a translucent entry frame on mobile when the lobby is shown. */
 body.in-mode-lobby #flipLobbySlot {animation:none;}
+
+/* Preserve the approved Flip card artwork; only invisible controls sit over it. */
+.mode-setup-screen.mode-flip-setup .flip-card-wrapper {
+ width:min(440px,calc(100vw - 32px),calc((100svh - 100px)*.625));
+ aspect-ratio:640 / 1024;height:auto;margin:0 auto;padding:0;border:0;outline:0;
+ border-radius:0;background:none;container-type:inline-size;
+}
+.flip-card-wrapper::before {content:none;}
+.flip-card-wrapper .flip-card-bg-img {display:block;width:100%;height:auto;}
+.flip-card-wrapper .flip-form-layer {position:absolute;inset:0;width:100%;height:100%;display:block;}
+.flip-card-wrapper .flip-name-label,.flip-card-wrapper .flip-code-label,
+.flip-card-wrapper .flip-separator {opacity:0;}
+.flip-card-wrapper .flip-name-input,.flip-card-wrapper .flip-code-input {
+ position:absolute;left:27%;width:52%;height:5.6%;padding:0 2%;border:0;border-radius:2px;
+ font:800 4.4cqw 'Outfit',sans-serif;color:#fff;letter-spacing:0;box-sizing:border-box;
+ background:transparent;outline:none;text-shadow:0 1px 2px #240035;
+}
+.flip-card-wrapper .flip-name-input {top:36.8%;}
+.flip-card-wrapper .flip-code-input {top:62.8%;}
+.flip-card-wrapper .flip-name-input::placeholder,.flip-card-wrapper .flip-code-input::placeholder {color:transparent;}
+.flip-card-wrapper .flip-name-input:not(:placeholder-shown) {background:#8404a7;}
+.flip-card-wrapper .flip-code-input:not(:placeholder-shown) {background:#730299;}
+.flip-card-wrapper .flip-create-btn,.flip-card-wrapper .flip-join-btn {
+ position:absolute;left:14.5%;width:71%;height:8%;min-height:44px;margin:0;padding:0;
+ background:transparent;border:0;box-shadow:none;border-radius:999px;
+}
+.flip-card-wrapper .flip-create-btn {top:44.6%;}
+.flip-card-wrapper .flip-join-btn {top:70.2%;}
+.flip-card-wrapper .flip-create-btn > *, .flip-card-wrapper .flip-join-btn > * {opacity:0;}
+.flip-card-wrapper .flip-create-btn:hover:not(:disabled),.flip-card-wrapper .flip-join-btn:hover:not(:disabled),
+.flip-card-wrapper .flip-create-btn:active:not(:disabled),.flip-card-wrapper .flip-join-btn:active:not(:disabled) {background:transparent;box-shadow:none;transform:none;filter:none;}
+.flip-card-wrapper input:focus-visible,.flip-card-wrapper button:focus-visible {outline:2px solid #ffe735;outline-offset:2px;}
+@media (max-width:600px) {
+ .mode-setup-screen.mode-flip-setup .flip-card-wrapper {width:min(440px,calc(100vw - 24px));}
+ .mode-setup-screen.mode-flip-setup .flip-setup-container {justify-content:flex-start;}
+}
+@media (max-height:500px) and (orientation:landscape) {
+ .mode-setup-screen.mode-flip-setup .flip-setup-container {justify-content:flex-start;}
+ .mode-setup-screen.mode-flip-setup .flip-card-wrapper {width:340px;flex-shrink:0;}
+}
+.flip-card-wrapper .flip-name-input::placeholder,.flip-card-wrapper .flip-code-input::placeholder {opacity:0;text-shadow:none;}
+/* Enlarge only the transparent hit area, preserving the printed button design. */
+.mode-setup-screen.mode-flip-setup .flip-card-wrapper .flip-create-btn,
+.mode-setup-screen.mode-flip-setup .flip-card-wrapper .flip-join-btn {min-height:44px;}

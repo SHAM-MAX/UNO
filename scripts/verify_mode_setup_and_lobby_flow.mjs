@@ -702,6 +702,21 @@ async function main() {
       throw new Error('Mobile setup should have no top nav and 0 padding top');
     }
 
+
+    for (const [width,height] of [[320,740],[390,844],[844,390]]) {
+      await cdp.setViewport(width,height,true);await delay(300);
+      const fields=await cdp.evaluate(()=>{
+        const art=document.querySelector('.flip-card-bg-img').getBoundingClientRect();
+        return ['flipPlayerNameInput','flipRoomCodeInput','flipCreateRoomBtn','flipJoinRoomBtn'].map(id=>{
+          const el=document.getElementById(id),r=el.getBoundingClientRect();
+          return {id,inside:r.left>=art.left&&r.right<=art.right+1&&r.top>=art.top&&r.bottom<=art.bottom+1,width:r.width,height:r.height};
+        });
+      });
+      console.log('Reference Flip setup controls',width,height,fields);
+      if(fields.some(f=>!f.inside||f.width<80))throw new Error('Flip reference controls outside artwork');
+      await cdp.screenshot(path.join(ARTIFACT_DIR,'flip_reference_setup_'+width+'x'+height+'.png'));
+    }
+    await cdp.setViewport(390,844,true);
     // Create room in mobile
     await cdp.evaluate(() => {
       document.getElementById('flipCreateRoomBtn').click();
