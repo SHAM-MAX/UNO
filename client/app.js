@@ -190,6 +190,7 @@ class UnoArenaApp {
       classicLobbySlot: document.getElementById('classicLobbySlot'),
       modeLobbyHeader: document.getElementById('modeLobbyHeader'),
       modeLobbyBadge: document.getElementById('modeLobbyBadge'),
+      modeLobbyCenterLogo: document.getElementById('modeLobbyCenterLogo'),
       modeLobbyFullscreenBtn: document.getElementById('modeLobbyFullscreenBtn'),
       modeLobbySettingsBtn: document.getElementById('modeLobbySettingsBtn'),
       modeLobbyLeaveBtn: document.getElementById('modeLobbyLeaveBtn'),
@@ -2461,6 +2462,9 @@ class UnoArenaApp {
         this.el.modeLobbyBadge.className = `mode-lobby-pill ${mode}`;
         this.el.modeLobbyBadge.textContent = `${currentModeInfo.icon} ${currentModeInfo.title}`;
       }
+      if (this.el.modeLobbyCenterLogo) {
+        this.el.modeLobbyCenterLogo.style.display = mode === 'no_mercy' ? 'block' : 'none';
+      }
 
       // Hide 3-mode selector and generic compact display
       if (this.el.lobbyModeSelectContainer) this.el.lobbyModeSelectContainer.style.display = 'none';
@@ -2488,6 +2492,7 @@ class UnoArenaApp {
       this.el.lobbySection.className = '';
 
       if (this.el.modeLobbyHeader) this.el.modeLobbyHeader.style.display = 'none';
+      if (this.el.modeLobbyCenterLogo) this.el.modeLobbyCenterLogo.style.display = 'none';
 
       // 3-mode selector for Direct Create Room
       if (this.el.lobbyModeSelectContainer) this.el.lobbyModeSelectContainer.style.display = 'block';
@@ -2531,7 +2536,7 @@ class UnoArenaApp {
 
     const maxPlayers = this.gameState.mode === 'classic' ? 10 : 6;
     if (this.el.lobbyPlayersHeading) {
-      this.el.lobbyPlayersHeading.textContent = `Players · ${playerCount}/${maxPlayers}`;
+      this.el.lobbyPlayersHeading.textContent = mode === 'no_mercy' ? `PLAYERS • ${playerCount}/${maxPlayers}` : `Players · ${playerCount}/${maxPlayers}`;
     }
 
     // Sync Game Rules modal if open while in lobby

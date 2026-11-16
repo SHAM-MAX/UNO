@@ -231,6 +231,17 @@
     min-height: 46px;
   }
 
+  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy {
+    border-width: 6px;
+    border-radius: 28px;
+    padding: 12px 14px 16px;
+  }
+
+  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-center-logo {
+    height: 44px;
+    max-width: 120px;
+  }
+
   /* Lobby actions must not inherit a 145px flex basis in a vertical stack. */
   body.in-room:not(.in-arena) { background: var(--mobile-paper); color: var(--mobile-ink); }
   body.in-room:not(.in-arena)::before, body.in-room:not(.in-arena)::after { display: none; }

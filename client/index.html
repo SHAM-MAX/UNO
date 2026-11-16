@@ -613,6 +613,9 @@
             <div class="mode-lobby-header-left">
               <span id="modeLobbyBadge" class="mode-lobby-pill classic">🎴 CLASSIC UNO</span>
             </div>
+            <div class="mode-lobby-header-center">
+              <img id="modeLobbyCenterLogo" class="mode-lobby-center-logo" src="./assets/no-mercy-show-em-logo.png" alt="UNO Show 'Em No Mercy" style="display: none;">
+            </div>
             <div class="mode-lobby-header-right">
               <button id="modeLobbyFullscreenBtn" class="mode-panel-btn" type="button" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -670,14 +673,16 @@
           <div class="lobby-players-section">
             <div id="lobbyPlayersHeading" class="lobby-players-heading">Players · 1/6</div>
             <div id="lobbyPlayersList" class="lobby-players-list"></div>
-            <div id="lobbyHostControls" class="lobby-host-controls" style="display: none;">
-              <button id="addBotBtn" class="nav-btn uno-btn lobby-secondary-btn" type="button" title="Add an AI bot to this lobby">
-                <span>+ Add Bot 🤖</span>
-              </button>
-              <button id="shuffleSeatsBtn" class="nav-btn uno-btn lobby-secondary-btn" type="button" title="Shuffle player seating order">
-                <span>🔀 Shuffle Seats</span>
-              </button>
-            </div>
+          </div>
+
+          <!-- Lobby Host Controls -->
+          <div id="lobbyHostControls" class="lobby-host-controls" style="display: none;">
+            <button id="addBotBtn" class="nav-btn uno-btn lobby-secondary-btn" type="button" title="Add an AI bot to this lobby">
+              <span>+ Add Bot 🤖</span>
+            </button>
+            <button id="shuffleSeatsBtn" class="nav-btn uno-btn lobby-secondary-btn" type="button" title="Shuffle player seating order">
+              <span>🔀 Shuffle Seats</span>
+            </button>
           </div>
 
           <!-- Footer Actions & Hint -->
