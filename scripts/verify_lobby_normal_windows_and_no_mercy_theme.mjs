@@ -680,6 +680,19 @@ async function main() {
       };
     });
     console.log('Flip Lobby State in Normal Window:', flipState);
+    for (let i=0;i<5;i++) {await cdpFlip.evaluate(()=>document.getElementById('addBotBtn').click());await delay(200);}
+    for(const [width,height] of [[320,740],[390,844],[667,375],[844,390],[1366,650]]) {
+      await cdpFlip.setViewport(width,height,width<900);await delay(300);
+      const state=await cdpFlip.evaluate(()=>{
+        const panel=document.getElementById('lobbySection').getBoundingClientRect();
+        const buttons=['readyBtn','startGameBtn','copyInviteBtn','modeLobbySettingsBtn'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,visible:r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight&&r.bottom<=panel.bottom,height:r.height};});
+        return {players:document.querySelectorAll('#lobbyPlayersList .lobby-player-row').length,overflow:document.documentElement.scrollWidth>innerWidth,buttons};
+      });
+      console.log('Full Flip lobby',width,height,state);
+      if(state.players!==6||state.overflow||state.buttons.some(b=>!b.visible||b.height<43))throw new Error('Full Flip lobby failed at '+width+'x'+height);
+      await cdpFlip.screenshot(path.join(ARTIFACT_DIR,'flip_full_'+width+'x'+height+'.png'));
+    }
+
     await cdpFlip.screenshot(path.join(ARTIFACT_DIR, 'lobby_flip_normal_window_1366x650.png'));
 
     console.log('\n=============================================================');

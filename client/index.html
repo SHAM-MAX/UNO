@@ -539,9 +539,10 @@
 
           <div class="flip-card-wrapper" id="flipCardWrapper">
             <img src="./assets/uno-flip-card-form.jpg" class="flip-card-bg-img" alt="UNO Flip Card Room Setup" />
+            <div class="flip-brand flip-setup-brand" aria-label="UNO Flip"><strong>UNO</strong><span>FLIP!</span></div>
             <form class="flip-form-layer" onsubmit="return false;">
               <!-- 1. Player Name -->
-              <label class="flip-name-label" for="flipPlayerNameInput" aria-label="Your player name"></label>
+              <label class="flip-name-label" for="flipPlayerNameInput">YOUR PLAYER NAME</label>
               <input id="flipPlayerNameInput" class="flip-name-input" type="text" maxlength="15" autocomplete="nickname" placeholder="Enter your name" aria-label="Your player name" />
 
               <!-- 2. Create Room -->
@@ -552,10 +553,10 @@
               </button>
 
               <!-- 3. Separator -->
-              <div class="flip-separator" aria-hidden="true"></div>
+              <div class="flip-separator">OR JOIN A FRIEND</div>
 
               <!-- 4. Room Code -->
-              <label class="flip-code-label" for="flipRoomCodeInput" aria-label="Room code"></label>
+              <label class="flip-code-label" for="flipRoomCodeInput">ROOM CODE</label>
               <input id="flipRoomCodeInput" class="flip-code-input" type="text" maxlength="8" autocomplete="off" placeholder="6-character code" aria-label="Room code" />
 
               <!-- 5. Join Room -->
@@ -614,6 +615,7 @@
               <span id="modeLobbyBadge" class="mode-lobby-pill classic">🎴 CLASSIC UNO</span>
             </div>
             <div class="mode-lobby-header-center">
+              <div class="flip-brand flip-lobby-brand" aria-label="UNO Flip"><strong>UNO</strong><span>FLIP!</span></div>
               <img id="modeLobbyCenterLogo" class="mode-lobby-center-logo" src="./assets/no-mercy-show-em-logo.png" alt="UNO Show 'Em No Mercy" style="display: none;">
             </div>
             <div class="mode-lobby-header-right">

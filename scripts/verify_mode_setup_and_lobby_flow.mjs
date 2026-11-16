@@ -708,6 +708,7 @@ async function main() {
     });
     await cdp.waitForFunction(() => document.body.classList.contains('in-mode-lobby'));
 
+    await delay(500);
     await cdp.screenshot(path.join(ARTIFACT_DIR, 'mobile_flip_lobby_portrait.png'));
 
     // Mobile Landscape 844x390
@@ -718,6 +719,16 @@ async function main() {
     console.log('Taking screenshot mobile_no_mercy_lobby_landscape.png...');
     await cdp.screenshot(path.join(ARTIFACT_DIR, 'mobile_no_mercy_lobby_landscape.png'));
     console.log('Screenshot taken!');
+    for (const [width,height] of [[320,740],[390,844],[667,375],[844,390],[1366,650]]) {
+      await cdp.setViewport(width,height,width<900); await delay(300);
+      const bounds=await cdp.evaluate(() => {
+        const panel=document.getElementById('lobbySection').getBoundingClientRect();
+        return {overflow:document.documentElement.scrollWidth>innerWidth,buttons:['readyBtn','startGameBtn','copyInviteBtn','modeLobbySettingsBtn'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,visible:r.top>=0&&r.bottom<=innerHeight&&r.bottom<=panel.bottom&&r.left>=0&&r.right<=innerWidth,height:r.height};})};
+      });
+      console.log('Flip mobile/desktop controls',width,height,bounds);
+      if(bounds.overflow||bounds.buttons.some(b=>!b.visible||b.height<43))throw new Error('Flip controls clipped or too small at '+width+'x'+height);
+    }
+
 
     console.log('\n=== All Mode Setup & Lobby Flow Verifications Passed! ===\n');
     process.exit(0);
