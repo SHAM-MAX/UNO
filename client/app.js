@@ -4452,3 +4452,10 @@ if (document.readyState === 'loading') {
 } else {
   window.app = new UnoArenaApp();
 }
+
+// Scale the reference composition as one unit instead of shrinking its typography independently.
+function fitNoMercyReferenceLobby() {
+ document.documentElement.style.setProperty('--no-mercy-reference-scale', String(Math.min((window.innerWidth - 40) / 1328, (window.innerHeight - 40) / 1184, 1)));
+}
+window.addEventListener('resize', fitNoMercyReferenceLobby);
+fitNoMercyReferenceLobby();
