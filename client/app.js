@@ -2570,12 +2570,12 @@ class UnoArenaApp {
 
     const emptySlotsCount = Math.max(0, maxPlayers - playerCount);
     let emptySlotsHtml = '';
-    for (let i = 0; i < emptySlotsCount; i++) {
-      emptySlotsHtml += `
+    if (emptySlotsCount === 1) {
+      emptySlotsHtml = `
         <div class="lobby-player-empty lobby-player-card">
           <div class="lobby-player-info">
             <div class="lobby-empty-avatar" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
@@ -2586,6 +2586,25 @@ class UnoArenaApp {
           </div>
           <div class="lobby-player-status">
             <span class="empty-seat-pill">Open Seat</span>
+          </div>
+        </div>
+      `;
+    } else if (emptySlotsCount > 1) {
+      emptySlotsHtml = `
+        <div class="lobby-player-empty lobby-player-card lobby-empty-summary">
+          <div class="lobby-player-info">
+            <div class="lobby-empty-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="lobby-player-meta">
+              <span class="lobby-empty-label">Waiting for players…</span>
+            </div>
+          </div>
+          <div class="lobby-player-status">
+            <span class="empty-seat-pill">${emptySlotsCount} Open Seats</span>
           </div>
         </div>
       `;
@@ -2603,6 +2622,8 @@ class UnoArenaApp {
     const hostControls = document.getElementById('lobbyHostControls');
     if (hostControls) {
       hostControls.style.display = isHost ? 'flex' : 'none';
+      if (this.el.addBotBtn) this.el.addBotBtn.style.display = isHost ? 'inline-flex' : 'none';
+      if (this.el.shuffleSeatsBtn) this.el.shuffleSeatsBtn.style.display = isHost ? 'inline-flex' : 'none';
     }
 
     const allReady = this.gameState.players.length >= 2 && this.gameState.players.every((p) => p.isReady);

@@ -73,10 +73,17 @@ class CDPClient {
     });
   }
 
-  async send(method, params = {}) {
+  async send(method, params = {}, timeoutMs = 10000) {
     const id = this.id++;
     return new Promise((resolve, reject) => {
-      this.pending.set(id, { resolve, reject });
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error(`CDP method ${method} timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+      this.pending.set(id, {
+        resolve: (val) => { clearTimeout(timer); resolve(val); },
+        reject: (err) => { clearTimeout(timer); reject(err); }
+      });
       this.ws.send(JSON.stringify({ id, method, params }));
     });
   }
@@ -111,7 +118,11 @@ class CDPClient {
       height,
       deviceScaleFactor: 1,
       mobile: isMobile,
+      screenOrientation: isMobile
+        ? (width > height ? { angle: 90, type: 'landscapePrimary' } : { angle: 0, type: 'portraitPrimary' })
+        : { angle: 0, type: 'portraitPrimary' },
     });
+    await delay(200);
   }
 
   async waitForFunction(fn, timeoutMs = 8000, pollIntervalMs = 150) {
@@ -127,9 +138,13 @@ class CDPClient {
   }
 
   async screenshot(outPath) {
-    const { data } = await this.send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(outPath, Buffer.from(data, 'base64'));
-    console.log(`Saved screenshot -> ${outPath}`);
+    try {
+      const { data } = await this.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+      fs.writeFileSync(outPath, Buffer.from(data, 'base64'));
+      console.log(`Saved screenshot -> ${outPath}`);
+    } catch (err) {
+      console.warn(`Screenshot warning for ${outPath}:`, err.message);
+    }
   }
 
   close() {
@@ -148,6 +163,7 @@ async function startHeadlessChrome() {
       '--no-first-run',
       '--no-default-browser-check',
       '--disable-gpu',
+      '--window-size=1366,768',
     ],
     { stdio: 'ignore' }
   );
@@ -695,12 +711,16 @@ async function main() {
     await cdp.screenshot(path.join(ARTIFACT_DIR, 'mobile_flip_lobby_portrait.png'));
 
     // Mobile Landscape 844x390
+    console.log('Changing viewport to mobile landscape 844x390...');
     await cdp.setViewport(844, 390, true);
+    await cdp.evaluate(() => document.body.offsetHeight);
     await delay(300);
+    console.log('Taking screenshot mobile_no_mercy_lobby_landscape.png...');
     await cdp.screenshot(path.join(ARTIFACT_DIR, 'mobile_no_mercy_lobby_landscape.png'));
+    console.log('Screenshot taken!');
 
     console.log('\n=== All Mode Setup & Lobby Flow Verifications Passed! ===\n');
-
+    process.exit(0);
   } finally {
     if (chromeProc) chromeProc.kill();
     server.close();

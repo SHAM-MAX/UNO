@@ -2824,12 +2824,33 @@ body.in-classic-setup::after {
 }
 
 /* 4. Replacement Mode Lobby Slot & Panel */
+body.in-mode-lobby .no-mercy-setup-container,
+body.in-mode-lobby .flip-setup-container,
+body.in-mode-lobby .standard-setup-layout,
+body.in-mode-lobby .mode-setup-screen.mode-classic-setup {
+  padding: clamp(8px, 1.8vh, 16px) clamp(10px, 2.5vw, 16px) !important;
+  box-sizing: border-box !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
 .mode-lobby-slot {
   width: 100%;
-  max-width: 520px;
+  max-width: 500px;
   margin: 0 auto;
   box-sizing: border-box;
   animation: modeLobbyFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-height: 100%;
 }
 
 @keyframes modeLobbyFadeIn {
@@ -2851,16 +2872,20 @@ body.in-classic-setup::after {
 
 #lobbySection.mode-specific-lobby {
   width: 100%;
-  max-width: 520px;
+  max-width: 500px;
+  max-height: min(calc(100vh - 28px), 720px);
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
   background: rgba(253, 248, 237, 0.98);
   border: 2px solid rgba(211, 195, 159, 0.85);
-  border-radius: 24px;
+  border-radius: 22px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
-  padding: 22px 24px;
+  padding: 16px 20px;
   color: #174332;
   box-sizing: border-box;
   backdrop-filter: blur(14px);
+  overflow: hidden;
 }
 
 #lobbySection.mode-specific-lobby.lobby-theme-flip {
@@ -2868,20 +2893,16 @@ body.in-classic-setup::after {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 24px rgba(113, 49, 141, 0.28);
 }
 
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy {
-  border-color: rgba(188, 33, 27, 0.6);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 24px rgba(188, 33, 27, 0.28);
-}
-
 /* 5. Mode Lobby Panel Header */
 .mode-lobby-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 18px;
-  padding-bottom: 14px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1.5px solid rgba(223, 209, 176, 0.65);
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .mode-lobby-header-left {
@@ -2894,10 +2915,10 @@ body.in-classic-setup::after {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 38px;
-  padding: 0 14px;
+  height: 36px;
+  padding: 0 12px;
   border-radius: 999px;
-  font: 800 0.85rem 'Outfit', sans-serif;
+  font: 800 0.82rem 'Outfit', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   box-sizing: border-box;
@@ -2931,9 +2952,9 @@ body.in-classic-setup::after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  min-height: 38px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
   padding: 0;
   border: 1.5px solid #d3c39f;
   border-radius: 10px;
@@ -2959,10 +2980,10 @@ body.in-classic-setup::after {
 
 .mode-panel-btn-leave {
   width: auto;
-  min-height: 38px;
-  height: 38px;
-  padding: 0 14px;
-  font: 800 0.85rem 'Outfit', sans-serif;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 12px;
+  font: 800 0.82rem 'Outfit', sans-serif;
   color: #a8241f;
   border-color: rgba(188, 33, 27, 0.35);
   background: rgba(255, 245, 245, 0.95);
@@ -2978,17 +2999,18 @@ body.in-classic-setup::after {
   text-align: center;
   background: rgba(247, 241, 227, 0.75);
   border: 1.5px solid rgba(220, 207, 178, 0.7);
-  border-radius: 16px;
-  padding: 14px 16px 12px;
-  margin-bottom: 18px;
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .lobby-invite-label {
-  font: 800 0.72rem 'Outfit', sans-serif;
+  font: 800 0.7rem 'Outfit', sans-serif;
   color: #5c6f64;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 #lobbySection.mode-specific-lobby .room-code-badge {
@@ -3000,8 +3022,8 @@ body.in-classic-setup::after {
   background: #112d22;
   color: #ffffff !important;
   border: 1.5px solid rgba(255, 255, 255, 0.22);
-  border-radius: 12px;
-  padding: 6px 18px;
+  border-radius: 10px;
+  padding: 4px 16px;
   cursor: pointer;
   user-select: none;
   touch-action: manipulation;
@@ -3022,9 +3044,9 @@ body.in-classic-setup::after {
 
 #lobbySection.mode-specific-lobby .room-code-badge #lobbyCodeText {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 1.55rem;
+  font-size: 1.4rem;
   font-weight: 800;
-  letter-spacing: 3px;
+  letter-spacing: 2.5px;
   color: #ffffff !important;
   line-height: 1.2;
 }
@@ -3063,13 +3085,13 @@ body.in-classic-setup::after {
 #lobbySection.mode-specific-lobby .room-code-badge.copied::after {
   content: "Copied! ✓";
   position: absolute;
-  top: -30px;
+  top: -28px;
   left: 50%;
   transform: translateX(-50%);
   background: #10b981;
   color: #ffffff;
   font-family: 'Outfit', sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 6px;
@@ -3085,7 +3107,7 @@ body.in-classic-setup::after {
 }
 
 .lobby-invite-actions {
-  margin-top: 10px;
+  margin-top: 8px;
   display: flex;
   justify-content: center;
 }
@@ -3095,16 +3117,16 @@ body.in-classic-setup::after {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  height: 36px;
-  min-height: 36px;
-  padding: 0 18px;
-  font: 700 0.82rem 'Outfit', sans-serif;
+  height: 32px;
+  min-height: 32px;
+  padding: 0 14px;
+  font: 700 0.78rem 'Outfit', sans-serif;
   color: #174332;
   background: #ffffff;
   border: 1.5px solid #d3c39f;
-  border-radius: 10px;
+  border-radius: 9px;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.15s ease;
   user-select: none;
   touch-action: manipulation;
@@ -3143,39 +3165,31 @@ body.in-classic-setup::after {
   border-color: #c084fc;
 }
 
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-invite-section {
-  background: rgba(252, 238, 238, 0.75);
-  border-color: rgba(235, 198, 198, 0.7);
-}
-
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .room-code-badge {
-  background: #2b0d0c;
-  border-color: rgba(248, 113, 113, 0.35);
-}
-
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .room-code-badge:hover {
-  background: #3d1413;
-  border-color: #f87171;
-}
-
 /* 7. Players Section & Clean Cards */
 .lobby-players-section {
-  margin: 16px 0;
+  margin: 8px 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .lobby-players-heading {
-  font: 800 0.86rem 'Outfit', sans-serif;
+  font: 800 0.82rem 'Outfit', sans-serif;
   color: #164e3b;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 #lobbySection.mode-specific-lobby .lobby-players-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: clamp(220px, 42vh, 310px);
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 4px;
@@ -3205,14 +3219,15 @@ body.in-classic-setup::after {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 48px;
-  padding: 8px 14px;
-  border-radius: 12px;
+  min-height: 42px;
+  padding: 6px 12px;
+  border-radius: 10px;
   background: #ffffff;
   border: 1.5px solid #e7dcce;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .lobby-player-row.lobby-player-card:hover {
@@ -3228,19 +3243,19 @@ body.in-classic-setup::after {
 .lobby-player-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
 .lobby-player-avatar {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1rem;
   background: #f4eee2;
   border: 1.5px solid #ded0ba;
 }
@@ -3248,13 +3263,13 @@ body.in-classic-setup::after {
 .lobby-player-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   min-width: 0;
 }
 
 .lobby-player-name {
-  font: 700 0.92rem 'Outfit', sans-serif;
+  font: 700 0.88rem 'Outfit', sans-serif;
   color: #174332;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3265,14 +3280,14 @@ body.in-classic-setup::after {
 .lobby-player-tags {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .player-role-badge {
-  font: 800 0.68rem 'Outfit', sans-serif;
+  font: 800 0.66rem 'Outfit', sans-serif;
   letter-spacing: 0.04em;
-  padding: 2px 6px;
-  border-radius: 6px;
+  padding: 2px 5px;
+  border-radius: 5px;
   line-height: 1.2;
 }
 
@@ -3302,9 +3317,9 @@ body.in-classic-setup::after {
 }
 
 #lobbySection.mode-specific-lobby .ready-pill {
-  font: 800 0.74rem 'Outfit', sans-serif;
+  font: 800 0.72rem 'Outfit', sans-serif;
   letter-spacing: 0.03em;
-  padding: 4px 10px;
+  padding: 3px 9px;
   border-radius: 999px;
   transition: all 0.15s ease;
 }
@@ -3327,13 +3342,13 @@ body.in-classic-setup::after {
   border: 1px solid #fca5a5;
   color: #b91c1c;
   border-radius: 6px;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 800;
   transition: all 0.12s ease;
 }
@@ -3343,18 +3358,18 @@ body.in-classic-setup::after {
   color: #991b1b;
 }
 
-/* Empty Seat Placeholder */
+/* Empty Seat Placeholder & Summary */
 .lobby-player-empty.lobby-player-card {
   background: rgba(255, 255, 255, 0.45);
   border: 1.5px dashed #dcd1ba;
   box-shadow: none;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .lobby-player-empty .lobby-empty-avatar {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   border-radius: 50%;
   border: 1.5px dashed #cfc2a7;
   display: flex;
@@ -3365,45 +3380,56 @@ body.in-classic-setup::after {
 }
 
 .lobby-player-empty .lobby-empty-label {
-  font: 500 0.84rem 'Outfit', sans-serif;
+  font: 600 0.8rem 'Outfit', sans-serif;
   color: #788a80;
   font-style: italic;
 }
 
 .lobby-player-empty .empty-seat-pill {
-  font: 700 0.68rem 'Outfit', sans-serif;
+  font: 700 0.66rem 'Outfit', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #8c9e94;
   background: rgba(0, 0, 0, 0.04);
   border: 1px dashed #d1c5ae;
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: 999px;
 }
 
 /* 8. Host Secondary Controls */
 .lobby-host-controls {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
-  margin-top: 12px;
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.lobby-host-controls[style*="none"],
+.lobby-host-controls[style*="none"] * {
+  display: none !important;
+}
+
+#lobbySection.mode-specific-lobby #addBotBtn[style*="none"],
+#lobbySection.mode-specific-lobby #shuffleSeatsBtn[style*="none"] {
+  display: none !important;
 }
 
 #lobbySection.mode-specific-lobby #addBotBtn,
 #lobbySection.mode-specific-lobby #shuffleSeatsBtn,
 .lobby-secondary-btn {
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
-  height: 36px !important;
-  min-height: 36px !important;
-  padding: 0 16px !important;
-  font: 700 0.82rem 'Outfit', sans-serif !important;
+  gap: 5px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 13px !important;
+  font: 700 0.78rem 'Outfit', sans-serif !important;
   color: #174332 !important;
   background: #ffffff !important;
   border: 1.5px solid #d3c39f !important;
-  border-radius: 10px !important;
+  border-radius: 9px !important;
   cursor: pointer !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
   transition: all 0.15s ease !important;
@@ -3433,15 +3459,16 @@ body.in-classic-setup::after {
 
 /* 9. Footer Actions & Hint */
 .lobby-footer-section {
-  margin-top: 16px;
+  margin-top: 10px;
+  flex-shrink: 0;
 }
 
 .lobby-start-hint {
   text-align: center;
-  font: 600 0.82rem 'Outfit', sans-serif;
+  font: 600 0.78rem 'Outfit', sans-serif;
   color: #5c6f64;
-  margin-bottom: 12px;
-  min-height: 18px;
+  margin-bottom: 8px;
+  min-height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3449,7 +3476,7 @@ body.in-classic-setup::after {
 
 .lobby-footer-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
@@ -3459,14 +3486,14 @@ body.in-classic-setup::after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  padding: 0 24px;
-  font: 900 0.94rem 'Outfit', sans-serif;
+  min-height: 44px;
+  padding: 0 20px;
+  font: 900 0.9rem 'Outfit', sans-serif;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: #ffffff;
   border: 2.5px solid #ffffff;
-  border-radius: 14px;
+  border-radius: 12px;
   cursor: pointer;
   user-select: none;
   touch-action: manipulation;
@@ -3544,4 +3571,302 @@ body.in-classic-setup::after {
   opacity: 0.88 !important;
   filter: none !important;
   pointer-events: none;
+}
+
+/* ==========================================================================
+   10. NO MERCY LOBBY THEME: AUTHENTIC RED & DEEP-BLACK SURFACES
+   ========================================================================== */
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy {
+  background: radial-gradient(circle at 50% 0%, rgba(220, 38, 38, 0.16) 0%, rgba(20, 7, 7, 0.98) 70%), #140707;
+  border: 2.5px solid #c3090b;
+  border-radius: 22px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+/* No Mercy Header */
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header {
+  border-bottom-color: rgba(195, 9, 11, 0.35);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-pill.no_mercy {
+  background: rgba(220, 38, 38, 0.22);
+  color: #ff6b6b;
+  border: 1.5px solid #ef4444;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-panel-btn {
+  background: #1f0a0a;
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #f1f5f9;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-panel-btn:hover {
+  background: #2f0e0e;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-panel-btn-leave {
+  background: rgba(195, 9, 11, 0.28);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #fca5a5;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-panel-btn-leave:hover {
+  background: #c3090b;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+/* No Mercy Invitation Section */
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-invite-section {
+  background: rgba(26, 9, 9, 0.9);
+  border: 1.5px solid rgba(195, 9, 11, 0.45);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-invite-label {
+  color: #fca5a5;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .room-code-badge {
+  background: #090303;
+  border: 2px solid #ef4444;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+  color: #ffffff !important;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .room-code-badge:hover {
+  background: #180505;
+  border-color: #fed000;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .room-code-badge #lobbyCodeText {
+  color: #ffffff !important;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .room-code-badge .room-code-icon-wrap {
+  color: #fca5a5;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .room-code-badge:hover .room-code-icon-wrap {
+  color: #fed000;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-share-btn {
+  background: #1a0808;
+  border: 1.5px solid rgba(239, 68, 68, 0.45);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-share-btn:hover {
+  background: #2a0c0c;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-share-btn.copied {
+  background: #064e3b;
+  border-color: #10b981;
+  color: #6ee7b7;
+}
+
+/* No Mercy Players Section */
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-heading {
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-list {
+  scrollbar-color: #7f1d1d transparent;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-list::-webkit-scrollbar-thumb {
+  background: #7f1d1d;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-list::-webkit-scrollbar-thumb:hover {
+  background: #991b1b;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-row.lobby-player-card {
+  background: #1a0808;
+  border: 1.5px solid rgba(195, 9, 11, 0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-row.lobby-player-card:hover {
+  background: #240c0c;
+  border-color: rgba(239, 68, 68, 0.7);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-row.lobby-player-card.is-self {
+  background: #220b0b;
+  border-color: rgba(248, 113, 113, 0.6);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-avatar {
+  background: #2a0f0f;
+  border-color: #7f1d1d;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-name {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .player-role-badge.host-badge {
+  background: rgba(245, 158, 11, 0.22);
+  color: #fde047;
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .player-role-badge.bot-badge {
+  background: rgba(59, 130, 246, 0.22);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .player-role-badge.self-badge {
+  background: rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .ready-pill.ready {
+  background: #15803d;
+  color: #ffffff;
+  border-color: #22c55e;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .ready-pill.waiting {
+  background: #78350f;
+  color: #fef08a;
+  border-color: #d97706;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .remove-bot-btn {
+  background: #7f1d1d;
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .remove-bot-btn:hover {
+  background: #991b1b;
+  color: #ffffff;
+}
+
+/* No Mercy Empty Seat Indicators */
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-empty.lobby-player-card {
+  background: rgba(20, 6, 6, 0.6);
+  border: 1.5px dashed rgba(195, 9, 11, 0.4);
+  box-shadow: none;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-empty .lobby-empty-avatar {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1.5px dashed rgba(239, 68, 68, 0.35);
+  color: #7f1d1d;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-empty .lobby-empty-label {
+  color: #a1a1aa;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-empty .empty-seat-pill {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px dashed rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+/* No Mercy Host Controls */
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy #addBotBtn,
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy #shuffleSeatsBtn {
+  background: #1a0808 !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.45) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy #addBotBtn:hover,
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy #shuffleSeatsBtn:hover {
+  background: #290c0c !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* No Mercy Footer */
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-start-hint {
+  color: #e2e8f0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy #startGameBtn:disabled {
+  background: #2a1111 !important;
+  border-color: #4a1f1f !important;
+  color: #8c6a6a !important;
+  box-shadow: 0 3px 0 #180909 !important;
+  opacity: 0.88 !important;
+}
+
+/* 11. Short Viewport Responsive Overrides */
+@media (max-height: 660px) {
+  #lobbySection.mode-specific-lobby {
+    padding: 12px 16px;
+    max-height: calc(100vh - 20px);
+  }
+  .mode-lobby-header {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+  .lobby-invite-section {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+  }
+  .lobby-players-section {
+    margin: 6px 0;
+  }
+  .lobby-players-heading {
+    margin-bottom: 6px;
+  }
+  .lobby-host-controls {
+    margin-top: 6px;
+  }
+  .lobby-footer-section {
+    margin-top: 8px;
+  }
+  .lobby-start-hint {
+    margin-bottom: 6px;
+  }
+  .lobby-action-btn {
+    min-height: 40px;
+    padding: 0 18px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-height: 500px) {
+  body.in-mode-lobby .no-mercy-setup-container,
+  body.in-mode-lobby .flip-setup-container,
+  body.in-mode-lobby .standard-setup-layout,
+  body.in-mode-lobby .mode-setup-screen.mode-classic-setup {
+    justify-content: flex-start !important;
+    padding: 8px 10px !important;
+  }
+  #lobbySection.mode-specific-lobby {
+    max-height: none !important;
+    margin: 6px auto !important;
+  }
+  #lobbySection.mode-specific-lobby .lobby-players-list {
+    max-height: 180px;
+  }
 }

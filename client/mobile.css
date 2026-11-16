@@ -176,8 +176,12 @@
   #lobbySection.mode-specific-lobby {
     width: 100%;
     max-width: 100%;
-    padding: 16px 12px;
+    max-height: calc(100svh - 24px);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 12px;
     border-radius: 18px;
+    overflow: hidden;
   }
   #lobbySection.mode-specific-lobby .mode-lobby-header {
     gap: 6px;
