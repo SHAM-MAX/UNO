@@ -4237,95 +4237,102 @@ body.in-mode-lobby .mode-setup-screen.mode-classic-setup {
   }
 }
 
-/* No Mercy card-back lobby with centered branding. */
-body.in-mode-lobby.in-no-mercy-setup::before {
-  background-image: linear-gradient(rgba(8, 5, 5, .78), rgba(8, 5, 5, .86)), url('./assets/no-mercy-setup-bg.jpg') !important;
+
+/* Reference lobby composition: three-column branding above two dark panels. */
+body.in-mode-lobby #noMercyLobbySlot { max-width: 860px; }
+body.in-mode-lobby .mode-setup-screen.mode-no-mercy-setup .no-mercy-setup-container {
+  background-image: linear-gradient(rgba(8,5,5,.78),rgba(8,5,5,.86)),url('./assets/no-mercy-setup-bg.jpg');
 }
-body.in-mode-lobby #noMercyLobbySlot { max-width: 620px; }
 #lobbySection.mode-specific-lobby.lobby-theme-no_mercy {
-  max-width: 620px !important;
-  background-image: url('./assets/no-mercy-card-canvas.png');
-  border-width: 10px;
-  border-radius: 28px;
-  padding: 20px 24px;
+  --lobby-gap: clamp(8px,1.3vh,14px);
+  max-width: 860px !important;
+  padding: clamp(14px,2.2vh,26px) clamp(16px,3vw,42px);
+  background: #b3080a url('./assets/no-mercy-card-canvas.png') center/cover;
+  border: 12px solid black;
+  border-radius: 42px;
+  box-shadow: 0 24px 70px #000b;
 }
 #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) minmax(150px,1.15fr) minmax(0,1fr);
   gap: 8px;
-  margin: 0 0 16px;
-  padding: 0 0 14px;
-  border-bottom: 1px solid rgba(255,255,255,.14);
+  align-items: start;
+  border: 0;
+  margin: 0 0 var(--lobby-gap);
+  padding: 0;
+  min-height: 0;
 }
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header-left { display: none; }
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header-left {
+  display:flex; min-width:0; padding-top:20px;
+}
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-pill.no_mercy {
+  width:100%; padding:0 8px; font-size:clamp(9px,1vw,13px); white-space:nowrap;
+  border:2px solid #ef2027; height:40px;
+}
 #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header-center {
-  position: static;
-  transform: none;
-  justify-content: center;
-  min-width: 0;
+  position:static; transform:none; justify-content:center; min-width:0;
 }
 #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-center-logo {
-  height: 100px;
-  max-width: 240px;
+  width:100%; height:clamp(95px,16vh,170px); max-width:260px; object-fit:contain;
 }
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-panel-btn { border: 1px solid #666; }
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header-right {
+  padding-top:20px; justify-content:flex-end; gap:6px;
+}
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-panel-btn { border:2px solid #ef2027; }
 #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-invite-section,
 #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-section {
-  background: rgba(8, 8, 10, .88);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 18px;
-  padding: 16px 20px;
-  margin-bottom: 12px;
+  background:rgba(5,0,0,.91); border:0; border-radius:24px;
+  padding:12px 18px; margin:0 0 var(--lobby-gap);
 }
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-card {
-  border-width: 1px;
-  border-color: #673033;
-  border-radius: 12px;
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-invite-label {
+  font-size:clamp(15px,2vh,22px); letter-spacing:.02em;
+}
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .room-code-badge {
+  border:3px solid red; padding:6px 24px; border-radius:18px; margin-bottom:10px;
+}
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .room-code-badge #lobbyCodeText {
+  font-size:clamp(24px,4vh,40px); letter-spacing:.08em;
+}
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-share-btn {
+  font-size:clamp(13px,1.9vh,18px); padding:8px 22px;
+}
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-heading {
+  font-size:clamp(15px,2.1vh,22px); letter-spacing:0;
+}
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-list {
+  max-height:clamp(110px,21vh,190px); flex:0 1 auto;
+}
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-row.lobby-player-card {
+  border:2px solid #ff2027; border-radius:16px; padding:8px 12px;
 }
 #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-player-empty.lobby-player-card {
-  border-width: 1px;
-  border-color: #673033;
+  border:2px dashed #ff2027; padding:8px 12px;
 }
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-host-controls { margin-top: 0; }
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-host-controls { margin-top:0; }
 #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-start-hint {
-  font-weight: 500;
-  color: #d3c9c9;
-  text-shadow: none;
+  color:white; font-weight:700; font-size:clamp(13px,1.9vh,18px); margin:6px 0 12px;
 }
-@media (max-height: 700px) and (min-width: 601px) {
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy { padding: 12px 20px; }
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header { margin-bottom: 10px; padding-bottom: 8px; }
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-center-logo { height: 60px; }
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-invite-section,
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-section { padding: 10px 16px; margin-bottom: 8px; }
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-footer-actions { gap:14px; }
+#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-action-btn {
+  height:clamp(44px,7vh,64px); font-size:clamp(15px,2.4vh,24px) !important;
 }
-@media (max-width: 600px) {
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy { padding: 14px; border-radius: 22px; }
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header { gap: 8px; }
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-center-logo { height: 76px; max-width: 210px; }
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header-right { gap: 6px; }
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-invite-section,
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-section { padding: 12px; }
+@media (max-height:700px) and (min-width:601px) {
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy { padding:12px 24px; max-width:760px !important; }
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-center-logo {height:90px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-invite-section,
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-section {padding:8px 16px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-list {max-height:114px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .room-code-badge {padding:3px 20px;margin-bottom:6px;}
 }
-body.in-mode-lobby .mode-setup-screen.mode-no-mercy-setup .no-mercy-setup-container {
-  background-image: linear-gradient(rgba(8, 5, 5, .78), rgba(8, 5, 5, .86)), url('./assets/no-mercy-setup-bg.jpg');
-}
-
-/* Utility buttons have a dedicated row above the centered card logo. */
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header-right { grid-row: 1; justify-content: flex-end; }
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header-center { grid-row: 2; }
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-start-hint { color: white; font-weight: 700; text-shadow: 0 1px 4px black; }
-@media (max-height: 700px) and (min-width: 601px) {
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header { gap: 2px; margin-bottom: 6px; padding-bottom: 4px; }
-}
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header {
-  display: grid;
-  grid-template-columns: 1fr;
-}
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header-center {
-  justify-content: center;
-}
-#lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header { display: grid !important; }
-@media (max-height: 700px) and (min-width: 601px) {
-  #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-list { max-height: 140px; flex: 0 1 auto; }
+@media (max-width:600px) {
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy {padding:14px;border-width:7px;border-radius:28px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header {grid-template-columns:1fr auto;gap:10px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header-left {padding-top:0;}
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header-right {padding-top:0;}
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-header-center {grid-row:2;grid-column:1 / -1;}
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-center-logo {height:100px;max-width:220px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .mode-lobby-pill.no_mercy {font-size:9px;padding:0 4px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-invite-section,
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-section {padding:10px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-no_mercy .lobby-players-list {max-height:115px;}
 }
