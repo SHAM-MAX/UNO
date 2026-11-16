@@ -530,15 +530,11 @@
         <!-- DEDICATED UNO FLIP IMAGE-BASED ROOM SETUP CONTAINER -->
         <div id="flipSetupContainer" class="flip-setup-container" aria-label="UNO Flip room setup">
           <!-- Back to game modes control (standalone button, not a navbar) -->
-          <div class="mode-setup-top-action">
-            <button id="flipBackToModesBtn" class="mode-setup-back-btn" type="button" aria-label="Back to game modes">
-              <span class="back-arrow" aria-hidden="true">←</span>
-              <span>Game modes</span>
-            </button>
-          </div>
+
 
           <div class="flip-card-wrapper" id="flipCardWrapper">
             <img src="./assets/uno-flip-create-reference.png" class="flip-card-bg-img" alt="UNO Flip Card Room Setup" />
+            <button id="flipBackToModesBtn" class="flip-symbol-back-btn" type="button" aria-label="Back to game modes" title="Back to game modes"></button>
             <form class="flip-form-layer" onsubmit="return false;">
               <!-- 1. Player Name -->
               <label class="flip-name-label" for="flipPlayerNameInput">YOUR PLAYER NAME</label>

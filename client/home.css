@@ -4606,3 +4606,13 @@ body.in-mode-lobby #flipLobbySlot {animation:none;}
 /* Enlarge only the transparent hit area, preserving the printed button design. */
 .mode-setup-screen.mode-flip-setup .flip-card-wrapper .flip-create-btn,
 .mode-setup-screen.mode-flip-setup .flip-card-wrapper .flip-join-btn {min-height:44px;}
+
+/* The printed upper-left Flip symbol is the setup back control. */
+.flip-card-wrapper .flip-symbol-back-btn {
+ position:absolute;left:8.5%;top:7.5%;width:22%;height:15%;min-width:44px;min-height:44px;
+ z-index:10;padding:0;border:0;border-radius:14px;background:transparent;box-shadow:none;
+ cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.flip-card-wrapper .flip-symbol-back-btn:hover {background:rgba(255,255,255,.08);}
+.flip-card-wrapper .flip-symbol-back-btn:focus-visible {outline:3px solid #ffe735;outline-offset:3px;}
+.flip-card-wrapper .flip-symbol-back-btn:active {background:rgba(255,255,255,.14);}
