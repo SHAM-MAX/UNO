@@ -4612,10 +4612,10 @@ body.in-mode-lobby #flipLobbySlot {animation:none;}
 .flip-corner-back {display:none;}
 body.in-flip-setup:not(.in-mode-lobby):not(.in-arena) .flip-corner-back {
  display:grid;place-items:center;position:fixed;z-index:150;
- width:clamp(64px,7vw,124px);height:clamp(74px,8vw,140px);
+ width:clamp(64px,6vw,108px);height:clamp(74px,7vw,124px);
  padding:6px;border:0;border-radius:16px;cursor:pointer;
- background:radial-gradient(ellipse,#660a96e6,#220330c9);
- box-shadow:0 4px 14px #0008;
+ background:transparent;
+ box-shadow:none;
 }
 .flip-corner-back svg {width:100%;height:100%;pointer-events:none;}
 .flip-corner-back-top {top:max(16px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));}
