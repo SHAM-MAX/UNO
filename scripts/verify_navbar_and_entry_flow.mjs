@@ -205,6 +205,8 @@ async function main() {
     console.log('Navigated to baseUrl, waiting for window.app...');
     await cdp.waitForFunction(() => window.app !== undefined && window.app.el !== undefined);
     console.log('window.app is loaded and ready.');
+    await cdp.screenshot(path.join(ARTIFACT_DIR, 'tabletop_brand_landing.png'));
+
 
     // Host enters name and clicks main Create Room button (no mode card clicked)
     await cdp.evaluate(() => {
