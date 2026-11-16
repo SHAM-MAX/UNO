@@ -4645,3 +4645,45 @@ body.in-flip-setup .flip-corner-back:focus-visible {outline:3px solid #ffe226;ou
  #brandNavToggle .logo-badge {font-size:20px !important;}
  #brandNavToggle .brand-tagline {font-size:6px;letter-spacing:.7px;}
 }
+
+/* Classic has its own card collage and classic red-oval room card. */
+body.in-classic-setup::before {
+ background:linear-gradient(#0005,#0009),url('./assets/classic-setup-collage.svg') center/cover no-repeat !important;
+}
+body.in-classic-setup {background:#151515 !important;}
+.mode-setup-screen.mode-classic-setup {max-width:none;padding:20px 16px;min-height:100svh;box-sizing:border-box;}
+.mode-setup-screen.mode-classic-setup .standard-setup-layout {display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100svh - 40px);gap:16px;}
+.mode-setup-screen.mode-classic-setup .mode-setup-layout {width:min(420px,100%);display:block;}
+.mode-setup-screen.mode-classic-setup .setup-panel {
+ position:relative;isolation:isolate;overflow:hidden;box-sizing:border-box;
+ padding:24px 30px 30px;border:9px solid #080808;outline:2px solid #fff4da;border-radius:36px;
+ background:#101010;box-shadow:0 24px 60px #000a;
+}
+.mode-setup-screen.mode-classic-setup .setup-panel::before {content:'';position:absolute;z-index:-1;inset:-12% -25%;background:#d50920;border-radius:50%;transform:rotate(30deg);pointer-events:none;}
+.classic-setup-brand {display:none;}
+.mode-setup-screen.mode-classic-setup .classic-setup-brand {display:flex;flex-direction:column;align-items:center;font:900 italic 86px/.9 'Arial Black','Outfit',sans-serif;color:#ffe32a;letter-spacing:-6px;-webkit-text-stroke:2px #101010;paint-order:stroke fill;text-shadow:3px 3px 0 #111,-2px -2px 0 #fff,5px 5px 0 #fff;transform:rotate(-10deg);margin:4px 0 22px;}
+.mode-setup-screen.mode-classic-setup .classic-setup-brand span {font:900 14px/1.5 'Outfit',sans-serif;color:#fff;letter-spacing:5px;-webkit-text-stroke:0;text-shadow:0 2px #111;margin-top:6px;}
+.mode-setup-screen.mode-classic-setup .mode-setup-heading {margin:0 0 20px;text-align:center;}
+.mode-setup-screen.mode-classic-setup .setup-kicker {display:none;}
+.mode-setup-screen.mode-classic-setup .mode-setup-heading h1 {font:900 18px/1.2 'Outfit',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:white;margin:0;}
+.mode-setup-screen.mode-classic-setup .mode-setup-heading p {display:none;}
+.mode-setup-screen.mode-classic-setup .setup-field {display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.mode-setup-screen.mode-classic-setup .setup-field > span {color:#fff1c7;font-size:13px;letter-spacing:.04em;font-weight:900;}
+.mode-setup-screen.mode-classic-setup .setup-field input {height:48px;min-height:48px;padding:10px 14px;background:#130606c9;border:1px solid #fff7;border-bottom:3px solid #fff4da;border-radius:10px;font-size:17px;color:white;box-sizing:border-box;width:100%;}
+.mode-setup-screen.mode-classic-setup .setup-field input::placeholder {color:#e7c5c5;}
+.mode-setup-screen.mode-classic-setup .setup-create-btn,
+.mode-setup-screen.mode-classic-setup .setup-join-btn {min-height:50px;height:50px;font-size:18px;border:3px solid #111;border-radius:30px;box-shadow:0 4px #111;}
+.mode-setup-screen.mode-classic-setup .setup-create-btn {background:#ffe116;color:#111;}
+.mode-setup-screen.mode-classic-setup .setup-join-btn {background:#fffaf0;color:#111;}
+.mode-setup-screen.mode-classic-setup .setup-or {color:#fff;font-size:11px;margin:20px 0;}
+.mode-setup-screen.mode-classic-setup .setup-or span {background:#fff9;}
+.mode-setup-screen.mode-classic-setup #backToModesBtn {background:#111e;color:#fff5d5;border:1px solid #fff8;border-radius:24px;min-height:44px;box-shadow:0 3px 8px #0004;}
+.mode-setup-screen.mode-classic-setup input:focus-visible {outline:3px solid #ffe116;outline-offset:2px;}
+@media (max-width:600px) {
+ .mode-setup-screen.mode-classic-setup {padding:16px 14px;}
+ .mode-setup-screen.mode-classic-setup .setup-panel {padding:22px;border-width:7px;}
+ .mode-setup-screen.mode-classic-setup .classic-setup-brand {font-size:76px;}
+}
+@media (max-height:500px) and (orientation:landscape) {
+ .mode-setup-screen.mode-classic-setup .standard-setup-layout {justify-content:flex-start;}
+}

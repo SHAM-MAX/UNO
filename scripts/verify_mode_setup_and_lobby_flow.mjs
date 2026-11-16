@@ -258,6 +258,19 @@ async function main() {
     }
 
     await cdp.screenshot(path.join(ARTIFACT_DIR, 'setup_classic_no_navbar.png'));
+    for(const [width,height] of [[320,740],[390,844],[844,390]]) {
+      await cdp.setViewport(width,height,true);await delay(300);
+      const state=await cdp.evaluate(()=>{
+        const card=document.querySelector('#standardSetupLayout .setup-panel').getBoundingClientRect();
+        const fields=['setupPlayerNameInput','setupRoomCodeInput','setupCreateRoomBtn','setupJoinRoomBtn'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,height:r.height,inside:r.left>=card.left&&r.right<=card.right&&r.top>=card.top&&r.bottom<=card.bottom};});
+        return {overflow:document.documentElement.scrollWidth>innerWidth,fields};
+      });
+      console.log('Classic card controls',width,height,state);
+      if(state.overflow||state.fields.some(f=>!f.inside||f.height<44))throw new Error('Classic card controls clipped or undersized');
+      await cdp.screenshot(path.join(ARTIFACT_DIR,'classic_setup_'+width+'x'+height+'.png'));
+    }
+    await cdp.setViewport(1280,800,false);
+
 
     // Click Create Room in Classic setup
     await cdp.evaluate(() => {
