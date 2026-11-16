@@ -4607,12 +4607,23 @@ body.in-mode-lobby #flipLobbySlot {animation:none;}
 .mode-setup-screen.mode-flip-setup .flip-card-wrapper .flip-create-btn,
 .mode-setup-screen.mode-flip-setup .flip-card-wrapper .flip-join-btn {min-height:44px;}
 
-/* The printed upper-left Flip symbol is the setup back control. */
-.flip-card-wrapper .flip-symbol-back-btn {
- position:absolute;left:8.5%;top:7.5%;width:22%;height:15%;min-width:44px;min-height:44px;
- z-index:10;padding:0;border:0;border-radius:14px;background:transparent;box-shadow:none;
- cursor:pointer;-webkit-tap-highlight-color:transparent;
+
+/* Screen-corner Flip controls, separate from the unchanged card artwork. */
+.flip-corner-back {display:none;}
+body.in-flip-setup:not(.in-mode-lobby):not(.in-arena) .flip-corner-back {
+ display:grid;place-items:center;position:fixed;z-index:150;
+ width:clamp(64px,7vw,124px);height:clamp(74px,8vw,140px);
+ padding:6px;border:0;border-radius:16px;cursor:pointer;
+ background:radial-gradient(ellipse,#660a96e6,#220330c9);
+ box-shadow:0 4px 14px #0008;
 }
-.flip-card-wrapper .flip-symbol-back-btn:hover {background:rgba(255,255,255,.08);}
-.flip-card-wrapper .flip-symbol-back-btn:focus-visible {outline:3px solid #ffe735;outline-offset:3px;}
-.flip-card-wrapper .flip-symbol-back-btn:active {background:rgba(255,255,255,.14);}
+.flip-corner-back svg {width:100%;height:100%;pointer-events:none;}
+.flip-corner-back-top {top:max(16px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));}
+.flip-corner-back-bottom {bottom:max(16px,env(safe-area-inset-bottom));right:max(16px,env(safe-area-inset-right));}
+.flip-corner-back-bottom svg {transform:rotate(180deg);}
+body.in-flip-setup .flip-corner-back:hover {filter:brightness(1.2);}
+body.in-flip-setup .flip-corner-back:focus-visible {outline:3px solid #ffe226;outline-offset:4px;}
+@media (max-width:600px) {
+ body.in-flip-setup:not(.in-mode-lobby):not(.in-arena) .flip-corner-back {width:52px;height:60px;padding:4px;}
+ body.in-flip-setup:not(.in-mode-lobby) .flip-setup-container {padding-top:84px;padding-bottom:84px;}
+}

@@ -614,6 +614,7 @@ class UnoArenaApp {
     // Dedicated UNO Flip Setup Event Handlers
     if (this.el.flipBackToModesBtn) {
       this.el.flipBackToModesBtn.addEventListener('click', () => this.showModePicker());
+      document.getElementById('flipBackCornerBtn')?.addEventListener('click', () => this.showModePicker());
     }
     if (this.el.flipPlayerNameInput) {
       this.el.flipPlayerNameInput.addEventListener('keydown', (e) => {

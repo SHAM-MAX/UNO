@@ -390,13 +390,18 @@ async function main() {
     const flipBackHit = await cdp.evaluate(() => {
       const button=document.getElementById('flipBackToModesBtn');
       const r=button.getBoundingClientRect(), card=document.getElementById('flipCardWrapper').getBoundingClientRect();
-      return {inside:r.left>=card.left&&r.top>=card.top&&r.right<=card.right&&r.bottom<=card.bottom,hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.id,width:r.width,height:r.height};
+      return {inside:r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight,hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.id,width:r.width,height:r.height};
     });
     if(!flipBackHit.inside||flipBackHit.hit!=='flipBackToModesBtn'||flipBackHit.width<44||flipBackHit.height<44)throw new Error('Flip symbol back button is not accessible');
     await cdp.evaluate(()=>document.getElementById('flipBackToModesBtn').click());
     await cdp.waitForFunction(()=>!document.body.classList.contains('in-flip-setup'));
     await cdp.evaluate(()=>document.querySelector('[data-home-mode="flip"]').click());
     await cdp.waitForFunction(()=>document.body.classList.contains('in-flip-setup'));
+    await cdp.evaluate(()=>document.getElementById('flipBackCornerBtn').click());
+    await cdp.waitForFunction(()=>!document.body.classList.contains('in-flip-setup'));
+    await cdp.evaluate(()=>document.querySelector('[data-home-mode="flip"]').click());
+    await cdp.waitForFunction(()=>document.body.classList.contains('in-flip-setup'));
+
 
 
     // Click Create Room in Flip setup
