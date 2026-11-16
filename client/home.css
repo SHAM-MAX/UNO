@@ -4708,3 +4708,39 @@ body.in-classic-setup {background:#151515 !important;}
 @media (max-width:600px) {
  .mode-setup-screen.mode-classic-setup .setup-panel {padding-top:65cqw;}
 }
+
+/* Exact supplied Classic form artwork with live controls aligned to its fields. */
+.mode-setup-screen.mode-classic-setup .setup-panel {
+ aspect-ratio:2 / 3;min-height:0;height:auto;padding:0;border:0;outline:0;border-radius:9cqw;
+ background:#101010 url('./assets/classic-exact-form.png') center/100% 100% no-repeat;
+ box-shadow:0 24px 60px #000b;
+}
+.mode-setup-screen.mode-classic-setup .setup-field {display:contents;}
+.mode-setup-screen.mode-classic-setup .setup-field > span,
+.mode-setup-screen.mode-classic-setup .setup-or {position:absolute;opacity:0;pointer-events:none;}
+.mode-setup-screen.mode-classic-setup .setup-field input {
+ position:absolute;left:15.5%;width:69%;height:5.5%;min-height:0;padding:0 1%;
+ border:0;border-radius:0;box-shadow:none;background:#210000;color:#fff8ed;
+ font:800 4.4cqw 'Outfit',sans-serif;letter-spacing:0;
+}
+.mode-setup-screen.mode-classic-setup #setupPlayerNameInput {top:40.6%;}
+.mode-setup-screen.mode-classic-setup #setupRoomCodeInput {top:69.8%;background:transparent;}
+.mode-setup-screen.mode-classic-setup #setupRoomCodeInput:not(:placeholder-shown) {background:#210000;}
+.mode-setup-screen.mode-classic-setup .setup-field input::placeholder {opacity:0;text-shadow:none;}
+.mode-setup-screen.mode-classic-setup .setup-create-btn,
+.mode-setup-screen.mode-classic-setup .setup-join-btn {
+ position:absolute;left:11%;width:78%;height:8.3%;min-height:44px;
+ margin:0;padding:0;background:transparent;border:0;box-shadow:none;border-radius:999px;
+ font-size:0;color:transparent;text-shadow:none;
+}
+.mode-setup-screen.mode-classic-setup .setup-create-btn {top:49%;}
+.mode-setup-screen.mode-classic-setup .setup-join-btn {top:78.2%;}
+.mode-setup-screen.mode-classic-setup .setup-create-btn > span,
+.mode-setup-screen.mode-classic-setup .setup-join-btn > span {opacity:0;}
+.mode-setup-screen.mode-classic-setup .setup-create-btn:hover:not(:disabled),
+.mode-setup-screen.mode-classic-setup .setup-join-btn:hover:not(:disabled),
+.mode-setup-screen.mode-classic-setup .setup-create-btn:active:not(:disabled),
+.mode-setup-screen.mode-classic-setup .setup-join-btn:active:not(:disabled) {background:transparent;box-shadow:none;transform:none;}
+@media (max-width:600px) {
+ .mode-setup-screen.mode-classic-setup .setup-panel {padding:0;border:0;}
+}

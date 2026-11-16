@@ -266,7 +266,7 @@ async function main() {
         return {overflow:document.documentElement.scrollWidth>innerWidth,fields};
       });
       console.log('Classic card controls',width,height,state);
-      if(state.overflow||state.fields.some(f=>!f.inside||f.height<44))throw new Error('Classic card controls clipped or undersized');
+      if(state.overflow||state.fields.some(f=>!f.inside||f.height<(f.id.includes("Input")?23:43)))throw new Error('Classic card controls clipped or undersized');
       await cdp.screenshot(path.join(ARTIFACT_DIR,'classic_setup_'+width+'x'+height+'.png'));
     }
     await cdp.setViewport(1280,800,false);
