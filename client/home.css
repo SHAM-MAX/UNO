@@ -4687,3 +4687,24 @@ body.in-classic-setup {background:#151515 !important;}
 @media (max-height:500px) and (orientation:landscape) {
  .mode-setup-screen.mode-classic-setup .standard-setup-layout {justify-content:flex-start;}
 }
+
+/* Reference card artwork is the Classic form surface; collage stays unchanged. */
+.mode-setup-screen.mode-classic-setup .mode-setup-layout {container-type:inline-size;}
+.mode-setup-screen.mode-classic-setup .setup-panel {
+ padding:53cqw 9cqw 10cqw;min-height:150cqw;border:0;outline:0;border-radius:9cqw;
+ background:#101010 url('./assets/classic-room-card.png') center top/100% auto no-repeat;
+ box-shadow:0 24px 60px #000b,inset 0 0 0 2px #fff2da;
+}
+.mode-setup-screen.mode-classic-setup .setup-panel::before {content:none;}
+.mode-setup-screen.mode-classic-setup .classic-setup-brand {display:none;}
+.mode-setup-screen.mode-classic-setup .mode-setup-heading {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);margin:0;}
+.mode-setup-screen.mode-classic-setup .setup-field > span {color:#ffe736;text-shadow:0 2px 2px #000;font-size:14px;}
+.mode-setup-screen.mode-classic-setup .setup-field input {background:#160305df;border:1px solid #fff8;border-bottom:3px solid #fff4da;}
+.mode-setup-screen.mode-classic-setup .setup-or {text-shadow:0 2px 2px #000;}
+@media (max-width:600px) {
+ .mode-setup-screen.mode-classic-setup .setup-panel {padding:53cqw 9cqw 10cqw;border:0;}
+}
+.mode-setup-screen.mode-classic-setup .setup-panel {background-size:100% 100%;}
+@media (max-width:600px) {
+ .mode-setup-screen.mode-classic-setup .setup-panel {padding-top:65cqw;}
+}
