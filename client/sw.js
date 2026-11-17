@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-brand-round-v2';
+const CACHE_NAME = 'uno-arena-flow-v3';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',

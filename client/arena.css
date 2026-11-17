@@ -4614,3 +4614,19 @@ body.is-fullscreen .arena-fullscreen-btn .arena-fs-text {
     font-size: 11px !important;
   }
 }
+
+/* Short, non-blocking authoritative knockout announcement. */
+.elimination-notice {
+  position: fixed; z-index: 12000; top: max(80px, env(safe-area-inset-top));
+  left: 50%; transform: translateX(-50%); width: max-content;
+  max-width: min(90vw, 540px); padding: 18px 26px; border: 2px solid #ffd529;
+  border-radius: 18px; background: rgba(27, 6, 8, .96); color: #fff5dc;
+  box-shadow: 0 12px 36px #0008; text-align: center; pointer-events: none;
+  animation: knockout-enter 220ms ease-out both;
+}
+.elimination-notice strong { display: block; font-size: clamp(20px, 4vw, 28px); color: #ffdb36; }
+.elimination-notice span { display: block; margin-top: 6px; font-size: 15px; }
+.elimination-notice.leaving { animation: knockout-exit 220ms ease-in both; }
+@keyframes knockout-enter { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes knockout-exit { to { opacity: 0; transform: translate(-50%, -8px); } }
+@media (prefers-reduced-motion: reduce) { .elimination-notice, .elimination-notice.leaving { animation-duration: 1ms; } }

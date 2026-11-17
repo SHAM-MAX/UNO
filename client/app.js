@@ -1142,15 +1142,8 @@ class UnoArenaApp {
       if (this.gameState.status === 'round_over') this.el.gameOverModal.classList.remove('active');
     });
 
-    // Victory celebration close button (dismisses celebration overlay to reveal table)
-    this.el.gameOverCloseBtn?.addEventListener('click', () => {
-      const currentMatchKey = this.gameState?.matchId || `${this.roomId || ''}_${this.gameState?.roundNumber || 0}`;
-      this.dismissedGameOverMatchId = currentMatchKey || true;
-      this.el.gameOverModal.classList.remove('active');
-      if (this.el.btnViewVictory && (this.gameState?.status === 'game_over' || this.gameState?.status === 'round_over')) {
-        this.el.btnViewVictory.style.display = 'inline-flex';
-      }
-    });
+    // Closing a finished match exits the room, rather than stranding the player.
+    this.el.gameOverCloseBtn?.addEventListener('click', () => this.confirmLeaveRoom());
 
     // Reopen victory celebration from finished table
     this.el.btnViewVictory?.addEventListener('click', () => {
@@ -1781,6 +1774,7 @@ class UnoArenaApp {
     if (this.ws) {
       this.ws.onclose = null;
       this.ws.onerror = null;
+      this.ws.onmessage = null;
       this.ws.close();
     }
 
@@ -1985,7 +1979,7 @@ class UnoArenaApp {
   handleRoomState(view) {
     const previous = this.clientView;
     const classicGeometry = this.captureClassicGeometry();
-    this.clearClassicAnimations();
+    if (!previous || previous.gameState.matchId !== view.gameState.matchId) this.clearClassicAnimations();
     const playSource = previous && this.el.playerHandCards.querySelector(`[data-card-id="${view.gameState.topDiscard?.id}"]`);
     const playRect = playSource?.getBoundingClientRect();
     const oldIds = new Set(previous?.myHand.map(c => c.id) || []);
@@ -2040,42 +2034,6 @@ class UnoArenaApp {
     if (this.el.setupJoinRoomBtn) this.el.setupJoinRoomBtn.disabled = false;
     if (this.el.flipJoinRoomBtn) this.el.flipJoinRoomBtn.disabled = false;
 
-    // Opponent card play flight animation
-    const prevDiscardId = previous?.gameState?.topDiscard?.id;
-    const newDiscardId = view.gameState?.topDiscard?.id;
-    if (previous && newDiscardId && newDiscardId !== prevDiscardId) {
-      const prevTurnPlayer = previous.gameState.players[previous.gameState.currentTurn];
-      if (prevTurnPlayer && prevTurnPlayer.id !== this.playerId && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        const opponentBox = document.querySelector(`.opponent-box[data-player-id="${prevTurnPlayer.id}"]`);
-        const avatarEl = opponentBox?.querySelector('.opponent-avatar') || opponentBox;
-        if (avatarEl && this.el.discardPile) {
-          const sourceRect = avatarEl.getBoundingClientRect();
-          const targetRect = this.el.discardPile.getBoundingClientRect();
-          if (sourceRect.width > 0 && targetRect.width > 0) {
-            const ghost = document.createElement('div');
-            ghost.className = 'card-departure-motion opponent-flight-ghost';
-            ghost.innerHTML = renderCardHTML(view.gameState.topDiscard, { mode: view.gameState.mode, flipSide: view.gameState.flipSide });
-            Object.assign(ghost.style, {
-              left: `${sourceRect.left}px`,
-              top: `${sourceRect.top}px`,
-              width: `${Math.min(70, targetRect.width)}px`,
-              height: `${Math.min(100, targetRect.height)}px`,
-              transform: 'translate3d(0, 0, 0) scale(0.6)',
-              opacity: '0.9',
-            });
-            document.body.appendChild(ghost);
-            const dx = targetRect.left + (targetRect.width - 70) / 2 - sourceRect.left;
-            const dy = targetRect.top + (targetRect.height - 100) / 2 - sourceRect.top;
-            requestAnimationFrame(() => {
-              ghost.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(1) rotate(0deg)`;
-              ghost.style.opacity = '1';
-            });
-            setTimeout(() => { ghost.remove(); }, 240);
-          }
-        }
-      }
-    }
-
     // Update Top Bar
     if (this.el.navRoomDetails) {
       this.el.navRoomDetails.style.display = 'inline-flex';
@@ -2091,7 +2049,8 @@ class UnoArenaApp {
       this.renderLobby();
     } else {
       this.renderArena();
-      if (view.gameState.mode !== 'flip' && previous) this.animateClassicState(previous, classicGeometry);
+      if (previous) this.animateClassicState(previous, classicGeometry);
+      this.announceEliminations(previous, view);
     }
     if (openingChoice && !this.el.colorPickerModal.classList.contains('active')) {
       this.openColorPicker();
@@ -2133,17 +2092,36 @@ class UnoArenaApp {
   }
 
   closeRematchDialog() {
-    const p = this.clientView?.rematchProposal;
-    if (!p) return;
-    if (['responding', 'voting', 'resolved'].includes(p.status)) {
-      if (this.rematchActionPending || this.ws?.readyState !== WebSocket.OPEN) return;
-      this.rematchDismissAfterResponseId = p.id;
-      if (p.initiatorPlayerId === this.playerId) this.sendRematchAction('rematch_cancel');
-      else if (p.pendingPlayerIds.includes(this.playerId)) this.sendRematchAction('rematch_respond', { accept: false });
-      else if (p.acceptedPlayerIds.includes(this.playerId)) this.sendRematchAction('rematch_respond', { accept: false, withdraw: true });
-      else this.dismissedRematchId = p.id;
-    } else this.dismissedRematchId = p.id;
-    this.renderRematchProposal();
+    this.confirmLeaveRoom();
+  }
+
+  announceEliminations(previous, view) {
+    if (!previous || view.gameState.mode !== 'no_mercy' ||
+        previous.gameState.matchId !== view.gameState.matchId ||
+        previous.gameState.roomId !== view.gameState.roomId) return;
+    const eliminated = view.gameState.players.filter(player => player.isEliminated &&
+      previous.gameState.players.some(before => before.id === player.id && !before.isEliminated));
+    if (!eliminated.length) return;
+    let notice = document.getElementById('eliminationNotice');
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = 'eliminationNotice';
+      notice.className = 'elimination-notice';
+      notice.setAttribute('role', 'status');
+      document.body.appendChild(notice);
+    }
+    const title = document.createElement('strong');
+    title.textContent = eliminated.map(player => player.id === this.playerId ? 'You' : player.name).join(', ') +
+      (eliminated.length === 1 && eliminated[0].id !== this.playerId ? ' is eliminated' : ' are eliminated');
+    const detail = document.createElement('span');
+    detail.textContent = eliminated.map(player => player.eliminatedReason || 'Mercy knockout limit reached').join(' · ');
+    notice.replaceChildren(title, detail);
+    clearTimeout(this.eliminationNoticeTimer);
+    notice.classList.remove('leaving');
+    this.eliminationNoticeTimer = setTimeout(() => {
+      notice.classList.add('leaving');
+      this.eliminationNoticeTimer = setTimeout(() => notice.remove(), 220);
+    }, 1600);
   }
 
   renderRematchSpectator() {
@@ -2285,6 +2263,8 @@ class UnoArenaApp {
     const ghost = document.createElement('div'); ghost.className = 'classic-motion-ghost'; ghost.setAttribute('aria-hidden', 'true'); ghost.innerHTML = html;
     Object.assign(ghost.style, { left: `${source.left}px`, top: `${source.top}px`, width: `${source.width}px`, height: `${source.height}px` });
     document.body.appendChild(ghost);
+    this.cardTargetCleanups ||= new WeakMap();
+    this.cardTargetCleanups.get(target)?.();
     const originalVisibility = target.style.visibility;
     if (faceHTML) target.style.visibility = 'hidden';
     const duration = Math.min(450, Math.max(300, Math.hypot(destination.left - source.left, destination.top - source.top) * .45));
@@ -2296,8 +2276,10 @@ class UnoArenaApp {
       const front = document.createElement('div'); front.className = 'classic-motion-front'; front.innerHTML = faceHTML; ghost.appendChild(front);
       reveal = front.animate([{ opacity: 0, offset: 0 }, { opacity: 0, offset: .72 }, { opacity: 1, offset: .86 }, { opacity: 1, offset: 1 }], { duration, delay, fill: 'both' });
     }
-    const dispose = () => { reveal?.cancel(); animation.cancel(); ghost.remove(); target.style.visibility = originalVisibility; this.classicAnimationCleanups.delete(dispose); };
+    const dispose = () => { reveal?.cancel(); animation.cancel(); ghost.remove(); target.style.visibility = originalVisibility; this.classicAnimationCleanups.delete(dispose); this.cardTargetCleanups.delete(target); };
+    this.classicAnimationCleanups ||= new Set();
     this.classicAnimationCleanups.add(dispose);
+    this.cardTargetCleanups.set(target, dispose);
     animation.onfinish = dispose;
   }
 
@@ -2344,7 +2326,7 @@ class UnoArenaApp {
     const useful = current.gameState.eventLogs?.[0];
     if (useful && useful.id !== previous.gameState.eventLogs?.[0]?.id && /call(?:ed)? UNO|CAUGHT|Draw Four challenge|penalty|drew [246]|played \+[246]/i.test(useful.text)) this.showToast(useful.text);
     if (me?.hasCalledUno && !beforeMe?.hasCalledUno) this.showToast('UNO!');
-    if (previous.gameState.mode === 'flip' || previous.gameState.status !== 'playing' || previous.gameState.roomId !== current.gameState.roomId || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (previous.gameState.mode !== current.gameState.mode || previous.gameState.status !== 'playing' || previous.gameState.roomId !== current.gameState.roomId || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (current.gameState.mode === 'no_mercy') this.animateNoMercyAction(previous, geometry);
     const newTop = current.gameState.topDiscard;
     if (newTop?.id !== previous.gameState.topDiscard?.id && geometry.hand.has(newTop?.id)) {
@@ -2354,20 +2336,21 @@ class UnoArenaApp {
     const action = current.gameState.noMercyAction;
     const transfer = current.gameState.mode === 'no_mercy' && action?.id !== previous.gameState.noMercyAction?.id && action?.type === 'number' && [0, 7].includes(current.gameState.topDiscard?.value);
     const roulette = current.gameState.mode === 'no_mercy' && current.gameState.rouletteResult?.id !== previous.gameState.rouletteResult?.id;
-    if (current.gameState.mode === 'no_mercy' && newTop?.id !== previous.gameState.topDiscard?.id && !geometry.hand.has(newTop?.id)) {
-      const source = geometry.opponents.get(action?.playerId);
-      if (source) this.travelClassicCard(source, this.el.discardPile.querySelector('.game-card'), renderCardBackHTML(false, false, 'no_mercy'), renderCardHTML(newTop, { mode: 'no_mercy' }));
+    if (newTop?.id !== previous.gameState.topDiscard?.id && !geometry.hand.has(newTop?.id)) {
+      const actor = action?.playerId || previous.gameState.players[previous.gameState.currentTurn]?.id;
+      const source = geometry.opponents.get(actor);
+      if (source) this.travelClassicCard(source, this.el.discardPile.querySelector('.game-card'), renderCardBackHTML(false, false, current.gameState.mode), renderCardHTML(newTop, { mode: current.gameState.mode, flipSide: current.gameState.flipSide }));
     }
     const oldIds = new Set(previous.myHand.map(c => c.id));
     current.myHand.filter(c => !transfer && !roulette && !oldIds.has(c.id)).forEach((card, index) => {
       const target = this.el.playerHandCards.querySelector(`[data-card-id="${card.id}"] .game-card`);
-      this.travelClassicCard(geometry.pending?.type === 'draw_card' ? geometry.pending.rect : geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), renderCardHTML(card, { mode: current.gameState.mode }), index * 65);
+      this.travelClassicCard(geometry.pending?.type === 'draw_card' ? geometry.pending.rect : geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), renderCardHTML(card, { mode: current.gameState.mode }), Math.min(index * 35, 210));
     });
     for (const player of current.gameState.players.filter(p => p.id !== this.playerId)) {
       const before = previous.gameState.players.find(p => p.id === player.id);
       const fan = this.el.opponentsRow.querySelector(`[data-profile-id="${player.id}"] .opponent-fan-card:last-child img`);
       const target = fan?.getClientRects().length ? fan : this.el.opponentsRow.querySelector(`[data-profile-id="${player.id}"] .opponent-avatar`);
-      for (let i = 0; !transfer && !roulette && i < Math.min(current.gameState.mode === 'no_mercy' ? 25 : 10, Math.max(0, player.cardCount - (before?.cardCount ?? player.cardCount))); i++) this.travelClassicCard(geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), null, i * 65);
+      for (let i = 0; !transfer && !roulette && i < Math.min(6, Math.max(0, player.cardCount - (before?.cardCount ?? player.cardCount))); i++) this.travelClassicCard(geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), null, i * 65);
     }
     // Move retained cards into their new fan positions without a layout snap.
     this.el.playerHandCards.querySelectorAll('[data-card-id]').forEach(el => {
@@ -3296,44 +3279,10 @@ class UnoArenaApp {
 
     sounds.playSnap();
 
-    // Optimistic local card departure towards discard pile
-    if (wrapperEl && this.el.discardPile) {
-      const sourceRect = wrapperEl.getBoundingClientRect();
-      const targetRect = this.el.discardPile.getBoundingClientRect();
-      if (sourceRect.width > 0 && targetRect.width > 0 && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        const ghost = wrapperEl.cloneNode(true);
-        ghost.className = 'card-departure-motion';
-        ghost.removeAttribute('tabindex');
-        ghost.removeAttribute('role');
-        Object.assign(ghost.style, {
-          left: `${sourceRect.left}px`,
-          top: `${sourceRect.top}px`,
-          width: `${sourceRect.width}px`,
-          height: `${sourceRect.height}px`,
-          transform: 'translate3d(0, 0, 0) scale(1)',
-          opacity: '1',
-        });
-        document.body.appendChild(ghost);
-
-        const dx = targetRect.left + (targetRect.width - sourceRect.width) / 2 - sourceRect.left;
-        const dy = targetRect.top + (targetRect.height - sourceRect.height) / 2 - sourceRect.top;
-        const scale = targetRect.width / sourceRect.width;
-
-        requestAnimationFrame(() => {
-          ghost.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(${scale}) rotate(0deg)`;
-          ghost.style.opacity = '0.92';
-        });
-
-        setTimeout(() => {
-          ghost.remove();
-        }, 240);
-      }
+    // Fly once from the captured hand position after the authoritative update.
+    if (wrapperEl) {
       this.inFlightCardId = card.id;
       wrapperEl.style.opacity = '0.35';
-    }
-
-    if (wrapperEl && this.gameState.mode === 'flip') {
-      wrapperEl.classList.add('playing');
     }
 
     this.send({
@@ -3845,6 +3794,13 @@ class UnoArenaApp {
     this.clearClassicAnimations();
     this.cancelCardDrag?.();
     this.send({ type: 'leave' });
+    if (this.roomId) localStorage.removeItem(`session_${this.roomId}`);
+    clearTimeout(this.eliminationNoticeTimer);
+    document.getElementById('eliminationNotice')?.remove();
+    this.el.gameOverModal?.classList.remove('active');
+    document.getElementById('rematchProposalModal')?.classList.remove('active');
+    this.clientView = null;
+    this.gameState = null;
     this.roomId = null;
     this.playerId = null;
     this.sessionToken = null;
@@ -3863,14 +3819,19 @@ class UnoArenaApp {
     if (this.ws) {
       this.ws.onclose = null;
       this.ws.onerror = null;
+      this.ws.onmessage = null;
       this.ws.close();
     }
     this.el.leaveConfirmModal?.classList.remove('active');
     document.body.classList.remove('in-mode-lobby', 'in-mode-setup', 'in-no-mercy-setup', 'in-flip-setup', 'in-classic-setup', 'in-room', 'in-arena');
+    this.pendingPlayCard = null;
+    this.rematchRequestPending = false;
+    this.rematchActionPending = false;
+    this.el.arenaView.style.display = 'none';
+    this.el.leaveBtn.style.display = 'none';
+    this.el.navRoomDetails.style.display = 'none';
     this.showModePicker();
-    if (window.location.search) {
-      window.location.search = '';
-    }
+    history.replaceState(null, '', window.location.pathname);
   }
 
   copyInviteLink() {

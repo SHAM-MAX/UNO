@@ -149,3 +149,18 @@ test('No Mercy authentic card artwork maps exact files for numbers, actions, and
     assert.match(renderCardHTML(card('w10', 'wild', 'wild_draw10'), { mode: 'no_mercy' }), /\/assets\/no-mercy-cards\/wild_draw10\.webp/);
     assert.match(renderCardHTML(card('wr', 'wild', 'wild_color_roulette'), { mode: 'no_mercy' }), /\/assets\/no-mercy-cards\/wild_roulette\.webp/);
 });
+
+test('Custom 35-card knockout is announced in client state while a three-player match continues', () => {
+ const {rm,r,ids,roomId}=setup(3);
+ r.houseRules.mercyKnockoutLimit=35;
+ r.playerHands[ids[1]]=Array.from({length:34},(_,i)=>card(`limit${i}`));
+ assert.equal(rm.checkKnockout(r,r.players[1]),false);
+ r.playerHands[ids[1]].push(card('threshold'));
+ assert.equal(rm.checkKnockout(r,r.players[1]),true);
+ const view=rm.getClientView(roomId,ids[0]);
+ assert.equal(view.gameState.status,'playing');
+ assert.equal(view.gameState.players.filter(p=>!p.isEliminated).length,2);
+ assert.match(view.gameState.players[1].eliminatedReason,/35 cards/);
+ assert.equal(rm.checkKnockout(r,r.players[1]),false);
+ rm.resetTurnTimer({...r,status:'game_over'});
+});
