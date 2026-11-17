@@ -1,0 +1,122 @@
+/* Approved Classic-only lobby. All game data and controls remain live. */
+body.in-mode-lobby #classicLobbySlot {width:auto;max-width:none;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic {
+ zoom:var(--classic-lobby-scale,.6);width:1000px;max-width:none !important;height:940px;max-height:none !important;
+ display:flex !important;flex-direction:column;box-sizing:border-box;padding:26px 78px 40px;
+ border:0;border-radius:65px;background:#101010 url('./assets/classic-lobby-card.png') center/100% 100% no-repeat;
+ color:#fff5df;overflow:hidden;box-shadow:0 24px 60px #0007;
+}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .mode-lobby-header {position:relative;height:222px;min-height:222px;margin:0;padding:0;border:0;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .mode-lobby-header-left,
+#lobbySection.mode-specific-lobby.lobby-theme-classic .mode-lobby-header-center {display:none;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .mode-lobby-header-right {position:absolute;right:-38px;top:26px;gap:12px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .mode-panel-btn {height:56px;min-height:56px;width:56px;border:3px solid #fff4dc;border-radius:16px;background:#080808;color:#fff4dc;box-shadow:none;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .mode-panel-btn svg {width:25px;height:25px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .mode-panel-btn-leave {width:100px;background:#d20922;font-size:23px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-invite-section {flex:0 0 216px;background:none;border:0;border-radius:0;padding:0;margin:0;text-align:center;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-invite-label {font:900 32px/1.2 'Outfit',sans-serif;color:#ffe522;text-shadow:2px 2px #000;letter-spacing:0;margin:0 0 8px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-invite-label::before,
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-invite-label::after {content:none;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #lobbyCodeBadge {min-width:480px;height:76px;box-sizing:border-box;justify-content:center;background:#180404ee;border:3px solid #fff2db;border-radius:20px;padding:4px 30px;margin:0 0 14px;box-shadow:none;gap:38px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #lobbyCodeText {font:900 54px 'Outfit',sans-serif;letter-spacing:.08em;color:#fff5e6;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .room-code-icon-wrap svg {width:36px;height:36px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .room-code-check-svg {display:none;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #lobbyCodeBadge.copied .room-code-copy-svg {display:none;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #lobbyCodeBadge.copied .room-code-check-svg {display:block;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #copyInviteBtn {height:72px;min-height:72px;max-height:none;padding:8px 36px !important;border:5px solid #111 !important;border-radius:40px !important;background:#ffe313 !important;color:#080808 !important;font:900 32px 'Outfit',sans-serif !important;box-shadow:inset 0 0 0 2px #fff1a5;gap:16px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #copyInviteBtn svg {width:36px;height:36px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-players-section {flex:0 0 204px;margin:0 0 8px;padding:0;overflow:hidden;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-players-heading {display:flex;align-items:center;justify-content:center;gap:22px;color:#fff4df;font:900 30px/1.3 'Outfit',sans-serif;margin:0 0 14px;text-shadow:2px 2px #111;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-players-heading::before,
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-players-heading::after {content:'';height:2px;background:#fff3db;flex:1;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-players-list {min-height:0;max-height:152px;overflow:auto;gap:10px;padding:0 2px;scrollbar-color:#ffe313 #160404;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-row,
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-empty {box-sizing:border-box;min-height:70px;flex-shrink:0;padding:8px 20px;border:3px solid #fff1da;border-radius:20px;background:#170303e8;color:#fff3df;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-name {font:900 30px 'Outfit',sans-serif;color:#fff5e6;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-avatar {width:48px;height:48px;min-width:48px;font-size:30px;background:#fff5df;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .player-role-badge.host-badge {background:#ffe313;color:#8e310b;border:0;font-size:22px;padding:4px 12px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .player-role-badge.self-badge {font-size:22px;background:none;border:0;color:#fff2dc;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .player-role-badge.bot-badge {font-size:20px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .ready-pill.ready {font:900 25px 'Outfit',sans-serif;color:white;background:#009b00;border:2px solid #f9ffe7;padding:5px 16px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .ready-pill.waiting {font-size:22px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-empty .lobby-empty-label {font-size:27px;font-weight:800;color:#fff3df;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-empty .lobby-empty-avatar {width:48px;height:48px;border:2px dashed #fff3df;background:none;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-empty-avatar svg {width:30px;height:30px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .empty-seat-pill {font:800 21px 'Outfit',sans-serif;background:none;border:2px solid #ddd0ba;color:#fff3df;padding:5px 14px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #lobbyHostControls {flex:0 0 60px;margin:0;justify-content:center;gap:28px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #addBotBtn,
+#lobbySection.mode-specific-lobby.lobby-theme-classic #shuffleSeatsBtn {height:54px;min-height:54px;max-height:none;padding:8px 24px !important;background:#101010 !important;color:#fff4df !important;border:3px solid #fff4df !important;border-radius:18px !important;box-shadow:none;font:900 25px 'Outfit',sans-serif !important;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-footer-section {flex-shrink:0;margin:12px 0 0;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-start-hint {color:#fff4df;font:800 italic 24px/1.3 'Outfit',sans-serif;text-shadow:1px 2px #111;margin:0 0 22px;text-align:center;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-footer-actions {display:flex;gap:24px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-action-btn {flex:1 1 0;min-width:0;height:82px;min-height:82px;border-radius:45px !important;font:900 34px 'Outfit',sans-serif !important;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #readyBtn {background:#ffe313 !important;color:#090909 !important;border:5px solid #111 !important;box-shadow:inset 0 0 0 2px #fff4c9;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #startGameBtn {background:#fff4df !important;color:#111 !important;border:4px solid #111 !important;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #startGameBtn:disabled {background:#292929 !important;color:#a5a5a5 !important;border:4px solid #777 !important;opacity:1;box-shadow:none;}
+@media (max-width:900px) {
+ body.in-mode-lobby #classicLobbySlot {width:100%;max-width:620px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic {zoom:1;width:100%;height:auto;min-height:680px;padding:18px 20px 26px;border-radius:30px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .mode-lobby-header {height:180px;min-height:180px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .mode-lobby-header-right {top:6px;right:0;gap:7px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .mode-panel-btn {height:44px;min-height:44px;width:44px;border-width:2px;border-radius:12px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .mode-panel-btn-leave {width:66px;font-size:15px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-invite-section {flex:0 0 162px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-invite-label {font-size:22px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic #lobbyCodeBadge {min-width:0;width:85%;height:48px;margin-bottom:10px;padding:4px 12px;gap:14px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic #lobbyCodeText {font-size:30px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .room-code-icon-wrap svg {width:24px;height:24px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic #copyInviteBtn {height:46px;min-height:46px;font-size:17px !important;padding:4px 16px !important;border-width:3px !important;gap:8px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic #copyInviteBtn svg {width:22px;height:22px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-players-section {flex:0 0 170px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-players-heading {font-size:19px;gap:10px;margin-bottom:10px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-players-list {max-height:132px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-row,
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-empty {min-height:56px;padding:6px 8px;border-width:2px;border-radius:12px;gap:6px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-name {font-size:16px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-avatar {width:32px;height:32px;min-width:32px;font-size:20px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .player-role-badge.host-badge,
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .player-role-badge.self-badge,
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .player-role-badge.bot-badge {font-size:10px;padding:2px 5px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .ready-pill.ready,
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .ready-pill.waiting {font-size:12px;padding:4px 7px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-empty .lobby-empty-label {font-size:14px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-empty .lobby-empty-avatar {width:30px;height:30px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .empty-seat-pill {font-size:10px;padding:3px 6px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic #lobbyHostControls {flex:0 0 48px;gap:8px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic #addBotBtn,
+ #lobbySection.mode-specific-lobby.lobby-theme-classic #shuffleSeatsBtn {height:44px;min-height:44px;padding:5px 10px !important;font-size:13px !important;border-width:2px !important;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-start-hint {font-size:13px;margin-bottom:12px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-footer-actions {flex-direction:row;gap:8px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-action-btn {height:48px;min-height:48px;font-size:15px !important;padding:0 6px;}
+}
+@media (max-width:900px) and (max-height:500px) {
+ #lobbySection.mode-specific-lobby.lobby-theme-classic {min-height:680px;max-width:600px !important;margin:auto !important;}
+}
+
+body.in-mode-lobby .mode-setup-screen.mode-classic-setup {padding:0 !important;}
+body.in-mode-lobby .mode-setup-screen.mode-classic-setup .standard-setup-layout {min-height:0;margin:0;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #addBotBtn,
+#lobbySection.mode-specific-lobby.lobby-theme-classic #shuffleSeatsBtn {height:54px !important;min-height:54px !important;max-height:none !important;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-name {max-width:330px;}
+#lobbySection.mode-specific-lobby.lobby-theme-classic #readyBtn {background:#ffe313 !important;box-shadow:none !important;}
+@media (max-width:900px) {
+ #lobbySection.mode-specific-lobby.lobby-theme-classic {background-position:center 50px;background-size:auto calc(100% - 50px);background-repeat:no-repeat;border:4px solid #fff3dc;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .mode-lobby-header {height:210px;min-height:210px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic #addBotBtn,
+ #lobbySection.mode-specific-lobby.lobby-theme-classic #shuffleSeatsBtn {height:44px !important;min-height:44px !important;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-player-name {max-width:110px;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .lobby-action-btn {font-size:13px !important;white-space:nowrap;}
+}
+@media (min-width:901px) {
+ body.in-mode-lobby .mode-setup-screen.mode-classic-setup,
+ body.in-mode-lobby .mode-setup-screen.mode-classic-setup .standard-setup-layout {overflow:hidden !important;}
+}
+@media (max-width:900px) {
+ #lobbySection.mode-specific-lobby.lobby-theme-classic {position:relative;isolation:isolate;background:#101010;}
+ #lobbySection.mode-specific-lobby.lobby-theme-classic::before {
+  content:'';position:absolute;inset:60px 0 0;z-index:-1;
+  background:url('./assets/classic-lobby-card.png') center -32px/auto calc(100% + 64px) no-repeat;
+  pointer-events:none;
+ }
+ #lobbySection.mode-specific-lobby.lobby-theme-classic .mode-lobby-header {height:230px;min-height:230px;}
+}

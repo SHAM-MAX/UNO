@@ -291,7 +291,7 @@ async function main() {
     await cdp.waitForFunction(() => {
       const lobby = document.getElementById('lobbySection');
       const classicSlot = document.getElementById('classicLobbySlot');
-      return lobby && lobby.parentElement === classicSlot && window.getComputedStyle(lobby).display === 'block';
+      return lobby && lobby.parentElement === classicSlot && window.getComputedStyle(lobby).display !== 'none';
     });
 
     const classicLobbyState = await cdp.evaluate(() => {

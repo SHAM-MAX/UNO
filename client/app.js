@@ -4461,3 +4461,7 @@ function fitNoMercyReferenceLobby() {
 }
 window.addEventListener('resize', fitNoMercyReferenceLobby);
 fitNoMercyReferenceLobby();
+
+function fitClassicLobby() { document.documentElement.style.setProperty("--classic-lobby-scale",String(Math.min((innerWidth-40)/1000,(innerHeight-64)/940,1))); }
+window.addEventListener("resize",fitClassicLobby);
+fitClassicLobby();
