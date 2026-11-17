@@ -1,0 +1,208 @@
+/* Direct-create lobby only; mode-specific lobbies retain their own designs. */
+.tabletop-lobby-title {display:none;}
+body.in-room:not(.in-arena)::before {
+ background:repeating-linear-gradient(2deg,#0000 0 8px,#35180722 9px 10px),repeating-linear-gradient(0deg,#0000 0 180px,#1c100a66 182px 184px),linear-gradient(95deg,#54301c,#855032 35%,#60381e 80%,#744426);
+}
+body.in-room:not(.in-arena) .top-nav {height:74px;width:calc(100% - 48px);max-width:1540px;margin:16px auto 24px;padding:8px 24px;border-radius:26px;}
+body.in-room:not(.in-arena) #brandNavToggle .brand-uno,
+body.in-room:not(.in-arena) #brandNavToggle .logo-badge {color:#fff2d4 !important;}
+body.in-room:not(.in-arena) #brandNavToggle .brand-tagline {color:#dec98f;}
+body.in-room:not(.in-arena) #entryView.lobby-card {
+ width:min(1320px,calc(100% - 64px));max-width:1320px;margin:0 auto 24px;padding:26px 34px 24px;
+ border:2px solid #e7c87c;border-radius:30px;
+ background:radial-gradient(ellipse at 25% 0%,#fffaf0aa,transparent 75%),repeating-linear-gradient(0deg,#87663406 0 1px,transparent 1px 4px),#f7ecd7;
+ box-shadow:0 5px 0 #795323,0 18px 34px #0006,inset 0 0 0 3px #fffae5;
+}
+#genericLobbySlot #lobbySection {
+ display:grid !important;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);gap:22px 28px;
+ font-family:'Outfit',sans-serif;color:#143d2c;
+}
+#genericLobbySlot #lobbySection[style*="display: none"] {display:none !important;}
+#genericLobbySlot #lobbySection .tabletop-lobby-title {
+ display:flex;align-items:center;justify-content:center;gap:18px;grid-column:1 / -1;grid-row:1;
+ font:800 25px/1.2 Georgia,serif;margin:0 !important;letter-spacing:.02em;
+}
+#genericLobbySlot #lobbySection .tabletop-lobby-title span {color:#d99f25;font-size:23px;}
+#genericLobbySlot #lobbySection .lobby-invite-section {
+ grid-column:1 / -1;grid-row:2;display:flex;align-items:center;justify-content:center;gap:20px;
+ padding:8px 16px;margin:0 auto 10px;width:max-content;max-width:100%;box-sizing:border-box;
+ border:1px solid #dbc59d;background:#fcf2dfb8;border-radius:24px;box-shadow:0 4px 8px #6e471220;
+}
+#genericLobbySlot #lobbySection .lobby-invite-label {font:800 22px Georgia,serif;color:#143d2c;letter-spacing:0;white-space:nowrap;margin:0;}
+#genericLobbySlot #lobbySection .lobby-invite-label::before,
+#genericLobbySlot #lobbySection .lobby-invite-label::after {content:none;}
+#genericLobbySlot #lobbySection #lobbyCodeBadge {margin:0;padding:8px 26px;gap:18px;border-radius:17px;min-height:48px;}
+#genericLobbySlot #lobbySection #lobbyCodeText {font:800 30px Georgia,serif;letter-spacing:.04em;}
+#genericLobbySlot #lobbySection .room-code-icon-wrap svg {width:24px;height:24px;}
+#genericLobbySlot #lobbySection .lobby-invite-actions {margin:0;padding-left:20px;border-left:1px solid #c7a66a;}
+#genericLobbySlot #lobbySection #copyInviteBtn {background:linear-gradient(#145738,#073423) !important;color:#fff4d9 !important;border:1px solid #bfad6b !important;border-radius:14px !important;min-height:48px;height:auto;padding:10px 20px !important;font:800 17px Georgia,serif !important;box-shadow:0 3px 4px #0003;text-decoration:none;}
+#genericLobbySlot #lobbySection #copyInviteBtn span {text-decoration:none;}
+#genericLobbySlot #lobbySection #lobbyModeSelectContainer {grid-column:2;grid-row:3 / 5;padding-left:26px;border-left:1px solid #d6bc89;min-width:0;}
+#genericLobbySlot #lobbySection #lobbyModeSelectHeading,
+#genericLobbySlot #lobbySection .lobby-players-heading {font:800 26px/1.2 Georgia,serif !important;color:#113d2a !important;letter-spacing:0;text-transform:uppercase;display:flex;gap:16px;align-items:center;margin:0 0 18px !important;}
+#genericLobbySlot #lobbySection #lobbyModeSelectHeading::after,
+#genericLobbySlot #lobbySection .lobby-players-heading::after {content:'';height:1px;background:#bd9a52;flex:1;}
+#genericLobbySlot #lobbySection #modeSelectorGrid {display:grid;grid-template-columns:1fr !important;gap:12px;margin:0;}
+#genericLobbySlot #lobbySection .mode-card-btn {position:relative;display:grid !important;grid-template-columns:62px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:16px;row-gap:2px;min-height:90px;height:auto;text-align:left;padding:10px 16px !important;border:1px solid #cbb48b;border-radius:18px;background:linear-gradient(135deg,#fffaec,#ede0c5);box-shadow:0 3px 4px #79532320;color:#133c2c;}
+#genericLobbySlot #lobbySection .mode-card-btn .lobby-mode-art {grid-column:1;grid-row:1 / 3;width:62px;height:72px;margin:0;}
+#genericLobbySlot #lobbySection .mode-card-btn strong {grid-column:2;grid-row:1;align-self:end;font:800 24px/1.15 Georgia,serif;color:inherit;}
+#genericLobbySlot #lobbySection .mode-card-btn > span:not(.lobby-mode-art) {grid-column:2;grid-row:2;align-self:start;font-size:13px !important;color:#5b574a !important;white-space:normal;}
+#genericLobbySlot #lobbySection .mode-card-btn.selected {border:2px solid #d3a22e;background:linear-gradient(130deg,#155039,#052f21);color:#fff4db;box-shadow:0 3px 0 #946b20,inset 0 0 0 1px #e6c36a;}
+#genericLobbySlot #lobbySection .mode-card-btn.selected > span:not(.lobby-mode-art) {color:#f1e8d1 !important;}
+#genericLobbySlot #lobbySection .mode-card-btn.selected::after {content:'✓';position:absolute;right:10px;top:14px;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#f0c65f;color:#123c2c;font-weight:900;}
+#genericLobbySlot #lobbySection .mode-card-btn.selected {padding-right:36px !important;}
+#genericLobbySlot #lobbySection .lobby-players-section {grid-column:1;grid-row:3;margin:0;min-width:0;}
+#genericLobbySlot #lobbySection .lobby-players-list {min-height:210px;max-height:290px;overflow:auto;padding:2px;gap:14px;}
+#genericLobbySlot #lobbySection .lobby-player-row {min-height:74px;border:1px solid #dccbb1;border-radius:18px;padding:12px 16px;background:#fffaf1;box-shadow:0 3px 5px #79532316;}
+#genericLobbySlot #lobbySection .lobby-player-name {font:800 23px Georgia,serif;color:#123c2c;}
+#genericLobbySlot #lobbySection .lobby-player-avatar {width:48px;height:48px;min-width:48px;font-size:26px;}
+#genericLobbySlot #lobbySection .lobby-player-empty {position:relative;min-height:130px;padding:16px;display:flex;flex-direction:column;justify-content:center;gap:12px;background:transparent;border:1px dashed #baab90;border-radius:20px;}
+#genericLobbySlot #lobbySection .lobby-player-empty .lobby-player-info {flex-direction:column;gap:8px;}
+#genericLobbySlot #lobbySection .lobby-empty-avatar {width:30px;height:30px;background:none;border:0;}
+#genericLobbySlot #lobbySection .lobby-empty-avatar svg {width:28px;height:28px;}
+#genericLobbySlot #lobbySection .lobby-empty-label {font-size:18px;color:#68786b;}
+#genericLobbySlot #lobbySection .empty-seat-pill {font:800 13px 'Outfit',sans-serif;background:#e8e2d0;color:#647267;border:1px solid #c9c6b3;padding:4px 18px;}
+#genericLobbySlot #lobbySection #lobbyHostControls {grid-column:1;grid-row:4;margin:0;justify-content:center;gap:22px;}
+#genericLobbySlot #lobbySection #addBotBtn,
+#genericLobbySlot #lobbySection #shuffleSeatsBtn {background:linear-gradient(#fffaed,#ece0c2) !important;color:#163e2d !important;border:1px solid #416344 !important;border-radius:14px !important;min-height:44px;padding:8px 24px !important;box-shadow:0 3px 3px #70512033;font:800 16px Georgia,serif !important;}
+#genericLobbySlot #lobbySection .lobby-footer-section {grid-column:1 / -1;grid-row:5;display:flex;align-items:center;justify-content:space-between;gap:20px;border-top:1px solid #c7a768;padding-top:18px;margin:0;}
+#genericLobbySlot #lobbySection .lobby-start-hint {margin:0;text-align:left;font-size:17px;font-style:italic;color:#617366;}
+#genericLobbySlot #lobbySection .lobby-footer-actions {display:flex;gap:20px;flex-shrink:0;}
+#genericLobbySlot #lobbySection .lobby-action-btn {height:52px;min-height:48px;flex:0 1 auto;min-width:190px;font:800 18px Georgia,serif !important;border-radius:16px !important;}
+#genericLobbySlot #lobbySection #readyBtn {background:linear-gradient(#fff9e9,#eaddbd) !important;color:#123d2b !important;border:1px solid #47633e !important;}
+#genericLobbySlot #lobbySection #startGameBtn:disabled {background:#ddcba5 !important;color:#777d67 !important;border:1px solid #d3bd91 !important;opacity:1;}
+body.in-room:not(.in-arena) #entryView:has(#genericLobbySlot #lobbySection) {min-height:0;}
+@media (max-height:760px) and (min-width:901px) {
+ body.in-room:not(.in-arena) .top-nav {height:60px;margin:10px auto 16px;}
+ body.in-room:not(.in-arena) #entryView.lobby-card {padding:18px 26px;margin-bottom:16px;}
+ #genericLobbySlot #lobbySection {gap:12px 22px;}
+ #genericLobbySlot #lobbySection .tabletop-lobby-title {font-size:21px;}
+ #genericLobbySlot #lobbySection .lobby-invite-section {margin-bottom:4px;padding:6px 14px;}
+ #genericLobbySlot #lobbySection #lobbyModeSelectHeading,
+ #genericLobbySlot #lobbySection .lobby-players-heading {font-size:22px !important;margin-bottom:12px !important;}
+ #genericLobbySlot #lobbySection .mode-card-btn {min-height:66px;padding:6px 12px !important;column-gap:10px;}
+ #genericLobbySlot #lobbySection .mode-card-btn .lobby-mode-art {width:44px;height:54px;}
+ #genericLobbySlot #lobbySection .mode-card-btn {grid-template-columns:44px 1fr;}
+ #genericLobbySlot #lobbySection .mode-card-btn strong {font-size:20px;}
+ #genericLobbySlot #lobbySection .mode-card-btn > span:not(.lobby-mode-art) {font-size:11px !important;}
+ #genericLobbySlot #lobbySection .lobby-players-list {min-height:160px;max-height:180px;}
+ #genericLobbySlot #lobbySection .lobby-player-row {min-height:60px;padding:8px 12px;}
+ #genericLobbySlot #lobbySection .lobby-player-empty {min-height:85px;padding:8px;gap:4px;}
+ #genericLobbySlot #lobbySection .lobby-empty-label {font-size:15px;}
+ #genericLobbySlot #lobbySection .lobby-footer-section {padding-top:12px;}
+ #genericLobbySlot #lobbySection .lobby-start-hint {font-size:14px;}
+ #genericLobbySlot #lobbySection .lobby-action-btn {height:46px;min-height:44px;min-width:160px;font-size:16px !important;}
+}
+@media (max-width:900px) {
+ body.in-room:not(.in-arena) .top-nav {width:calc(100% - 20px);height:auto;min-height:60px;margin:10px auto 16px;padding:8px 12px;gap:8px;flex-wrap:wrap;}
+ body.in-room:not(.in-arena) #entryView.lobby-card {width:calc(100% - 24px);padding:18px;margin:0 auto 24px;}
+ #genericLobbySlot #lobbySection {grid-template-columns:minmax(0,1fr);gap:16px;}
+ #genericLobbySlot #lobbySection .tabletop-lobby-title {grid-column:1;grid-row:1;font-size:22px;}
+ #genericLobbySlot #lobbySection .lobby-invite-section {grid-column:1;grid-row:2;width:100%;flex-wrap:wrap;gap:12px;padding:12px;}
+ #genericLobbySlot #lobbySection .lobby-invite-label {font-size:17px;}
+ #genericLobbySlot #lobbySection #lobbyCodeBadge {padding:6px 16px;}
+ #genericLobbySlot #lobbySection #lobbyCodeText {font-size:25px;}
+ #genericLobbySlot #lobbySection .lobby-invite-actions {border:0;padding:0;}
+ #genericLobbySlot #lobbySection #copyInviteBtn {font-size:14px !important;min-height:44px;}
+ #genericLobbySlot #lobbySection .lobby-players-section {grid-column:1;grid-row:3;}
+ #genericLobbySlot #lobbySection .lobby-players-list {min-height:0;max-height:240px;}
+ #genericLobbySlot #lobbySection #lobbyHostControls {grid-column:1;grid-row:4;gap:10px;flex-wrap:wrap;}
+ #genericLobbySlot #lobbySection #addBotBtn,
+ #genericLobbySlot #lobbySection #shuffleSeatsBtn {padding:8px 12px !important;font-size:14px !important;}
+ #genericLobbySlot #lobbySection #lobbyModeSelectContainer {grid-column:1;grid-row:5;padding:0;border:0;}
+ #genericLobbySlot #lobbySection #modeSelectorGrid {gap:10px;}
+ #genericLobbySlot #lobbySection .mode-card-btn {min-height:80px;}
+ #genericLobbySlot #lobbySection .lobby-footer-section {grid-column:1;grid-row:6;display:flex;flex-direction:column;gap:14px;padding-top:16px;}
+ #genericLobbySlot #lobbySection .lobby-footer-actions {width:100%;gap:10px;}
+ #genericLobbySlot #lobbySection .lobby-action-btn {min-width:0;flex:1 1 0;font-size:14px !important;height:48px;}
+ #genericLobbySlot #lobbySection .lobby-start-hint {font-size:14px;text-align:center;}
+ body.in-room:not(.in-arena) #navRoomDetails {order:3;flex:1 0 100%;justify-content:center;}
+ body.in-room:not(.in-arena) #brandNavToggle .brand-card-mark {width:34px;height:38px;}
+ body.in-room:not(.in-arena) #brandNavToggle .brand-uno {font-size:23px;}
+ body.in-room:not(.in-arena) #brandNavToggle .logo-badge {font-size:19px !important;}
+ body.in-room:not(.in-arena) #brandNavToggle .brand-tagline {display:none;}
+}
+#genericLobbySlot #lobbySection .lobby-invite-section {justify-self:center;margin-left:auto !important;margin-right:auto !important;}
+#genericLobbySlot #lobbySection .room-code-check-svg {display:none;}
+#genericLobbySlot #lobbySection #lobbyCodeBadge.copied .room-code-copy-svg {display:none;}
+#genericLobbySlot #lobbySection #lobbyCodeBadge.copied .room-code-check-svg {display:block;}
+@media (max-width:600px) {
+ body.in-room:not(.in-arena) #brandNavToggle {flex-shrink:1;min-width:0;}
+ body.in-room:not(.in-arena) #brandNavToggle .brand-card-mark {width:28px;height:34px;}
+ body.in-room:not(.in-arena) #brandNavToggle .brand-uno {font-size:20px;}
+ body.in-room:not(.in-arena) #brandNavToggle .logo-badge {font-size:17px !important;}
+ body.in-room:not(.in-arena) .top-nav .nav-controls {gap:5px;}
+ body.in-room:not(.in-arena) .top-nav #leaveBtn {padding:0 8px;min-width:0;}
+ body.in-room:not(.in-arena) .top-nav .nav-btn-icon {width:38px;min-width:38px;}
+ #genericLobbySlot #lobbySection .mode-card-btn strong {font-size:22px;}
+}
+body.in-room:not(.in-arena) .main-content {min-height:0;}
+@media (min-width:901px) and (max-height:700px) {
+ body.in-room:not(.in-arena) #entryView.lobby-card {padding:14px 24px;margin-bottom:12px;}
+ #genericLobbySlot #lobbySection {gap:10px 20px;}
+ #genericLobbySlot #lobbySection .lobby-players-list {max-height:160px;min-height:145px;}
+ #genericLobbySlot #lobbySection .lobby-player-empty {min-height:70px;}
+ #genericLobbySlot #lobbySection .mode-card-btn {min-height:58px;padding:4px 10px !important;}
+ #genericLobbySlot #lobbySection .mode-card-btn .lobby-mode-art {height:48px;}
+ #genericLobbySlot #lobbySection #modeSelectorGrid {gap:10px;}
+}
+@media (min-width:901px) and (min-height:761px) {
+ body.in-room:not(.in-arena) .top-nav {height:88px;max-width:none;width:calc(100% - 60px);margin:20px auto 30px;padding:10px 30px;}
+ body.in-room:not(.in-arena) #brandNavToggle .brand-card-mark {width:72px;height:68px;}
+ body.in-room:not(.in-arena) #brandNavToggle .brand-uno {font-size:40px;}
+ body.in-room:not(.in-arena) #brandNavToggle .logo-badge {font-size:34px !important;}
+ body.in-room:not(.in-arena) #brandNavToggle .brand-tagline {font-size:9px;letter-spacing:2px;}
+ body.in-room:not(.in-arena) #entryView.lobby-card {max-width:1420px;width:calc(100% - 80px);padding:26px 40px 32px;}
+ #genericLobbySlot #lobbySection {gap:24px 28px;}
+ #genericLobbySlot #lobbySection .tabletop-lobby-title {font-size:28px;}
+ #genericLobbySlot #lobbySection .lobby-invite-section {margin-bottom:12px;padding:8px 20px;}
+ #genericLobbySlot #lobbySection .lobby-invite-label {font-size:24px;}
+ #genericLobbySlot #lobbySection #lobbyCodeText {font-size:38px;}
+ #genericLobbySlot #lobbySection #copyInviteBtn {font-size:22px !important;padding:14px 26px !important;}
+ #genericLobbySlot #lobbySection #lobbyModeSelectHeading,
+ #genericLobbySlot #lobbySection .lobby-players-heading {font-size:34px !important;}
+ #genericLobbySlot #lobbySection .mode-card-btn {min-height:100px;grid-template-columns:74px 1fr;column-gap:18px;}
+ #genericLobbySlot #lobbySection .mode-card-btn .lobby-mode-art {width:74px;height:84px;}
+ #genericLobbySlot #lobbySection .mode-card-btn strong {font-size:30px;}
+ #genericLobbySlot #lobbySection .mode-card-btn > span:not(.lobby-mode-art) {font-size:17px !important;}
+ #genericLobbySlot #lobbySection .lobby-player-name {font-size:28px;}
+ #genericLobbySlot #lobbySection .lobby-player-avatar {width:62px;height:62px;min-width:62px;font-size:32px;}
+ #genericLobbySlot #lobbySection .lobby-player-row {min-height:90px;}
+ #genericLobbySlot #lobbySection .lobby-players-list {min-height:255px;max-height:290px;}
+ #genericLobbySlot #lobbySection .lobby-player-empty {min-height:165px;}
+ #genericLobbySlot #lobbySection .lobby-empty-label {font-size:22px;}
+ #genericLobbySlot #lobbySection .empty-seat-pill {font-size:17px;}
+ #genericLobbySlot #lobbySection #addBotBtn,
+ #genericLobbySlot #lobbySection #shuffleSeatsBtn {font-size:20px !important;height:48px !important;padding:10px 28px !important;}
+ #genericLobbySlot #lobbySection .lobby-start-hint {font-size:22px;}
+ #genericLobbySlot #lobbySection .lobby-action-btn {min-width:260px;height:58px;font-size:22px !important;}
+}
+@media (max-width:600px) {
+ #genericLobbySlot #lobbySection .lobby-invite-section {display:grid;grid-template-columns:1fr auto;gap:10px;}
+ #genericLobbySlot #lobbySection .lobby-invite-actions {grid-column:1 / -1;justify-self:center;}
+ #genericLobbySlot #lobbySection .lobby-invite-label {font-size:15px;}
+ #genericLobbySlot #lobbySection #lobbyCodeText {font-size:22px;}
+ #genericLobbySlot #lobbySection #lobbyCodeBadge {padding:6px 10px;gap:10px;}
+ #genericLobbySlot #lobbySection .lobby-player-empty {min-height:100px;padding:10px;gap:6px;}
+ #genericLobbySlot #lobbySection .lobby-empty-label {font-size:15px;}
+ #genericLobbySlot #lobbySection #lobbyModeSelectHeading,
+ #genericLobbySlot #lobbySection .lobby-players-heading {font-size:24px !important;margin-bottom:12px !important;}
+ #genericLobbySlot #lobbySection .mode-card-btn {min-height:74px;grid-template-columns:46px 1fr;column-gap:12px;}
+ #genericLobbySlot #lobbySection .mode-card-btn .lobby-mode-art {width:46px;height:56px;}
+}
+#genericLobbySlot #lobbySection .player-role-badge {font-size:12px;padding:4px 8px;}
+#genericLobbySlot #lobbySection .ready-pill {font-size:14px;padding:6px 12px;}
+#genericLobbySlot #lobbySection #addBotBtn span,
+#genericLobbySlot #lobbySection #shuffleSeatsBtn span {font-size:0;}
+#genericLobbySlot #lobbySection #addBotBtn span::after {content:'＋ ADD BOT';font-size:16px;}
+#genericLobbySlot #lobbySection #shuffleSeatsBtn span::after {content:'⤨ SHUFFLE SEATS';font-size:16px;}
+@media (min-width:901px) and (min-height:761px) {
+ body.in-room:not(.in-arena) #entryView.lobby-card {margin-bottom:12px;}
+ #genericLobbySlot #lobbySection .player-role-badge {font-size:16px;}
+ #genericLobbySlot #lobbySection .ready-pill {font-size:19px;padding:8px 16px;}
+ #genericLobbySlot #lobbySection #addBotBtn span::after,
+ #genericLobbySlot #lobbySection #shuffleSeatsBtn span::after {font-size:20px;}
+}
+@media (min-width:901px) and (max-height:700px) {
+ body.in-room:not(.in-arena) #entryView.lobby-card {padding:12px 24px 8px;margin-bottom:8px;}
+}

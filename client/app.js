@@ -2500,7 +2500,7 @@ class UnoArenaApp {
       if (this.el.lobbyModeSelectContainer) this.el.lobbyModeSelectContainer.style.display = 'block';
       if (this.el.lobbyModeDisplay) this.el.lobbyModeDisplay.style.display = 'none';
       if (this.el.lobbyModeSelectHeading) {
-        this.el.lobbyModeSelectHeading.textContent = isHost ? 'Select Game Mode' : 'Game Mode';
+        this.el.lobbyModeSelectHeading.textContent = 'Game Mode';
       }
       if (this.el.modeSelectorGrid) {
         this.el.modeSelectorGrid.style.display = 'grid';
