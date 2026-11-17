@@ -258,6 +258,16 @@ async function main() {
     }
 
     await cdp.screenshot(path.join(ARTIFACT_DIR, 'setup_classic_no_navbar.png'));
+    const classicBack=await cdp.evaluate(()=>{
+      const b=document.getElementById('backToModesBtn'),r=b.getBoundingClientRect();
+      return {left:r.left,top:r.top,height:r.height,hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.closest('button')?.id};
+    });
+    if(classicBack.left>24||classicBack.top>24||classicBack.height<44||classicBack.hit!=='backToModesBtn')throw new Error('Classic back must be usable in screen top-left');
+    await cdp.evaluate(()=>document.getElementById('backToModesBtn').click());
+    await cdp.waitForFunction(()=>!document.body.classList.contains('in-classic-setup'));
+    await cdp.evaluate(()=>document.querySelector('[data-home-mode="classic"]').click());
+    await cdp.waitForFunction(()=>document.body.classList.contains('in-classic-setup'));
+
     for(const [width,height] of [[320,740],[390,844],[844,390]]) {
       await cdp.setViewport(width,height,true);await delay(300);
       const state=await cdp.evaluate(()=>{
