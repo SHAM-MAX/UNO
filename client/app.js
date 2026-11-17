@@ -450,6 +450,7 @@ class UnoArenaApp {
     });
 
     this.el.backToModesBtn.addEventListener('click', () => this.showModePicker());
+    document.getElementById('classicBackBottomBtn')?.addEventListener('click', () => this.showModePicker());
     this.el.setupMercyLimit.value = String(this.mercyKnockoutLimit);
     this.el.setupMercyLimit.addEventListener('change', () => {
       this.mercyKnockoutLimit = Number(this.el.setupMercyLimit.value) || 25;
