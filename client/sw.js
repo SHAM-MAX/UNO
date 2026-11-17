@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-brand-v1';
+const CACHE_NAME = 'uno-arena-brand-round-v2';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -16,10 +16,10 @@ const STATIC_SHELL_ASSETS = [
   '/manifest.json',
   '/branding.css?v=1',
   '/assets/game-logo.png',
-  '/assets/game-logo-32.png?v=1',
-  '/assets/game-logo-180.png?v=1',
-  '/assets/game-logo-192.png',
-  '/assets/game-logo-512.png',
+  '/assets/game-icon-round-32.png?v=2',
+  '/assets/game-icon-round-180.png?v=2',
+  '/assets/game-icon-round-192.png',
+  '/assets/game-icon-round-512.png',
   '/assets/tabletop-wood.jpg',
   '/assets/uno-arena-mobile-hero.png',
   '/assets/game-modes/classic-card.png',
