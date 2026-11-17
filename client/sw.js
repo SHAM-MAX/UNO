@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-victory-v4';
+const CACHE_NAME = 'uno-arena-victory-stage-v5';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -15,7 +15,8 @@ const STATIC_SHELL_ASSETS = [
   '/shared/rules.js',
   '/manifest.json',
   '/branding.css?v=1',
-  '/victory.css?v=1',
+  '/victory.css?v=2',
+  '/assets/victory-champion-trophy.png',
   '/assets/game-logo.png',
   '/assets/game-icon-round-32.png?v=2',
   '/assets/game-icon-round-180.png?v=2',

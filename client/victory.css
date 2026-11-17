@@ -1,82 +1,73 @@
-/* Victory stage: bounded compositor animations, quiet once the reveal ends. */
-#gameOverModal.victory-overlay {
-  background: radial-gradient(ellipse at 65% 25%, #34442c88, transparent 55%), #070c0ff5 !important;
-  overflow: auto; padding: 32px 24px; isolation: isolate;
+/* Full-screen championship reveal. Decorative layers never capture input. */
+#gameOverModal.victory-overlay { --victory-gold:#ffd66d; background:radial-gradient(ellipse at 50% 32%,#6e401b55,transparent 48%),radial-gradient(ellipse at 0 70%,#a7192030,transparent 50%),radial-gradient(ellipse at 100% 75%,#12417b30,transparent 50%),#08090e !important; padding:24px; overflow:auto; isolation:isolate; }
+#gameOverModal.victory-overlay::before { content:''; position:fixed; inset:0; pointer-events:none; background:repeating-conic-gradient(from 0deg at 50% 35%,transparent 0deg 16deg,#ffda7110 18deg 20deg,transparent 23deg 40deg); mask-image:radial-gradient(ellipse at 50% 35%,#000,transparent 72%); opacity:.7; }
+#gameOverModal.victory-overlay::after { content:''; position:fixed; width:68vw; height:68vw; left:16vw; top:calc(35% - 34vw); border:1px solid #ffd66d20; border-radius:50%; box-shadow:0 0 0 60px #ffd66d06,0 0 0 120px #ffd66d04; pointer-events:none; }
+#gameOverModal .victory-stage { width:min(1200px,100%); height:auto; min-height:0; margin:auto; position:relative; }
+#gameOverModal .modal-card.victory-card { display:flex; flex-direction:column; align-items:center; gap:14px; width:min(920px,100%); max-width:920px; padding:24px 40px; margin:auto; border:0 !important; outline:0 !important; border-radius:0; background:none !important; box-shadow:none !important; overflow:visible; position:relative; text-align:center !important; transform:none; }
+#gameOverModal .victory-card::before { content:'VICTORY'; position:absolute; z-index:-1; top:85px; left:50%; transform:translateX(-50%); font-family:'Outfit',sans-serif; font-size:clamp(90px,15vw,210px); line-height:1; font-weight:950; letter-spacing:-10px; color:#ffd66d0a; -webkit-text-stroke:1px #ffd66d38; pointer-events:none; }
+#gameOverModal .victory-eyebrow { display:flex; align-items:center; gap:10px; color:#c9bd9e; letter-spacing:3px; font-size:10px; font-weight:700; margin-bottom:6px; }
+.victory-eyebrow img { width:28px; height:28px; }
+.victory-eyebrow b { margin:0 8px; color:#f5c458; }
+#gameOverModal .victory-ribbon-bar { display:none; }
+#gameOverModal .victory-emblem-container { width:300px; height:270px; margin:0; position:relative; display:grid; place-items:center; }
+#gameOverModal .victory-trophy-graphic { position:relative; inset:auto; display:grid; place-items:center; width:300px; height:300px; filter:drop-shadow(0 22px 28px #0009) drop-shadow(0 0 35px #ffb12530); animation:none; }
+#gameOverModal .victory-trophy-svg { display:none; }
+.victory-trophy-art { display:block; width:100%; height:100%; object-fit:contain; }
+#gameOverModal .victory-sunburst { position:absolute; inset:0; width:300px; height:270px; background:radial-gradient(ellipse,#ffcf5444,transparent 68%); border:0; animation:none; opacity:1; }
+#gameOverModal .victory-sparkles { inset:15px; }
+#gameOverModal .victory-header-group { display:flex; flex-direction:column-reverse; align-items:center; gap:10px; margin:8px 0 0; width:100%; }
+#gameOverModal #winnerNameText { font-size:clamp(52px,7vw,96px) !important; line-height:1 !important; letter-spacing:-3px !important; font-weight:950 !important; text-transform:none !important; color:#fff5dc !important; text-shadow:0 5px 0 #604622,0 10px 32px #0009 !important; margin:0 !important; overflow-wrap:anywhere; max-width:100%; }
+#gameOverModal .victory-wins-heading { margin:0; padding:6px 20px; color:#ffe398; background:#f9c74d10; border:1px solid #ffd66d50; border-radius:3px; box-shadow:none; text-shadow:none; font-size:12px; font-weight:850; letter-spacing:6px; }
+#gameOverModal #winReasonText { color:#b8b6ae !important; font-size:14px !important; font-weight:400; line-height:1.6 !important; margin:4px 0 !important; max-width:650px; text-shadow:none !important; }
+#gameOverModal .victory-match-details { display:flex; justify-content:center; gap:0; margin:0; flex-wrap:wrap; }
+.victory-match-details span { font-size:10px; font-weight:700; letter-spacing:1.5px; color:#d4b46d; padding:5px 14px; }
+.victory-match-details span+span { border-left:1px solid #ffd66d30; }
+#gameOverModal .victory-actions { display:flex; align-items:center; justify-content:center; width:100%; gap:12px; margin:10px 0 0; padding:0; }
+#gameOverModal #rematchBtn.victory-rematch-btn { width:auto; min-width:260px; max-width:380px; min-height:58px; padding:16px 34px; border:1px solid #ffe9ab; border-radius:8px; background:linear-gradient(120deg,#ffe49b,#f6bc39) !important; color:#23170b !important; font-size:14px; font-weight:900; letter-spacing:1px; text-shadow:none; box-shadow:0 4px 0 #9c6521,0 0 36px #ffcc4725 !important; transition:transform 180ms; }
+#gameOverModal #rematchBtn:hover { transform:translateY(-3px); }
+.victory-home-btn { min-height:58px; padding:14px 26px; background:#ffffff05; color:#d5d0c4; border:1px solid #ffffff25; border-radius:8px; font:inherit; font-size:13px; cursor:pointer; }
+.victory-home-btn span { margin-left:16px; color:#ffd66d; }
+.victory-home-btn:hover { background:#ffffff12; }
+#gameOverModal .victory-close-btn { position:fixed; top:max(24px,env(safe-area-inset-top)); right:max(24px,env(safe-area-inset-right)); width:42px; height:42px; border:1px solid #fff3; background:#fff1; color:#eee5d2; box-shadow:none; font-size:26px; }
+#gameOverModal button:focus-visible { outline:3px solid #fff2ad; outline-offset:5px; }
+#gameOverModal .victory-floating-cards { pointer-events:none; opacity:1; gap:55px; z-index:1; top:140px; }
+#gameOverModal .victory-floating-cards.left { left:40px; }
+#gameOverModal .victory-floating-cards.right { right:40px; }
+#gameOverModal .victory-card-asset { width:105px; height:154px; filter:drop-shadow(0 0 16px #ffc83e20); }
+#gameOverModal:not(.active) *,#gameOverModal:not(.active)::before { animation:none !important; }
+#gameOverModal.active .victory-trophy-graphic { animation:champion-trophy 1200ms cubic-bezier(.16,1,.3,1) both; }
+#gameOverModal.active .victory-header-group { animation:champion-title 850ms 300ms cubic-bezier(.16,1,.3,1) both; }
+#gameOverModal.active .victory-actions { animation:champion-rise 700ms 650ms both; }
+#gameOverModal.active .victory-card::before { animation:champion-rise 1100ms 100ms both; }
+#gameOverModal.active .victory-confetti { animation-iteration-count:2; animation-fill-mode:both; }
+#gameOverModal.active .victory-floating-cards { animation:champion-rise 1000ms 150ms both; }
+#gameOverModal .floating-card-wrapper { animation-iteration-count:2; }
+#gameOverModal .sparkle { animation-iteration-count:4; }
+@keyframes champion-trophy { from { opacity:0; transform:translateY(85px) scale(.35) rotate(-18deg); } 65% { opacity:1; transform:translateY(-10px) scale(1.06) rotate(3deg); } to { opacity:1; transform:translateY(0) scale(1) rotate(0); } }
+@keyframes champion-title { from { opacity:0; transform:translateY(30px) scale(1.15); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes champion-rise { from { opacity:0; translate:0 25px; } to { opacity:1; translate:0 0; } }
+@media(max-width:900px) { #gameOverModal .victory-floating-cards.left { left:0; } #gameOverModal .victory-floating-cards.right { right:0; } #gameOverModal .victory-card-asset { width:75px; height:110px; } }
+@media(max-width:600px) {
+ #gameOverModal.victory-overlay { padding:20px 16px; align-items:flex-start; }
+ #gameOverModal .modal-card.victory-card { padding:48px 4px 20px; gap:15px; }
+ #gameOverModal .victory-eyebrow { letter-spacing:1.3px; font-size:9px; }
+ #gameOverModal .victory-card::before { font-size:21vw; letter-spacing:-4px; top:122px; }
+ #gameOverModal .victory-emblem-container { width:230px; height:230px; }
+ #gameOverModal .victory-trophy-graphic { width:250px; height:250px; }
+ #gameOverModal .victory-sunburst { width:230px; height:230px; }
+ #gameOverModal #winnerNameText { font-size:58px !important; letter-spacing:-2px !important; }
+ #gameOverModal .victory-wins-heading { font-size:10px; letter-spacing:4px; }
+ #gameOverModal #winReasonText { font-size:13px !important; }
+ #gameOverModal .victory-actions { flex-direction:column; margin-top:12px; }
+ #gameOverModal #rematchBtn.victory-rematch-btn,.victory-home-btn { width:100%; min-width:0; max-width:360px; min-height:54px; }
+ #gameOverModal .victory-floating-cards { display:none; }
+ #gameOverModal .victory-close-btn { top:16px; right:16px; width:34px; height:34px; }
+ .victory-match-details span { padding:4px 9px; font-size:9px; }
 }
-#gameOverModal .victory-stage { width: min(1120px, 100%); min-height: 0; height: auto; }
-#gameOverModal .modal-card.victory-card {
-  display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 22px 28px;
-  width: min(940px, 100%); max-width: 940px; box-sizing: border-box;
-  padding: 36px 48px; margin: auto; border-radius: 32px;
-  background: radial-gradient(ellipse at 90% 25%, #67522755, transparent 55%), linear-gradient(140deg, #192323, #0b1415 70%) !important;
-  border: 1px solid #e3c78066 !important; outline: none !important;
-  box-shadow: 0 32px 110px #0009, inset 0 1px #fff2 !important;
-  overflow: hidden; text-align: left !important; position: relative;
-}
-#gameOverModal .victory-card::before {
-  content: ''; position: absolute; width: 280px; height: 1px; top: 0; left: 15%;
-  background: linear-gradient(90deg, transparent, #ffe8a8, transparent);
-}
-#gameOverModal .victory-eyebrow { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; color: #c9d0c9; letter-spacing: 2.2px; font-size: 11px; font-weight: 700; padding-right: 40px; }
-.victory-eyebrow img { width: 34px; height: 34px; }
-.victory-eyebrow b { color: #ddbd70; margin: 0 10px; }
-#gameOverModal .victory-ribbon-bar { display: none; }
-#gameOverModal .victory-emblem-container { grid-column: 2; grid-row: 2 / 5; width: 260px; height: 280px; margin: auto; display: grid; place-items: center; }
-#gameOverModal .victory-trophy-graphic { position: relative; inset: auto; width: 220px; height: 220px; display: grid; place-items: center; animation: none; filter: drop-shadow(0 20px 28px #e6aa1833); }
-#gameOverModal .victory-trophy-svg { width: 220px; height: 220px; }
-#gameOverModal .victory-sunburst { inset: 0; width: 260px; height: 260px; border: 1px solid #e0be7040; border-radius: 50%; background: radial-gradient(circle, #e7b44a22, transparent 65%); animation: none; opacity: 1; }
-#gameOverModal .victory-sunburst::after { content: ''; position: absolute; inset: 18px; border: 1px dashed #e0be7038; border-radius: 50%; }
-#gameOverModal .victory-sparkles { inset: 10px; }
-#gameOverModal .victory-header-group { grid-column: 1; grid-row: 2; align-items: flex-start; margin: 12px 0 0; gap: 8px; }
-#gameOverModal #winnerNameText { font-size: clamp(32px, 4.8vw, 64px) !important; letter-spacing: -2px !important; line-height: 1.05 !important; text-shadow: none !important; text-transform: none !important; color: #fff8e7 !important; overflow-wrap: anywhere; }
-#gameOverModal .victory-wins-heading { font-size: clamp(48px, 6vw, 86px); letter-spacing: -3px; line-height: 1; border: 0; border-radius: 0; box-shadow: none; background: linear-gradient(125deg, #fff1ac, #ffc838 55%, #e8a72c); background-clip: text; -webkit-background-clip: text; color: transparent; text-shadow: none; padding: 0; margin: 0; font-style: italic; }
-#gameOverModal #winReasonText { grid-column: 1; grid-row: 3; color: #bcc7bf !important; font-size: 15px !important; line-height: 1.65 !important; text-shadow: none !important; margin: 0 !important; max-width: 420px; font-weight: 400; }
-#gameOverModal .victory-match-details { grid-column: 1; grid-row: 4; display: flex; flex-wrap: wrap; gap: 8px; align-self: end; }
-.victory-match-details span { border: 1px solid #c8d6ca26; border-radius: 6px; padding: 7px 9px; color: #e0c582; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
-#gameOverModal .victory-actions { grid-column: 1 / -1; grid-row: 5; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 14px; padding-top: 25px; margin-top: 5px; border-top: 1px solid #d9e8d91a; }
-#gameOverModal #rematchBtn.victory-rematch-btn { flex: 1; min-width: 220px; max-width: none; width: auto; min-height: 58px; padding: 16px 24px; border: 1px solid #fff0a3; border-radius: 12px; background: linear-gradient(115deg, #ffeaa0, #ffc43b) !important; box-shadow: 0 4px 0 #91671e, 0 8px 24px #eab73618; color: #20190c !important; font-size: 15px; font-weight: 850; letter-spacing: .5px; text-shadow: none; transition: transform 180ms, box-shadow 180ms; }
-#gameOverModal #rematchBtn:hover { transform: translateY(-3px); box-shadow: 0 7px 0 #91671e, 0 12px 32px #eab73628; }
-.victory-home-btn { min-height: 58px; padding: 14px 22px; background: #ffffff06; color: #e0e6df; border: 1px solid #c8d6ca30; border-radius: 12px; font: inherit; font-size: 14px; cursor: pointer; }
-.victory-home-btn span { margin-left: 20px; color: #e4c581; }
-.victory-home-btn:hover { background: #ffffff10; }
-#gameOverModal .victory-close-btn { top: 22px; right: 22px; width: 36px; height: 36px; border: 1px solid #fff3; background: #fff1; color: #e7ecdf; box-shadow: none; font-size: 24px; }
-#gameOverModal button:focus-visible { outline: 3px solid #fff2ad; outline-offset: 4px; }
-#gameOverModal .victory-floating-cards { opacity: .65; z-index: 1; pointer-events: none; }
-#gameOverModal .victory-floating-cards.left { left: -65px; }
-#gameOverModal .victory-floating-cards.right { right: -65px; }
-#gameOverModal .victory-card-asset { width: 84px; height: 125px; }
-#gameOverModal:not(.active) *, #gameOverModal:not(.active) *::after { animation: none !important; }
-#gameOverModal.active .victory-header-group { animation: champion-reveal 700ms 180ms cubic-bezier(.16,1,.3,1) both; }
-#gameOverModal.active .victory-trophy-graphic { animation: trophy-reveal 950ms 80ms cubic-bezier(.16,1,.3,1) both; }
-#gameOverModal.active .victory-actions { animation: champion-reveal 650ms 400ms both; }
-#gameOverModal.active .victory-confetti { animation-iteration-count: 1; animation-fill-mode: both; }
-#gameOverModal .sparkle { animation-iteration-count: 3; }
-#gameOverModal .floating-card-wrapper { animation-iteration-count: 2; }
-@keyframes champion-reveal { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes trophy-reveal { from { opacity: 0; transform: translateY(35px) scale(.65) rotate(-14deg); } to { opacity: 1; transform: translateY(0) scale(1) rotate(0); } }
-@media (max-width: 700px) {
-  #gameOverModal.victory-overlay { padding: max(16px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom)); align-items: flex-start; }
-  #gameOverModal .victory-stage { margin: auto; }
-  #gameOverModal .modal-card.victory-card { display: flex; flex-direction: column; gap: 16px; padding: 24px; border-radius: 24px; }
-  #gameOverModal .victory-eyebrow { font-size: 9px; letter-spacing: 1px; gap: 8px; }
-  .victory-eyebrow b { margin: 0 3px; }
-  .victory-eyebrow img { width: 26px; height: 26px; }
-  #gameOverModal .victory-emblem-container { order: 1; width: 160px; height: 160px; margin: 0 auto; }
-  #gameOverModal .victory-trophy-graphic, #gameOverModal .victory-trophy-svg { width: 150px; height: 150px; }
-  #gameOverModal .victory-sunburst { width: 160px; height: 160px; }
-  #gameOverModal .victory-header-group { order: 2; margin: 0; align-items: center; text-align: center; }
-  #gameOverModal #winnerNameText { font-size: 38px !important; letter-spacing: -1px !important; }
-  #gameOverModal .victory-wins-heading { font-size: 64px; }
-  #gameOverModal #winReasonText { order: 3; text-align: center; font-size: 13px !important; }
-  #gameOverModal .victory-match-details { order: 4; align-self: center; justify-content: center; }
-  #gameOverModal .victory-actions { order: 5; margin: 0; padding-top: 18px; gap: 12px; }
-  #gameOverModal #rematchBtn.victory-rematch-btn, .victory-home-btn { width: 100%; min-width: 0; min-height: 52px; }
-  #gameOverModal .victory-floating-cards { display: none; }
-  #gameOverModal .victory-close-btn { top: 18px; right: 16px; width: 30px; height: 30px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  #gameOverModal *, #gameOverModal *::after { animation: none !important; transition: none !important; }
-  #gameOverModal .victory-confetti-stage { display: none; }
-}
-#gameOverModal #rematchBtn.victory-rematch-btn { box-shadow: 0 4px 0 #91671e, 0 8px 24px #eab73618 !important; }
-#gameOverModal #rematchBtn.victory-rematch-btn:hover { box-shadow: 0 7px 0 #91671e, 0 12px 32px #eab73628 !important; }
+@media(prefers-reduced-motion:reduce) { #gameOverModal *,#gameOverModal *::before,#gameOverModal *::after { animation:none !important; transition:none !important; } #gameOverModal .victory-confetti-stage { display:none; } }
+#gameOverModal.victory-overlay::before,#gameOverModal.victory-overlay::after { z-index:-1; }
+#gameOverModal .victory-actions { max-width:560px; }
+#gameOverModal #rematchBtn.victory-rematch-btn { margin:0 !important; flex:1; }
+#gameOverModal .victory-home-btn { margin:0 !important; flex:0 0 auto; }
+#gameOverModal > .victory-close-btn { z-index:20; }
+@media(max-width:600px) { #gameOverModal .victory-home-btn { flex:auto; } }
