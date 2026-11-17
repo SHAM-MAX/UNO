@@ -6,6 +6,7 @@ import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
 import { PersistentRoomStore } from './db.js';
 import { RoomManager } from './roomManager.js';
+import { RoomConnections, sendRoomMessage } from './roomConnections.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,7 +22,7 @@ const roomManager = new RoomManager(store);
 roomManager.onStateChange = (roomId) => broadcastRoomState(roomId);
 
 // Map WebSocket to client metadata: { ws, roomId, playerId }
-const clientSockets = new Map();
+const clientSockets = new RoomConnections();
 
 // Broadcast tailored state to all connected players in a room
 function broadcastRoomState(roomId) {
@@ -36,7 +37,7 @@ function broadcastRoomState(roomId) {
       const view = roomManager.getClientView(roomId, player.id);
       if (view) {
         try {
-          player.socket.send(
+          sendRoomMessage(player.socket,
             JSON.stringify({
               type: 'room:state',
               data: view,
@@ -50,7 +51,7 @@ function broadcastRoomState(roomId) {
     }
   }
 
-  for (const [ws, meta] of clientSockets.entries()) {
+  for (const [ws, meta] of clientSockets.forRoom(roomId).entries()) {
     if (meta.roomId === roomId && ws.readyState === WebSocket.OPEN && !sentSockets.has(ws)) {
       const player = roomParticipants.find((p) => p.id === meta.playerId);
       if (player && !player.socket) {
@@ -59,7 +60,7 @@ function broadcastRoomState(roomId) {
       const view = roomManager.getClientView(roomId, meta.playerId);
       if (view) {
         try {
-          ws.send(
+          sendRoomMessage(ws,
             JSON.stringify({
               type: 'room:state',
               data: view,
@@ -222,7 +223,7 @@ app.get('*', (req, res) => {
 const server = http.createServer(app);
 
 // WebSocket Server attached to HTTP server
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, maxPayload: 64 * 1024, perMessageDeflate: false });
 
 wss.on('connection', (ws, req) => {
   ws.isAlive = true;
@@ -482,9 +483,9 @@ wss.on('connection', (ws, req) => {
             type: 'player_card_hovered',
             data: { playerId, cardIndex },
           });
-          for (const [otherWs, meta] of clientSockets.entries()) {
+          for (const [otherWs, meta] of clientSockets.forRoom(cleanRoomId).entries()) {
             if (meta.roomId === cleanRoomId && meta.playerId !== playerId && otherWs.readyState === WebSocket.OPEN) {
-              otherWs.send(msg);
+              sendRoomMessage(otherWs, msg);
             }
           }
           break;
@@ -503,9 +504,9 @@ wss.on('connection', (ws, req) => {
             type: 'player_reaction',
             data: { playerId, emoteId, timestamp: now },
           });
-          for (const [otherWs, meta] of clientSockets.entries()) {
+          for (const [otherWs, meta] of clientSockets.forRoom(cleanRoomId).entries()) {
             if (meta.roomId === cleanRoomId && otherWs.readyState === WebSocket.OPEN) {
-              otherWs.send(msg);
+              sendRoomMessage(otherWs, msg);
             }
           }
           break;

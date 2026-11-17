@@ -23,6 +23,7 @@ export class PersistentRoomStore {
     this.memoryFallback = new Map();
     this.sessionFallback = new Map();
     this.db = null;
+    this.statements = new Map();
 
     if (DatabaseSync) {
       try {
@@ -36,6 +37,15 @@ export class PersistentRoomStore {
     } else {
       console.log('[Storage] Using in-memory room store.');
     }
+  }
+
+  prepare(sql) {
+    let statement = this.statements.get(sql);
+    if (!statement) {
+      statement = this.db.prepare(sql);
+      this.statements.set(sql, statement);
+    }
+    return statement;
   }
 
   initTables() {
@@ -69,7 +79,7 @@ export class PersistentRoomStore {
 
     if (this.db) {
       try {
-        const stmt = this.db.prepare(`
+        const stmt = this.prepare(`
           INSERT INTO rooms (room_id, mode, state_json, updated_at)
           VALUES (?, ?, ?, ?)
           ON CONFLICT(room_id) DO UPDATE SET
@@ -95,7 +105,7 @@ export class PersistentRoomStore {
   loadRoom(roomId) {
     if (this.db) {
       try {
-        const stmt = this.db.prepare('SELECT state_json FROM rooms WHERE room_id = ?');
+        const stmt = this.prepare('SELECT state_json FROM rooms WHERE room_id = ?');
         const row = stmt.get(roomId);
         if (row && row.state_json) {
           return JSON.parse(row.state_json);
@@ -115,8 +125,8 @@ export class PersistentRoomStore {
   deleteRoom(roomId) {
     if (this.db) {
       try {
-        this.db.prepare('DELETE FROM rooms WHERE room_id = ?').run(roomId);
-        this.db.prepare('DELETE FROM player_sessions WHERE room_id = ?').run(roomId);
+        this.prepare('DELETE FROM rooms WHERE room_id = ?').run(roomId);
+        this.prepare('DELETE FROM player_sessions WHERE room_id = ?').run(roomId);
       } catch (err) {
         console.error(`[Storage] Error deleting room ${roomId}:`, err);
       }
@@ -132,7 +142,7 @@ export class PersistentRoomStore {
   saveSession(sessionToken, roomId, playerId, playerName) {
     if (this.db) {
       try {
-        const stmt = this.db.prepare(`
+        const stmt = this.prepare(`
           INSERT INTO player_sessions (session_token, room_id, player_id, player_name)
           VALUES (?, ?, ?, ?)
           ON CONFLICT(session_token) DO UPDATE SET
@@ -152,7 +162,7 @@ export class PersistentRoomStore {
   getSession(sessionToken) {
     if (this.db) {
       try {
-        const stmt = this.db.prepare(
+        const stmt = this.prepare(
           'SELECT session_token as sessionToken, room_id as roomId, player_id as playerId, player_name as playerName FROM player_sessions WHERE session_token = ?'
         );
         const row = stmt.get(sessionToken);
@@ -169,8 +179,8 @@ export class PersistentRoomStore {
     if (this.db) {
       try {
         const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-        this.db.prepare('DELETE FROM rooms WHERE updated_at < ?').run(cutoff);
-        const rows = this.db.prepare('SELECT room_id as roomId, state_json as stateJson FROM rooms').all();
+        this.prepare('DELETE FROM rooms WHERE updated_at < ?').run(cutoff);
+        const rows = this.prepare('SELECT room_id as roomId, state_json as stateJson FROM rooms').all();
         for (const row of rows) {
           try {
             results.push({ roomId: row.roomId, state: JSON.parse(row.stateJson) });
