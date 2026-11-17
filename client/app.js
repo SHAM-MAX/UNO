@@ -500,6 +500,7 @@ class UnoArenaApp {
     // Dedicated No Mercy Setup Event Handlers
     if (this.el.noMercyBackBtn) {
       this.el.noMercyBackBtn.addEventListener('click', () => this.showModePicker());
+      document.getElementById('noMercyBackBottomBtn')?.addEventListener('click', () => this.showModePicker());
     }
     if (this.el.noMercyMobileBackBtn) {
       this.el.noMercyMobileBackBtn.addEventListener('click', () => this.showModePicker());

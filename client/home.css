@@ -4776,3 +4776,23 @@ body.in-classic-setup #classicBackBottomBtn:active {transform:scale(.96);}
 @media (max-width:600px) {
  body.in-classic-setup:not(.in-mode-lobby) #classicBackBottomBtn {bottom:max(12px,env(safe-area-inset-bottom));right:max(12px,env(safe-area-inset-right));width:48px;height:58px;padding:2px;}
 }
+
+/* No Mercy setup corner X controls; no extra tile around the symbols. */
+.nm-corner-back {display:none;}
+body.in-no-mercy-setup:not(.in-mode-lobby):not(.in-arena) .nm-corner-back {
+ display:grid;place-items:center;position:fixed;z-index:150;
+ width:72px;height:72px;padding:6px;border:0;border-radius:10px;
+ background:transparent;box-shadow:none;cursor:pointer;
+}
+body.in-no-mercy-setup:not(.in-mode-lobby) #noMercySetupContainer > .mode-setup-top-action {display:contents;}
+.nm-corner-back svg {display:block;width:100%;height:100%;pointer-events:none;}
+.nm-corner-top {top:max(16px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));}
+.nm-corner-bottom {bottom:max(16px,env(safe-area-inset-bottom));right:max(16px,env(safe-area-inset-right));}
+.nm-corner-back:hover {filter:brightness(1.15);}
+.nm-corner-back:focus-visible {outline:3px solid #ffe226;outline-offset:3px;}
+.nm-corner-back:active {transform:scale(.94);}
+@media (max-width:600px) {
+ body.in-no-mercy-setup:not(.in-mode-lobby):not(.in-arena) .nm-corner-back {width:48px;height:48px;padding:3px;}
+ .nm-corner-top {top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));}
+ .nm-corner-bottom {bottom:max(12px,env(safe-area-inset-bottom));right:max(12px,env(safe-area-inset-right));}
+}
