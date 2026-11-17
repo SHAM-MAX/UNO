@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-v2.2.0';
+const CACHE_NAME = 'uno-arena-brand-v1';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -14,6 +14,12 @@ const STATIC_SHELL_ASSETS = [
   '/shared/constants.js',
   '/shared/rules.js',
   '/manifest.json',
+  '/branding.css?v=1',
+  '/assets/game-logo.png',
+  '/assets/game-logo-32.png?v=1',
+  '/assets/game-logo-180.png?v=1',
+  '/assets/game-logo-192.png',
+  '/assets/game-logo-512.png',
   '/assets/tabletop-wood.jpg',
   '/assets/uno-arena-mobile-hero.png',
   '/assets/game-modes/classic-card.png',

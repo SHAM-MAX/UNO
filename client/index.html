@@ -15,7 +15,10 @@
   <link rel="stylesheet" href="./mobile.css?v=2.2.0">
   <link rel="stylesheet" href="./tabletop-lobby.css?v=1">
   <link rel="stylesheet" href="./classic-lobby.css?v=1">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23EF4444'/><text x='50' y='65' font-size='42' font-weight='900' fill='white' text-anchor='middle'>A</text></svg>">
+  <link rel="stylesheet" href="./branding.css?v=1">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/game-logo-32.png?v=1">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/game-logo-180.png?v=1">
+  <meta property="og:image" content="/assets/game-logo.png">
   <script>
     (function() {
       const orig = document.getElementById.bind(document);
@@ -33,17 +36,7 @@
   <!-- Top Navigation Bar -->
   <header class="top-nav">
     <div class="nav-left">
-      <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="UNO Arena home" title="UNO Arena">
-        <svg class="brand-card-mark" viewBox="0 0 64 60" aria-hidden="true">
-          <rect x="7" y="10" width="29" height="43" rx="5" fill="#e6b526" stroke="#143d2e" stroke-width="2.5" transform="rotate(-18 22 32)"/>
-          <rect x="26" y="8" width="29" height="43" rx="5" fill="#164837" stroke="#f6ebce" stroke-width="2.5" transform="rotate(15 40 30)"/>
-          <rect x="17" y="6" width="31" height="46" rx="5" fill="#d62e32" stroke="#fff4d8" stroke-width="3"/>
-          <ellipse cx="32.5" cy="29" rx="11" ry="18" fill="none" stroke="#fff4d8" stroke-width="2" transform="rotate(26 32.5 29)"/>
-          <path d="M25 31v-8h10v-5l7 9-7 8v-5h-6v8h-9l5-7Z" fill="#fff4d8" stroke="#143d2e" stroke-width="1.5" stroke-linejoin="round"/>
-        </svg>
-        <span class="brand-wordmark"><span class="brand-title"><span class="brand-uno">UNO</span><span class="logo-badge">ARENA</span></span><span class="brand-tagline">GOOD CARDS. GREAT COMPANY.</span></span>
-        <span class="nav-toggle-cue" aria-hidden="true" style="display: none;">▾</span>
-      </button>
+      <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="UNO Arena home" title="UNO Arena"><img class="app-brand-logo" src="./assets/game-logo.png" alt="UNO Arena — Play Your Way"></button>
     </div>
 
     <div id="navRoomDetails" class="nav-room-details" style="display: none;">
@@ -279,10 +272,7 @@
         <div id="mobileLandingContainer" class="mobile-landing-container" aria-label="UNO Arena Mobile Home">
           <!-- 1. Top Navigation Bar -->
           <header class="mobile-nav-bar" aria-label="Mobile Navigation">
-            <div class="mobile-brand">
-              <span class="mobile-brand-uno">UNO</span>
-              <span class="mobile-brand-arena">ARENA</span>
-            </div>
+            <div class="mobile-brand"><img class="app-brand-logo" src="./assets/game-logo.png" alt="UNO Arena — Play Your Way"></div>
             <div class="mobile-nav-actions">
               <button id="mobileNavFullscreenBtn" class="mobile-nav-action-btn nav-btn-icon" type="button" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">
                 <svg class="nav-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -834,7 +824,7 @@
       <div id="colorPickerCardFan" class="color-picker-card-fan" aria-hidden="true"></div>
       <div class="modal-card color-picker-card">
         <div class="color-picker-header">
-          <span class="color-picker-badge">UNO ARENA</span>
+          <span class="color-picker-badge"><img class="app-brand-badge" src="./assets/game-logo.png" alt="UNO Arena — Play Your Way"></span>
           <div class="color-picker-title-row">
             <span class="gold-decor-line left" aria-hidden="true"></span>
             <h3 id="colorPickerTitle" class="modal-title color-picker-title">CHOOSE ACTIVE COLOR</h3>
@@ -853,7 +843,7 @@
       <div id="rouletteCardFan" class="color-picker-card-fan roulette-card-fan" aria-hidden="true"></div>
       <div class="modal-card color-picker-card roulette-card">
         <div class="color-picker-header">
-          <span class="color-picker-badge">UNO ARENA</span>
+          <span class="color-picker-badge"><img class="app-brand-badge" src="./assets/game-logo.png" alt="UNO Arena — Play Your Way"></span>
           <div class="color-picker-title-row">
             <span class="gold-decor-line left" aria-hidden="true"></span>
             <h3 id="rouletteTitle" class="modal-title color-picker-title">COLOR ROULETTE</h3>
@@ -1526,7 +1516,7 @@
   <div id="quickMatchModal" class="modal-overlay quick-match-overlay" role="dialog" aria-modal="true" aria-labelledby="quickMatchTitle" style="display: none;">
     <div class="modal-card quick-match-card">
       <div class="quick-match-header">
-        <span class="color-picker-badge">UNO ARENA</span>
+        <span class="color-picker-badge"><img class="app-brand-badge" src="./assets/game-logo.png" alt="UNO Arena — Play Your Way"></span>
         <h3 id="quickMatchTitle" class="quick-match-title">FINDING MATCH...</h3>
         <p class="quick-match-subtitle">Searching for players in <strong id="quickMatchModeBadge" class="qm-mode-badge">CLASSIC</strong> mode</p>
       </div>
