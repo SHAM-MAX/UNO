@@ -4745,23 +4745,18 @@ body.in-classic-setup {background:#151515 !important;}
  .mode-setup-screen.mode-classic-setup .setup-panel {padding:0;border:0;}
 }
 
-/* Classic back navigation belongs to the viewport, styled like its card back. */
+
+/* Classic reverse symbol is the screen-corner back control, without a tile. */
 body.in-classic-setup:not(.in-mode-lobby) #standardSetupLayout > .mode-setup-top-action {display:contents;}
 body.in-classic-setup:not(.in-mode-lobby) #backToModesBtn {
  position:fixed;top:max(16px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));
- z-index:150;isolation:isolate;overflow:hidden;display:inline-flex;align-items:center;gap:10px;
- min-height:56px;padding:10px 20px;border:3px solid #fff1d6;border-radius:18px;
- background:#101010;color:#ffe52a;font:900 14px 'Outfit',sans-serif;letter-spacing:.02em;
- box-shadow:0 5px 0 #080808,0 8px 18px #0005;text-shadow:0 2px 1px #080808;
+ z-index:150;display:grid;place-items:center;width:80px;height:96px;min-height:44px;
+ padding:4px;border:0;border-radius:8px;background:transparent;color:inherit;box-shadow:none;text-shadow:none;
 }
-body.in-classic-setup:not(.in-mode-lobby) #backToModesBtn::before {
- content:'';position:absolute;z-index:-1;left:24%;top:-50%;width:60%;height:200%;
- border-radius:50%;background:#d40b22;transform:rotate(42deg);pointer-events:none;
-}
-body.in-classic-setup #backToModesBtn .back-arrow {color:#fff3db;font-size:27px;line-height:1;}
-body.in-classic-setup #backToModesBtn:hover {filter:brightness(1.12);transform:none;}
-body.in-classic-setup #backToModesBtn:focus-visible {outline:3px solid #ffe52a;outline-offset:4px;}
-body.in-classic-setup #backToModesBtn:active {transform:translateY(2px);}
+#backToModesBtn .classic-back-symbol {display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;}
+body.in-classic-setup #backToModesBtn:hover {background:transparent;filter:brightness(1.08);transform:none;}
+body.in-classic-setup #backToModesBtn:focus-visible {outline:3px solid #ffe52a;outline-offset:3px;}
+body.in-classic-setup #backToModesBtn:active {transform:scale(.96);}
 @media (max-width:600px) {
- body.in-classic-setup:not(.in-mode-lobby) #backToModesBtn {top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));min-height:48px;padding:6px 14px;font-size:12px;border-radius:14px;}
+ body.in-classic-setup:not(.in-mode-lobby) #backToModesBtn {top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));width:48px;height:58px;padding:2px;}
 }
