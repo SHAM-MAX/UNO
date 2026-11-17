@@ -1144,6 +1144,7 @@ class UnoArenaApp {
 
     // Closing a finished match exits the room, rather than stranding the player.
     this.el.gameOverCloseBtn?.addEventListener('click', () => this.confirmLeaveRoom());
+    document.getElementById('victoryHomeBtn')?.addEventListener('click', () => this.confirmLeaveRoom());
 
     // Reopen victory celebration from finished table
     this.el.btnViewVictory?.addEventListener('click', () => {
@@ -3756,11 +3757,19 @@ class UnoArenaApp {
     this.el.winReasonText.textContent = (gameState.winReason || 'All cards played!') + (gameState.mode === 'classic' ? ' Scores: ' + gameState.players.map(p => `${p.name}: ${p.score}`).join(' · ') : '');
     this.el.rematchBtn.textContent = gameState.status === 'round_over' ? 'Next round' : 'REQUEST REMATCH';
 
+    const modeDetail = document.getElementById('victoryModeDetail');
+    const playersDetail = document.getElementById('victoryPlayersDetail');
+    if (modeDetail) modeDetail.textContent = { classic: 'CLASSIC UNO', flip: 'UNO FLIP', no_mercy: 'NO MERCY' }[gameState.mode] || 'UNO';
+    if (playersDetail) playersDetail.textContent = `${gameState.players.length} PLAYERS`;
+    this.el.gameOverModal.dataset.mode = gameState.mode;
     const me = gameState.players.find((p) => p.id === this.playerId);
     this.el.rematchBtn.style.display = (gameState.status === 'round_over' ? me?.isHost : this.clientView.canProposeRematch) ? 'block' : 'none';
 
     if (this.el.btnViewVictory) this.el.btnViewVictory.style.display = 'none';
-    if (!this.el.gameOverModal.classList.contains('active')) sounds.playVictory();
+    if (!this.el.gameOverModal.classList.contains('active')) {
+      sounds.playVictory();
+      requestAnimationFrame(() => this.el.gameOverCloseBtn?.focus({ preventScroll: true }));
+    }
     this.el.gameOverModal.classList.add('active');
   }
 
