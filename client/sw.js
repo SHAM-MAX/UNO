@@ -1,10 +1,11 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-opponent-fan-v13';
+const CACHE_NAME = 'uno-arena-settings-v14';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
   '/install.js?v=1',
   '/install.css?v=1',
+  '/settings.css?v=1',
   '/style.css?v=2.2.0',
   '/home.css?v=2.2.0',
   '/lobby.css?v=2.2.0',

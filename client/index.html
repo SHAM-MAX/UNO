@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="./branding.css?v=2">
   <link rel="stylesheet" href="./victory.css?v=3">
   <link rel="stylesheet" href="./mobile-layout.css?v=3">
+  <link rel="stylesheet" href="./settings.css?v=1">
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/uno-brand-v4-32.png?v=4">
   <link rel="icon" type="image/png" sizes="192x192" href="./assets/uno-brand-v4-192.png?v=4">
   <link rel="icon" type="image/png" sizes="512x512" href="./assets/uno-brand-v4-512.png?v=4">
@@ -1070,7 +1071,7 @@
     <div class="modal-card settings-modal-card">
       <div class="modal-header settings-modal-header">
         <div class="rules-modal-title-wrap">
-          <h3 id="settingsModalTitle" class="modal-title">⚙️ Settings</h3>
+          <span class="settings-kicker">UNO ARENA / YOUR PREFERENCES</span><h3 id="settingsModalTitle" class="modal-title">Settings</h3>
           <span id="gameRulesModeBadge" class="rules-mode-badge" style="display: none;">CLASSIC UNO</span>
           <span id="gameRulesTypeBadge" class="rules-type-badge" style="display: none;">Official Rules</span>
         </div>
@@ -1079,9 +1080,9 @@
 
       <!-- Navigation Tabs: General | Game Rules | How to Play -->
       <div class="settings-nav-tabs" role="tablist">
-        <button id="tabBtnGeneral" class="settings-tab-btn active" role="tab" aria-selected="true" data-tab="general" type="button">⚙️ General</button>
-        <button id="tabBtnGameRules" class="settings-tab-btn" role="tab" aria-selected="false" data-tab="rules" type="button">📋 Game Rules</button>
-        <button id="tabBtnHowToPlay" class="settings-tab-btn" role="tab" aria-selected="false" data-tab="how_to_play" type="button">📖 How to Play</button>
+        <button id="tabBtnGeneral" class="settings-tab-btn active" role="tab" aria-selected="true" data-tab="general" type="button">General</button>
+        <button id="tabBtnGameRules" class="settings-tab-btn" role="tab" aria-selected="false" data-tab="rules" type="button">Game rules</button>
+        <button id="tabBtnHowToPlay" class="settings-tab-btn" role="tab" aria-selected="false" data-tab="how_to_play" type="button">How to play</button>
       </div>
 
       <!-- Mode Selector Tabs (For Game Rules) -->
@@ -1114,7 +1115,7 @@
               </div>
               <div class="setting-ctrl">
                 <label class="rule-toggle">
-                  <input type="checkbox" id="settingSoundToggle" checked>
+                  <input type="checkbox" id="settingSoundToggle" aria-label="Sound effects" checked>
                   <span class="rule-toggle-slider"></span>
                 </label>
               </div>
@@ -1148,7 +1149,7 @@
             <div class="setting-col">
               <div class="setting-info">
                 <span class="setting-title">Player Avatar</span>
-                <p class="setting-desc">Choose a built-in avatar badge or upload a custom image (auto-scaled to 96×96).</p>
+                <p class="setting-desc">Choose your table avatar or upload a photo.</p>
               </div>
               <div class="avatar-manager-box">
                 <div class="avatar-preview-wrap">
@@ -1191,7 +1192,7 @@
               </div>
               <div class="setting-ctrl">
                 <label class="rule-toggle">
-                  <input type="checkbox" id="settingReducedMotion">
+                  <input type="checkbox" id="settingReducedMotion" aria-label="Reduced motion">
                   <span class="rule-toggle-slider"></span>
                 </label>
               </div>
@@ -1451,7 +1452,7 @@
             </ul>
 
             <h4>The UNO Rule</h4>
-            <p>When you have only 1 card remaining in your hand, you MUST tap the <strong>CALL UNO</strong> button! If an opponent catches you before the next turn, you will be penalized with draw cards.</p>
+            <p>Tap <strong>CALL UNO</strong> when you hold exactly two cards, before playing down to one. If you reach one card without calling UNO, an opponent can catch you. The penalty uses the card count set in Game Rules.</p>
           </div>
 
           <!-- Flip Guide -->
@@ -1489,6 +1490,7 @@
 
       <!-- Footer Actions -->
       <div class="modal-footer settings-modal-footer">
+        <span class="settings-footer-note">Make yourself at home.</span>
         <button id="ruleRestoreDefaultsBtn" class="rule-btn-secondary" type="button">↺ Restore default rules</button>
         <button id="ruleApplyBtn" class="rule-btn-primary" type="button">Save &amp; Close ✓</button>
       </div>

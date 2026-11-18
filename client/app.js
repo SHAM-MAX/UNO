@@ -3970,8 +3970,8 @@ class UnoArenaApp {
 
     if (this.el.gameRulesModalTitle) {
       this.el.gameRulesModalTitle.textContent = isPlaying
-        ? '🔒 Active Match Rules'
-        : (context === 'ai' ? '⚙️ Play vs AI Rules' : '⚙️ Lobby Game Rules');
+        ? 'Match rules'
+        : (context === 'ai' ? 'AI game rules' : 'Game rules');
     }
 
     const rules = context === 'ai'
@@ -4148,6 +4148,12 @@ class UnoArenaApp {
     this.el.modeLobbySettingsBtn?.addEventListener('click', openSettings);
 
     // Tab buttons
+    const settingsTabs = [this.el.tabBtnGeneral, this.el.tabBtnGameRules, this.el.tabBtnHowToPlay];
+    settingsTabs.forEach((button, index) => button?.addEventListener('keydown', event => {
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? 2 : ['ArrowRight','ArrowDown'].includes(event.key) ? (index + 1) % 3 : ['ArrowLeft','ArrowUp'].includes(event.key) ? (index + 2) % 3 : null;
+      if (next === null) return;
+      event.preventDefault(); settingsTabs[next].click(); settingsTabs[next].focus();
+    }));
     this.el.tabBtnGeneral?.addEventListener('click', () => this.switchSettingsTab('general'));
     this.el.tabBtnGameRules?.addEventListener('click', () => this.switchSettingsTab('rules'));
     this.el.tabBtnHowToPlay?.addEventListener('click', () => this.switchSettingsTab('how_to_play'));
@@ -4335,9 +4341,13 @@ class UnoArenaApp {
       if (t.btn) {
         t.btn.classList.toggle('active', isMatch);
         t.btn.setAttribute('aria-selected', String(isMatch));
+        t.btn.tabIndex = isMatch ? 0 : -1;
+        t.btn.setAttribute('aria-controls', t.content.id);
       }
       if (t.content) {
         t.content.classList.toggle('active', isMatch);
+        t.content.setAttribute('role', 'tabpanel');
+        t.content.setAttribute('aria-labelledby', t.btn.id);
       }
     });
 
@@ -4372,13 +4382,13 @@ class UnoArenaApp {
 
     if (this.el.settingsModalTitle) {
       if (tab === 'general') {
-        this.el.settingsModalTitle.textContent = '⚙️ Settings';
+        this.el.settingsModalTitle.textContent = 'Settings';
       } else if (tab === 'rules') {
         this.el.settingsModalTitle.textContent = isPlaying
-          ? '🔒 Active Match Rules'
-          : (this.rulesModalContext === 'ai' ? '⚙️ Play vs AI Rules' : '⚙️ Lobby Game Rules');
+          ? 'Match rules'
+          : (this.rulesModalContext === 'ai' ? 'AI game rules' : 'Game rules');
       } else if (tab === 'how_to_play') {
-        this.el.settingsModalTitle.textContent = '📖 How to Play';
+        this.el.settingsModalTitle.textContent = 'How to play';
       }
     }
   }
