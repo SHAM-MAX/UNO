@@ -4436,3 +4436,27 @@ fitNoMercyReferenceLobby();
 function fitClassicLobby() { document.documentElement.style.setProperty("--classic-lobby-scale",String(Math.min((innerWidth-40)/1000,(innerHeight-64)/940,1))); }
 window.addEventListener("resize",fitClassicLobby);
 fitClassicLobby();
+
+// Measure untransformed layout so the complete result and actions stay visible.
+let victoryFitFrame;
+function fitVictoryStage() {
+  cancelAnimationFrame(victoryFitFrame);
+  victoryFitFrame = requestAnimationFrame(() => {
+    const modal = document.getElementById('gameOverModal');
+    const stage = modal?.querySelector('.victory-stage');
+    if (!stage || !modal.classList.contains('active')) return;
+    const height = stage.offsetHeight;
+    const width = stage.offsetWidth;
+    const availableHeight = Math.max(1, modal.clientHeight - 80);
+    const availableWidth = Math.max(1, modal.clientWidth - 24);
+    const scale = Math.min(1, availableHeight / Math.max(1, height), availableWidth / Math.max(1, width));
+    stage.style.setProperty('--victory-fit', String(scale));
+  });
+}
+const victoryModal = document.getElementById('gameOverModal');
+if (victoryModal) {
+  new MutationObserver(fitVictoryStage).observe(victoryModal, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true, characterData: true });
+  new ResizeObserver(fitVictoryStage).observe(victoryModal.querySelector('.victory-card'));
+  window.addEventListener('resize', fitVictoryStage);
+  window.visualViewport?.addEventListener('resize', fitVictoryStage);
+}
