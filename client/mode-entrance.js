@@ -1,19 +1,29 @@
 // Wait for artwork before starting: a cold network must not animate an empty image.
-const artworkUrls = [
+const artworkByMode = { no_mercy: [
   './assets/no-mercy-cards/wild_draw10.webp',
   './assets/no-mercy-setup-bg.jpg',
   './assets/no-mercy-card-canvas.png',
   './assets/no-mercy-card-header.png',
-].map(path => new URL(path, import.meta.url).href);
-let artworkReady;
-export function preloadNoMercyEntrance() {
-  return artworkReady ||= Promise.all(artworkUrls.map(src => {
+], flip: [
+  './assets/flip-cards/Purple_FLIP.jpg',
+  './assets/uno-flip-setup-bg.jpg',
+  './assets/uno-flip-create-reference.png',
+] };
+for (const mode of Object.keys(artworkByMode)) artworkByMode[mode] = artworkByMode[mode].map(path => new URL(path, import.meta.url).href);
+const artworkReady = {};
+export function preloadNoMercyEntrance() { return preloadModeEntrance('no_mercy'); }
+export function preloadFlipEntrance() { return preloadModeEntrance('flip'); }
+function preloadModeEntrance(mode) {
+  return artworkReady[mode] ||= Promise.all(artworkByMode[mode].map(src => {
     const image = new Image();
     image.src = src;
     return image.decode();
-  })).catch(() => { artworkReady = null; return false; });
+  })).catch(() => { artworkReady[mode] = null; return false; });
 }
-export function playNoMercyEntrance(card) {
+export function playNoMercyEntrance(card) { return playModeEntrance(card,'no_mercy'); }
+export function playFlipEntrance(card) { return playModeEntrance(card,'flip'); }
+function playModeEntrance(card, mode) {
+  const artworkUrls = artworkByMode[mode];
   if (!card || matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduced-motion')) return () => {};
   let cleaned = false;
   let face, flight, reveal;
@@ -31,7 +41,7 @@ export function playNoMercyEntrance(card) {
     Object.assign(face.style, {left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px'});
   };
   const start = async () => {
-    const ready = await preloadNoMercyEntrance();
+    const ready = await preloadModeEntrance(mode);
     if (cleaned || ready === false || !card.isConnected) return;
     // Let the newly opened screen finish layout before measuring its form.
     await new Promise(resolve => requestAnimationFrame(resolve));
@@ -40,7 +50,7 @@ export function playNoMercyEntrance(card) {
     face.src = artworkUrls[0];
     face.alt = '';
     face.setAttribute('aria-hidden','true');
-    face.dataset.modeEntrance = 'no-mercy';
+    face.dataset.modeEntrance = mode;
     Object.assign(face.style, {
       position:'fixed',objectFit:'fill',borderRadius:'28px',pointerEvents:'none',zIndex:'110',
       filter:'drop-shadow(0 24px 30px #0009)',transformOrigin:'center',

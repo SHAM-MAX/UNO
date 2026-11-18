@@ -215,25 +215,30 @@ async function main() {
 
 
 
+    for (const mode of ['no_mercy','flip']) {
+    await cdp.evaluate(new Function(`window.entranceMode=${JSON.stringify(mode)}`));
+    const selector = mode==='flip' ? '#flipCardWrapper' : '.nm-card-container';
+    await cdp.evaluate(new Function(`window.entranceSelector=${JSON.stringify(selector)}`));
     for (const [width,height] of [[1440,900],[390,844],[844,390]]) {
       await cdp.setViewport(width,height,width<900);
-      await cdp.evaluate(()=>document.querySelector('[data-home-mode="no_mercy"]').click());
-      await cdp.waitForFunction(()=>!!document.querySelector('[data-mode-entrance]') && document.querySelector('.nm-card-container').inert, 60000);
+      await cdp.evaluate(()=>document.querySelector('[data-home-mode="'+window.entranceMode+'"]').click());
+      await cdp.waitForFunction(()=>!!document.querySelector('[data-mode-entrance]') && document.querySelector(window.entranceSelector).inert, 60000);
       if (!await cdp.evaluate(()=>{const image=document.querySelector('[data-mode-entrance]');return image.complete && image.naturalWidth>0;})) throw Error('Entrance artwork not ready');
       await delay(350);
-      console.log('mid-animation',await cdp.evaluate(()=>({motion:matchMedia('(prefers-reduced-motion: reduce)').matches,face:!!document.querySelector('[data-mode-entrance]'),opacity:getComputedStyle(document.querySelector('.nm-card-container')).opacity,animations:document.querySelector('.nm-card-container').getAnimations().map(a=>({time:a.currentTime,state:a.playState}))})));
-      await cdp.screenshot(path.join(ARTIFACT_DIR,'entrance-'+width+'.png'));
-      await cdp.waitForFunction(()=>!document.querySelector('[data-mode-entrance]') && !document.querySelector('.nm-card-container').inert);
-      await cdp.evaluate(()=>{const input=window.app.el.noMercyPlayerNameInput;input.focus();input.value='Animation Host';});
-      if (!await cdp.evaluate(()=>document.activeElement===window.app.el.noMercyPlayerNameInput)) throw Error('Form unusable after entrance');
-      await cdp.evaluate(()=>window.app.openModeSetup('no_mercy'));
+      console.log('mid-animation',await cdp.evaluate(()=>({motion:matchMedia('(prefers-reduced-motion: reduce)').matches,face:!!document.querySelector('[data-mode-entrance]'),opacity:getComputedStyle(document.querySelector(window.entranceSelector)).opacity,animations:document.querySelector(window.entranceSelector).getAnimations().map(a=>({time:a.currentTime,state:a.playState}))})));
+      await cdp.screenshot(path.join(ARTIFACT_DIR,'entrance-'+mode+'-'+width+'.png'));
+      await cdp.waitForFunction(()=>!document.querySelector('[data-mode-entrance]') && !document.querySelector(window.entranceSelector).inert);
+      await cdp.evaluate(()=>{const input=window.entranceMode==='flip'?window.app.el.flipPlayerNameInput:window.app.el.noMercyPlayerNameInput;input.focus();input.value='Animation Host';});
+      if (!await cdp.evaluate(()=>document.activeElement===(window.entranceMode==='flip'?window.app.el.flipPlayerNameInput:window.app.el.noMercyPlayerNameInput))) throw Error('Form unusable after entrance');
+      await cdp.evaluate(()=>window.app.openModeSetup(window.entranceMode));
       await cdp.evaluate(()=>window.app.showModePicker());
       await cdp.waitForFunction(()=>window.app.selectedSetupMode===null);
-      if (!await cdp.evaluate(()=>!document.querySelector('[data-mode-entrance]') && !document.querySelector('.nm-card-container').inert)) throw Error('Entrance cleanup failed');
+      if (!await cdp.evaluate(()=>!document.querySelector('[data-mode-entrance]') && !document.querySelector(window.entranceSelector).inert)) throw Error('Entrance cleanup failed');
+    }
     }
     await cdp.evaluate(()=>document.body.classList.add('reduced-motion'));
-    await cdp.evaluate(()=>window.app.openModeSetup('no_mercy'));
-    if (!await cdp.evaluate(()=>!document.querySelector('[data-mode-entrance]') && !document.querySelector('.nm-card-container').inert)) throw Error('Reduced motion ignored');
+    await cdp.evaluate(()=>window.app.openModeSetup(window.entranceMode));
+    if (!await cdp.evaluate(()=>!document.querySelector('[data-mode-entrance]') && !document.querySelector(window.entranceSelector).inert)) throw Error('Reduced motion ignored');
     console.log('PASS entrance desktop/mobile/landscape, completion, editable form, repeat, cancellation, reduced motion');
     cdp.close();
   } finally {

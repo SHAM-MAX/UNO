@@ -1,4 +1,4 @@
-import { playNoMercyEntrance, preloadNoMercyEntrance } from './mode-entrance.js';
+import { playNoMercyEntrance, preloadNoMercyEntrance, playFlipEntrance, preloadFlipEntrance } from './mode-entrance.js';
 import { initBackNavigation } from './navigation.js';
 import { CLASSIC_COLORS, FLIP_DARK_COLORS, COLOR_METADATA } from '../shared/constants.js';
 import { defaultHouseRules } from '../shared/rules.js';
@@ -56,6 +56,7 @@ class UnoArenaApp {
     }
 
     preloadNoMercyEntrance();
+    preloadFlipEntrance();
     this.initElements();
     this.initEvents();
     this.initDialogAccessibility();
@@ -1479,6 +1480,7 @@ class UnoArenaApp {
     this.el.modeHomeScreen.hidden = true;
     this.el.modeSetupSection.hidden = false;
     if (isNoMercy) this.cancelModeEntrance = playNoMercyEntrance(nmCard);
+    else if (isFlip) this.cancelModeEntrance = playFlipEntrance(flipCard);
   }
 
   showModePicker() {

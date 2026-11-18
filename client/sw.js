@@ -1,11 +1,12 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-loaded-card-entrance-v20';
+const CACHE_NAME = 'uno-arena-flip-card-entrance-v21';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
   '/assets/friends-uno-nav.png',
   '/navigation.js',
   '/mode-entrance.js',
+  '/assets/flip-cards/Purple_FLIP.jpg',
   '/assets/no-mercy-cards/wild_draw10.webp',
   '/install.js?v=1',
   '/install.css?v=1',
