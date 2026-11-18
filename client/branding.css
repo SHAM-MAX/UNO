@@ -13,3 +13,17 @@ body.in-arena #brandNavToggle .app-brand-logo {height:38px;max-width:100px;}
  body.in-room:not(.in-arena) #brandNavToggle .app-brand-logo {height:40px;max-width:100px;}
  .mobile-brand .app-brand-logo {height:44px;max-width:100px;}
 }
+
+/* Center the navigation wordmark independently of the right-hand controls. */
+.top-nav .nav-left { position:absolute; left:50%; transform:translateX(-50%); }
+.top-nav .nav-controls { margin-left:auto; }
+.top-nav .nav-room-details { justify-content:flex-start; flex:0 1 auto; max-width:38%; min-width:0; }
+#brandNavToggle.brand-logo { padding:0 8px; height:48px; }
+#brandNavToggle .nav-uno-wordmark,
+.mobile-brand .nav-uno-wordmark { display:block; font:900 32px/1 'Outfit',sans-serif; letter-spacing:2px; color:#103b2c; text-shadow:none; }
+.mobile-nav-bar { position:relative; }
+.mobile-nav-bar .mobile-brand { position:absolute; left:50%; transform:translateX(-50%); margin:0; }
+.mobile-nav-bar .mobile-nav-actions { margin-left:auto; }
+@media(max-width:600px) {
+ #brandNavToggle .nav-uno-wordmark,.mobile-brand .nav-uno-wordmark { font-size:28px; letter-spacing:1.5px; }
+}
