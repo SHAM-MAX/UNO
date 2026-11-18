@@ -231,7 +231,30 @@ async function main() {
     await cdp.evaluate(()=>window.app.openGameRulesModal('ai','no_mercy'));
     const edit=await cdp.evaluate(()=>{const select=document.getElementById('ruleMissedUnoPenalty');select.value='5';select.dispatchEvent(new Event('change',{bubbles:true}));const enabled=!select.disabled;document.getElementById('ruleApplyBtn').click();return {enabled,saved:window.app.getSelectedHouseRules('no_mercy').missedUnoPenalty===5};});
     if(!edit.enabled||!edit.saved)throw Error('Rule saving failed '+JSON.stringify(edit));
-    console.log('PASS settings layouts, audio, volume, profile, avatar, and editable rule save');cdp.close();
+    const landing=await cdp.evaluate(()=>{
+      const app=window.app;app.rulesModalContext='lobby';app.preferredMode='classic';app.openSettingsModal('rules');
+      const select=document.getElementById('ruleMissedUnoPenalty'),draw=document.getElementById('ruleClassicDrawBehavior');
+      const enabled=!select.disabled&&draw.value==='draw_one';select.value='6';select.dispatchEvent(new Event('change',{bubbles:true}));
+      draw.value='draw_until_playable';draw.dispatchEvent(new Event('change',{bubbles:true}));document.getElementById('ruleApplyBtn').click();
+      const saved=app.getSelectedHouseRules('classic');return {enabled,saved:saved.missedUnoPenalty===6&&saved.drawUntilPlayable};
+    });
+    if(!landing.enabled||!landing.saved)throw Error('Landing rules still locked or unsaved '+JSON.stringify(landing));
+    await cdp.evaluate(()=>window.app.createRoom('Rules Host','classic',window.app.getSelectedHouseRules('classic'),'selectable'));
+    await cdp.waitForFunction(()=>window.app.gameState?.status==='lobby');
+    const permissions=await cdp.evaluate(()=>{
+      const app=window.app,host=app.playerId;app.openGameRulesModal('lobby','classic');
+      const applied=app.gameState.houseRules.missedUnoPenalty===6&&app.gameState.houseRules.drawUntilPlayable;
+      const hostEditable=!document.getElementById('ruleMissedUnoPenalty').disabled;
+      app.playerId='guest-fixture';app.openGameRulesModal('lobby','classic');
+      const guestLocked=document.getElementById('ruleMissedUnoPenalty').disabled&&!document.getElementById('rulesGuestBanner').hidden;
+      app.playerId=host;app.closeSettingsModal();return {applied,hostEditable,guestLocked};
+    });
+    if(Object.values(permissions).some(v=>!v))throw Error('Rule permissions '+JSON.stringify(permissions));
+    await cdp.evaluate(()=>window.app.send({type:'add_bot'}));await cdp.waitForFunction(()=>window.app.gameState.players.length===2);
+    await cdp.evaluate(()=>window.app.send({type:'start_game'}));await cdp.waitForFunction(()=>window.app.gameState.status==='playing');
+    if(!await cdp.evaluate(()=>{window.app.openSettingsModal('rules');return document.getElementById('ruleMissedUnoPenalty').disabled&&!document.getElementById('rulesLockedBanner').hidden;}))throw Error('Active match rules unlocked');
+    await cdp.evaluate(()=>window.app.confirmLeaveRoom());
+    console.log('PASS settings layouts, audio/profile, landing edits, rule propagation, host editing, guest and active-match locks');cdp.close();
   } finally {
     chromeProc.kill();
     server.close();

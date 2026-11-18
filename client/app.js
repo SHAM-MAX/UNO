@@ -927,7 +927,7 @@ class UnoArenaApp {
           if (mode) {
             this.activeRulesModalMode = mode;
             this.el.gameRulesModeTabs.querySelectorAll('.rule-tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
-            const rules = this.rulesModalContext === 'ai'
+            const rules = ['ai', 'setup'].includes(this.rulesModalContext)
               ? (this.customHouseRules[mode] || defaultHouseRules(mode))
               : (this.gameState?.houseRules || defaultHouseRules(mode));
             this.syncGameRulesModalInputs(mode, rules, this.gameState?.status === 'playing', this.gameState?.players?.find(p => p.id === this.playerId)?.isHost);
@@ -940,7 +940,7 @@ class UnoArenaApp {
     if (this.el.ruleRestoreDefaultsBtn) {
       this.el.ruleRestoreDefaultsBtn.addEventListener('click', () => {
         const mode = this.activeRulesModalMode;
-        if (this.rulesModalContext === 'ai') {
+        if (['ai', 'setup'].includes(this.rulesModalContext)) {
           this.customHouseRules[mode] = defaultHouseRules(mode);
           this.syncGameRulesModalInputs(mode, this.customHouseRules[mode], false, true);
           this.updateAiRulesSummary(mode);
@@ -954,7 +954,7 @@ class UnoArenaApp {
     const handleRuleInputChange = () => {
       const mode = this.activeRulesModalMode;
       const updatedRules = this.readGameRulesModalInputs(mode);
-      if (this.rulesModalContext === 'ai') {
+      if (['ai', 'setup'].includes(this.rulesModalContext)) {
         this.customHouseRules[mode] = updatedRules;
         const isCustom = this.isCustomRules(mode, updatedRules);
         if (this.el.gameRulesTypeBadge) {
@@ -3873,7 +3873,7 @@ class UnoArenaApp {
     }
   }
 
-  getSelectedHouseRules(mode = this.aiSetup?.mode || this.gameState?.mode || this.preferredMode || 'classic') {
+  getSelectedHouseRules(mode = this.gameState?.mode || this.selectedSetupMode || this.preferredMode || this.aiSetup?.mode || 'classic') {
     const custom = this.customHouseRules?.[mode];
     if (custom) return { ...custom };
     return defaultHouseRules(mode);
@@ -3952,12 +3952,13 @@ class UnoArenaApp {
   }
 
   openGameRulesModal(context = 'lobby', mode = null) {
+    if (!this.roomId && context !== 'ai') context = 'setup';
     this.rulesModalContext = context;
-    const targetMode = mode || (context === 'ai' ? (this.aiSetup?.mode || 'classic') : (this.gameState?.mode || 'classic'));
+    const targetMode = mode || (['ai', 'setup'].includes(context) ? (this.aiSetup?.mode || 'classic') : (this.gameState?.mode || 'classic'));
     this.activeRulesModalMode = targetMode;
 
     const me = this.gameState?.players?.find((p) => p.id === this.playerId);
-    const isHost = context === 'ai' ? true : (me?.isHost || false);
+    const isHost = ['ai', 'setup'].includes(context) ? true : (me?.isHost || false);
     const isPlaying = this.gameState?.status === 'playing';
     const isReadOnly = isPlaying || !isHost;
 
@@ -3965,16 +3966,16 @@ class UnoArenaApp {
       this.el.rulesLockedBanner.hidden = !isPlaying;
     }
     if (this.el.rulesGuestBanner) {
-      this.el.rulesGuestBanner.hidden = isPlaying || isHost || context === 'ai';
+      this.el.rulesGuestBanner.hidden = isPlaying || isHost || ['ai', 'setup'].includes(context);
     }
 
     if (this.el.gameRulesModalTitle) {
       this.el.gameRulesModalTitle.textContent = isPlaying
         ? 'Match rules'
-        : (context === 'ai' ? 'AI game rules' : 'Game rules');
+        : (['ai', 'setup'].includes(context) ? 'AI game rules' : 'Game rules');
     }
 
-    const rules = context === 'ai'
+    const rules = ['ai', 'setup'].includes(context)
       ? this.getSelectedHouseRules(targetMode)
       : (this.gameState?.houseRules || defaultHouseRules(targetMode));
 
@@ -4005,7 +4006,7 @@ class UnoArenaApp {
       this.el.gameRulesModeTabs.querySelectorAll('.rule-tab-btn').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.rulesMode === mode);
       });
-      this.el.gameRulesModeTabs.style.display = this.rulesModalContext === 'ai' ? 'flex' : 'none';
+      this.el.gameRulesModeTabs.style.display = ['ai', 'setup'].includes(this.rulesModalContext) ? 'flex' : 'none';
     }
 
     // Mode-specific sections visibility
@@ -4352,8 +4353,10 @@ class UnoArenaApp {
     });
 
     const isPlaying = this.gameState?.status === 'playing';
-    const isHost = this.rulesModalContext === 'ai' ? true : (this.gameState?.players?.find((p) => p.id === this.playerId)?.isHost || false);
+    const isHost = ['ai', 'setup'].includes(this.rulesModalContext) ? true : (this.gameState?.players?.find((p) => p.id === this.playerId)?.isHost || false);
     const isReadOnly = isPlaying || !isHost;
+    if (this.el.rulesLockedBanner) this.el.rulesLockedBanner.hidden = tab !== 'rules' || !isPlaying;
+    if (this.el.rulesGuestBanner) this.el.rulesGuestBanner.hidden = tab !== 'rules' || isPlaying || isHost;
 
     if (tab === 'rules') {
       if (this.el.gameRulesModeBadge) this.el.gameRulesModeBadge.style.display = 'inline-block';
@@ -4365,7 +4368,7 @@ class UnoArenaApp {
         this.el.ruleApplyBtn.textContent = isReadOnly ? 'Close ✕' : 'Save & Close ✓';
       }
       const targetMode = this.activeRulesModalMode || this.gameState?.mode || this.aiSetup?.mode || 'classic';
-      const rules = this.rulesModalContext === 'ai'
+      const rules = ['ai', 'setup'].includes(this.rulesModalContext)
         ? this.getSelectedHouseRules(targetMode)
         : (this.gameState?.houseRules || defaultHouseRules(targetMode));
       this.syncGameRulesModalInputs(targetMode, rules, isReadOnly, isHost);
@@ -4386,7 +4389,7 @@ class UnoArenaApp {
       } else if (tab === 'rules') {
         this.el.settingsModalTitle.textContent = isPlaying
           ? 'Match rules'
-          : (this.rulesModalContext === 'ai' ? 'AI game rules' : 'Game rules');
+          : (['ai', 'setup'].includes(this.rulesModalContext) ? 'AI game rules' : 'Game rules');
       } else if (tab === 'how_to_play') {
         this.el.settingsModalTitle.textContent = 'How to play';
       }
@@ -4394,6 +4397,13 @@ class UnoArenaApp {
   }
 
   openSettingsModal(tab = 'general') {
+    if (!this.roomId && this.rulesModalContext !== 'ai') {
+      this.rulesModalContext = 'setup';
+      this.activeRulesModalMode = this.selectedSetupMode || this.preferredMode || 'classic';
+    } else if (this.roomId && this.rulesModalContext !== 'ai') {
+      this.rulesModalContext = this.gameState?.status === 'playing' ? 'arena' : 'lobby';
+      this.activeRulesModalMode = this.gameState?.mode || 'classic';
+    }
     this.switchSettingsTab(tab);
 
     if (this.el.settingSoundToggle) {
