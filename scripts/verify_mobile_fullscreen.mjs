@@ -209,6 +209,19 @@ async function main() {
 
 
 
+    await cdp.setViewport(390,844,true);
+    const rotation=await cdp.evaluate(async()=>{
+      const root=document.documentElement,orientation=screen.orientation,log=[];
+      const request=root.requestFullscreen,exit=document.exitFullscreen,lock=orientation.lock,unlock=orientation.unlock;
+      try {
+        root.requestFullscreen=async()=>{log.push('fullscreen');Object.defineProperty(document,'fullscreenElement',{configurable:true,value:root});};
+        document.exitFullscreen=async()=>{log.push('exit');delete document.fullscreenElement;};
+        orientation.lock=async(value)=>log.push(value);orientation.unlock=()=>log.push('unlock');
+        await window.app.toggleFullscreen();await window.app.toggleFullscreen();
+        return log.join(',');
+      } finally {root.requestFullscreen=request;document.exitFullscreen=exit;orientation.lock=lock;orientation.unlock=unlock;delete document.fullscreenElement;window.app.syncFullscreenState();}
+    });
+    if(rotation!=='fullscreen,landscape,exit,unlock')throw Error('Fullscreen orientation ordering: '+rotation);
     const sizes=[[320,568],[390,844],[844,390],[932,430]];
     const audit=async(label)=>{
       for(const [w,h]of sizes){
@@ -217,6 +230,13 @@ async function main() {
         console.log(label,w,h,JSON.stringify(state));
         if(state.wide)throw Error(label+' horizontal overflow');
         if(label.startsWith('arena')&&(state.hand.bottom>h+1||state.hand.top<0||state.table.bottom>state.hand.top+1))throw Error(label+' table/hand collision');
+        if(label.startsWith('arena')){
+          const controls=await cdp.evaluate(()=>{
+            const visible=el=>{const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight;};
+            return {header:['leaveBtn','fullscreenToggleBtn','settingsBtn'].every(id=>visible(document.getElementById(id))),singleFullscreen:!document.getElementById('arenaFullscreenBtn'),backs:[...document.querySelectorAll('.opponent-cards-fan')].some(visible),clock:!document.querySelector('.direction-indicator')};
+          });
+          if(Object.values(controls).some(v=>!v))throw Error('Missing gameplay controls: '+JSON.stringify(controls));
+        }
         // Headless mobile Chromium rejects native fullscreen. Exercise both native
         // event states with the same viewport metrics; device testing remains needed.
         await cdp.evaluate(()=>{Object.defineProperty(document,'fullscreenElement',{configurable:true,value:document.documentElement});document.dispatchEvent(new Event('fullscreenchange'));});
@@ -238,6 +258,15 @@ async function main() {
       await cdp.evaluate(()=>window.app.send({type:'start_game'}));
       await cdp.waitForFunction(()=>window.app.gameState.status==='playing');
       await audit('arena-'+mode);
+      const uno=await cdp.evaluate(()=>{
+        const app=window.app,saved=structuredClone(app.clientView),next=structuredClone(saved),me=next.gameState.players.find(p=>p.id===app.playerId);
+        next.myHand=next.myHand.slice(0,2);next.canCallUno=true;me.hasCalledUno=false;app.clientView=next;app.gameState=next.gameState;app.renderArena();
+        const button=document.getElementById('btnUnoAction'),r=button.getBoundingClientRect();const visible=r.width>0&&r.height>0&&r.bottom<=innerHeight&&r.top>=0;
+        app.clientView={...next,myHand:[...next.myHand,{...next.myHand[0],id:'third-fixture'}],canCallUno:false};app.renderArena();
+        const hidden=getComputedStyle(button).display==='none';
+        app.clientView=saved;app.gameState=saved.gameState;app.renderArena();return {visible,hidden};
+      });
+      if(!uno.visible||!uno.hidden)throw Error('UNO count visibility failed '+mode+JSON.stringify(uno));
       if(mode==='classic'){
         for(const id of ['rulesModal','colorPickerModal','leaveConfirmModal']){
           await cdp.evaluate(new Function('document.getElementById('+JSON.stringify(id)+').classList.add(\"active\")'));
@@ -267,4 +296,3 @@ main().catch((err) => {
   console.error('\n❌ Verification Failed:', err);
   process.exit(1);
 });
-

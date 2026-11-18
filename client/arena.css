@@ -2038,15 +2038,9 @@ body.no-mercy-arena .direction-indicator {
 body.no-mercy-arena #btnDrawAction {
   display: none !important;
 }
-body.no-mercy-arena #btnUnoAction {
-  display: none !important;
-}
-body.no-mercy-arena #btnCatchAction {
-  display: none !important;
-}
-body.no-mercy-arena .table-action-bar:not(:has(#btnViewVictory:not([style*="display: none"]))):not(:has(#btnPassAction:not([style*="display: none"]))) {
-  display: none !important;
-}
+
+
+
 
 .in-arena .btn-pass {
   background: linear-gradient(135deg, #475569 0%, #1e293b 100%) !important;

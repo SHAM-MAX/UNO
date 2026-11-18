@@ -216,6 +216,11 @@ test('AI Bot System and Social Parity Features', async (t) => {
     client2.send('join', { roomId, playerName: 'HoverUser2' });
     await client2.waitFor((m) => m.type === 'joined');
 
+    client2.send('ready', { data: { isReady: true } });
+    await client1.waitFor(m => m.type === 'room:state' && m.data.gameState.players.every(p => p.isReady));
+    client1.send('start_game');
+    await client1.waitFor(m => m.type === 'room:state' && m.data.gameState.status === 'playing');
+
     // Hover card index 3
     client1.send('player_card_hovered', { data: { cardIndex: 3 } });
     const hoverMsg = await client2.waitFor((m) => m.type === 'player_card_hovered');

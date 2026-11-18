@@ -49,7 +49,7 @@ test('UNO Flow: Call UNO availability at 2 cards vs hidden at 3 cards', () => {
   // Opponent has 2 cards but it is NOT their turn: canCallUno must be false
   room.playerHands[p2] = [card('c4', 'red', 'number', 4), card('c5', 'red', 'number', 5)];
   const viewOpponent = rm.getClientView(roomId, p2);
-  assert.equal(viewOpponent.canCallUno, false, 'Call UNO must NOT appear for players when it is not their turn');
+  assert.equal(viewOpponent.canCallUno, true, 'Two-card players can call UNO before their turn');
 });
 
 test('UNO Flow: Arming UNO registers declaration when player reaches 1 card; visible to opponents', () => {

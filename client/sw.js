@@ -1,12 +1,12 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-nav-wordmark-v10';
+const CACHE_NAME = 'uno-arena-gameplay-controls-v11';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
   '/style.css?v=2.2.0',
   '/home.css?v=2.2.0',
   '/lobby.css?v=2.2.0',
-  '/arena.css?v=2.2.0',
+  '/arena.css?v=2.2.1',
   '/mobile.css?v=2.2.0',
   '/app.js?v=2.2.0',
   '/audio.js',
@@ -16,7 +16,7 @@ const STATIC_SHELL_ASSETS = [
   '/manifest.json',
   '/branding.css?v=2',
   '/victory.css?v=3',
-  '/mobile-layout.css?v=1',
+  '/mobile-layout.css?v=2',
   '/assets/victory-champion-trophy.png',
   '/assets/uno-brand-v4.png',
   '/assets/uno-brand-v4-32.png?v=4',

@@ -47,7 +47,7 @@ test('Dynamic UNO Scenario A: Player has 2 cards: only their own screen shows ca
   assert.equal(viewP2.canCallUno, false, 'p2 has 3 cards, canCallUno must be false');
 
   // p3 has 2 cards but it is NOT their turn: canCallUno must be false
-  assert.equal(viewP3.canCallUno, false, 'p3 is not current turn player, canCallUno must be false');
+  assert.equal(viewP3.canCallUno, true, 'Any two-card player may declare UNO');
 });
 
 test('Dynamic UNO Scenario B: Player arms UNO at 2 cards and plays down to 1: UNO DECLARED and CAUGHT buttons disappear', () => {

@@ -86,3 +86,43 @@
  body.in-mode-lobby .no-mercy-setup-container,
  body.in-mode-lobby .flip-setup-container { padding-top:max(16px,env(safe-area-inset-top)) !important; padding-bottom:max(16px,env(safe-area-inset-bottom)) !important; }
 }
+/* Gameplay controls stay in the header; opponents keep a visible hidden hand. */
+body.in-arena .direction-indicator, body.in-arena .orbital-direction-track { display:none !important; }
+body.in-arena .contextual-uno-container { display:none !important; }
+@media (max-width:800px), (max-width:1024px) and (max-height:540px) {
+ body.in-arena .top-nav { display:flex !important; position:relative !important; height:52px !important; min-height:52px !important; width:100% !important; margin:0 !important; padding:0 8px !important; background:#faf4e6 !important; color:#103b2c; overflow:visible; flex-shrink:0; }
+ body.in-arena .top-nav .nav-controls { display:contents !important; }
+ body.in-arena .top-nav #fullscreenToggleBtn, body.in-arena .top-nav #settingsBtn, body.in-arena .top-nav #leaveBtn { display:inline-flex !important; position:absolute; top:6px; height:40px !important; min-height:40px !important; align-items:center; justify-content:center; visibility:visible !important; opacity:1 !important; color:#103b2c !important; font-size:12px !important; padding:6px !important; }
+ body.in-arena .top-nav #fullscreenToggleBtn { left:8px; width:40px; }
+ body.in-arena .top-nav #settingsBtn { left:54px; width:40px; }
+ body.in-arena .top-nav #leaveBtn { right:8px; width:62px; color:#a12727 !important; }
+ body.in-arena .top-nav .nav-left { display:flex !important; }
+ body.in-arena .top-nav .nav-room-details { display:none !important; }
+ body.in-arena .top-nav .nav-icon-svg { display:block !important; width:20px; height:20px; }
+ body.in-arena .opponents-row { min-height:104px !important; max-height:112px !important; padding:4px 2px !important; align-items:flex-start !important; overflow-y:hidden !important; }
+ body.in-arena .opponent-wrapper { gap:0; }
+ body.in-arena .opponent-cards-fan { display:flex !important; height:52px !important; width:140px !important; margin:4px 0 0 !important; align-items:center; overflow:visible; }
+ body.in-arena .opponent-fan-card { width:28px !important; height:42px !important; transform-origin:50% 120%; }
+ body.in-arena .opponent-fan-card .game-card { width:100% !important; height:100% !important; aspect-ratio:auto !important; }
+ body.in-arena .opponent-caught-btn { min-height:28px; font-size:10px; padding:4px 6px; }
+ body.in-arena .opponent-card-badge { min-height:40px; }
+}
+@media (max-width:1024px) and (max-height:540px) and (orientation:landscape) {
+ body.in-arena .opponents-row { min-height:86px !important; max-height:90px !important; }
+ body.in-arena .opponent-cards-fan { height:40px !important; }
+ body.in-arena .opponent-fan-card { width:24px !important; height:35px !important; }
+ body.in-arena .table-felt { min-height:60px !important; height:100px !important; }
+ body.in-arena .center-table { padding-bottom:34px !important; }
+ body.in-arena #drawPile .game-card, body.in-arena #discardPile .game-card { width:42px !important; height:62px !important; }
+}
+body.in-arena .opponent-fan-card.fan-card-hovered { transform:var(--fan-rest) translateY(-10px) scale(1.08) !important; }
+body.in-arena .opponent-box.is-hovering-card .opponent-card-badge { outline:2px solid #ffd34b; outline-offset:2px; }
+@media (max-width:800px), (max-width:1024px) and (max-height:540px) {
+ body.in-arena .opponent-cards-fan { transform:rotate(180deg); }
+}
+body.in-arena.no-mercy-arena .table-action-bar { display:flex !important; }
+body.in-arena #btnUnoAction[style*="display: inline-flex"] { display:inline-flex !important; }
+body.in-arena #btnUnoAction[style*="display: none"] { display:none !important; }
+@media (max-width:800px), (max-width:1024px) and (max-height:540px) {
+ body.in-arena .top-nav #leaveBtn { color:#fff !important; background:#b92525 !important; }
+}

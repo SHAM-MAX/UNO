@@ -74,14 +74,14 @@ test('Classic unplayable draw ends turn and clears exact identity',()=>{
  const {rm,r,ids,roomId}=setup();r.drawPile=[number('new','blue',9)];
  assert.ok(rm.drawCard(roomId,ids[0]).success); assert.equal(r.currentTurn,1); assert.equal(r.turnDrawnCardId,null);
 });
-test('Classic UNO catch closes on next accepted action, rejects self and duplicate catches',()=>{
+test('Classic one-card catch remains available, rejects self and duplicate catches',()=>{
  const {rm,r,ids,roomId}=setup();r.playerHands[ids[0]]=[number('a'),number('b')];
  rm.playCard(roomId,ids[0],{cardId:'a'});
  assert.equal(rm.catchUno(roomId,ids[0],ids[0]).success,false);
  assert.ok(rm.catchUno(roomId,ids[2],ids[0]).success);
  assert.equal(rm.catchUno(roomId,ids[1],ids[0]).success,false);
  r.currentTurn=0;r.playerHands[ids[0]]=[number('c'),number('d')];rm.playCard(roomId,ids[0],{cardId:'c'});
- rm.drawCard(roomId,ids[1]);assert.equal(rm.catchUno(roomId,ids[2],ids[0]).success,false);
+ rm.drawCard(roomId,ids[1]);assert.equal(rm.catchUno(roomId,ids[2],ids[0]).success,true);
 });
 test('Classic UNO declaration cannot be stockpiled; valid declaration prevents catch',()=>{
  const {rm,r,ids,roomId}=setup();assert.equal(rm.callUno(roomId,ids[0]).success,false);
@@ -235,10 +235,10 @@ test('Classic pending physical challenge survives server rehydration with privat
  assert.equal(second.getClientView(host.roomId,guest.playerId).drawFourEvidence.hadMatchingColor,true);
  for(const rm of [first,second])for(const timer of rm.turnTimers.values())clearTimeout(timer);
 });
-test('Classic Draw Four response does not allow pre-declaring UNO before the response is resolved',()=>{
+test('Classic two-card declaration is available during a pending response',()=>{
  const {rm,r,ids,roomId}=setup();r.playerHands[ids[0]]=[{id:'w',color:'wild',type:'wild_draw4'},number('held')];r.playerHands[ids[1]]=[number('a'),number('b')];
- rm.playCard(roomId,ids[0],{cardId:'w',chosenColor:'blue'});assert.equal(rm.getClientView(roomId,ids[1]).canCallUno,false);assert.equal(rm.callUno(roomId,ids[1]).success,false);
- rm.resolveDrawFour(roomId,ids[1],true);assert.equal(rm.getClientView(roomId,ids[1]).canCallUno,true);
+ rm.playCard(roomId,ids[0],{cardId:'w',chosenColor:'blue'});assert.equal(rm.getClientView(roomId,ids[1]).canCallUno,true);assert.equal(rm.callUno(roomId,ids[1]).success,true);
+ rm.resolveDrawFour(roomId,ids[1],true);assert.equal(rm.getClientView(roomId,ids[1]).canCallUno,false);
 });
 test('Classic Draw Four challenge follows reversed order and final failed challenge scores all six cards',()=>{
  const {rm,r,ids,roomId}=setup();r.direction=-1;r.playerHands[ids[0]]=[{id:'w',color:'wild',type:'wild_draw4'}];r.playerHands[ids[1]]=[number('b','blue',1)];r.playerHands[ids[2]]=[number('c','blue',1)];r.drawPile=Array.from({length:8},(_,i)=>number(`d${i}`,'blue',9));

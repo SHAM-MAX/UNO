@@ -478,7 +478,9 @@ wss.on('connection', (ws, req) => {
         }
 
         case 'player_card_hovered': {
-          const cardIndex = typeof data?.cardIndex === 'number' ? data.cardIndex : null;
+          const hand = roomManager.getRoom(cleanRoomId)?.playerHands[playerId] || [];
+          const cardIndex = data?.cardIndex == null ? null : data.cardIndex;
+          if (cardIndex !== null && (!Number.isInteger(cardIndex) || cardIndex < 0 || cardIndex >= hand.length)) break;
           const msg = JSON.stringify({
             type: 'player_card_hovered',
             data: { playerId, cardIndex },

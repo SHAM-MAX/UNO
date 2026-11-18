@@ -1820,13 +1820,13 @@ export class RoomManager {
     if (!player) return { success: false, error: 'Player not found' };
 
     const hand = room.playerHands[playerId] || [];
-    const isTwoCardArming = hand.length === 2 && room.players[room.currentTurn]?.id === playerId && !room.pendingAction;
+    const isTwoCardArming = hand.length === 2 && !player.isEliminated;
     const isCatchWindowTarget = room.unoChallengeWindow?.targetPlayerId === playerId || (room.mode === 'no_mercy' && room.unoChallengeTargets?.includes(playerId));
 
-    if (room.mode !== 'flip' && !isTwoCardArming && !isCatchWindowTarget) {
+    if (!isTwoCardArming && !(hand.length === 1 && isCatchWindowTarget)) {
       return { success: false, error: 'Call UNO when playing down to one card' };
     }
-    if (room.mode !== 'flip' && (player.hasCalledUno || player.isUnoArmed)) {
+    if (player.hasCalledUno || player.isUnoArmed) {
       return { success: false, error: 'UNO already called' };
     }
 
@@ -1873,13 +1873,7 @@ export class RoomManager {
       return { success: false, error: `CAUGHT FAILED: ${target.name} no longer has one card.` };
     }
 
-    const inWindow = room.mode === 'no_mercy'
-      ? (room.unoChallengeTargets?.includes(targetPlayerId) || room.unoChallengeWindow?.targetPlayerId === targetPlayerId)
-      : (room.unoChallengeWindow?.targetPlayerId === targetPlayerId && (room.mode !== 'flip' || room.unoChallengeWindow.expiresAt > Date.now()));
-
-    if (room.mode !== 'flip' && !inWindow) {
-      return { success: false, error: 'CAUGHT FAILED: UNO catch window is closed' };
-    }
+    if (target.isEliminated || challenger.isEliminated) return { success: false, error: 'Eliminated players cannot catch UNO' };
 
     const penaltyCount = Math.max(1, Math.min(10, Number(room.houseRules?.missedUnoPenalty) || 2));
     const drawn = [];
@@ -2102,17 +2096,10 @@ export class RoomManager {
       if (room.turnDrawnCard) canPlayCards = canPlayCards.filter(id => id === room.turnDrawnCardId);
 
     }
-    let canCatchUno = null;
-    if (room.unoChallengeWindow && (room.mode !== 'flip' || room.unoChallengeWindow.expiresAt > Date.now())) {
-      if (room.unoChallengeWindow.targetPlayerId !== playerId) {
-        canCatchUno = room.unoChallengeWindow.targetPlayerId;
-      }
-    }
-
-    if (room.mode === 'no_mercy') canCatchUno = room.unoChallengeTargets?.find(id => id !== playerId) || null;
-    const canCatchUnoTargets = room.mode === 'no_mercy'
-      ? (room.unoChallengeTargets || []).filter(id => id !== playerId)
-      : (canCatchUno ? [canCatchUno] : []);
+    // Uncalled one-card opponents remain catchable until their hand changes.
+    // Declared opponents still have a per-player inspection button in the UI.
+    const canCatchUnoTargets = !myPlayer || myPlayer.isEliminated || room.status !== 'playing' ? [] : room.players.filter(p => p.id !== playerId && !p.isEliminated && !p.hasCalledUno && (room.playerHands[p.id] || []).length === 1).map(p => p.id);
+    const canCatchUno = room.status === 'playing' ? canCatchUnoTargets[0] || null : null;
     const publicPlayers = room.players.map((p) => ({
       id: p.id,
       name: p.name,
@@ -2208,7 +2195,7 @@ export class RoomManager {
       canPass: (room.mode === 'no_mercy' || room.houseRules?.drawUntilPlayable)
         ? isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCount > 0 || room.turnDrawnCard)
         : isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCard),
-      canCallUno: room.mode !== 'flip' ? room.status === 'playing' && ((isMyTurn && myHand.length === 2 && !room.pendingAction) || room.unoChallengeWindow?.targetPlayerId === playerId || (room.mode === 'no_mercy' && room.unoChallengeTargets?.includes(playerId))) && !myPlayer.hasCalledUno : myHand.length <= 2,
+      canCallUno: room.status === 'playing' && myHand.length === 2 && !myPlayer?.isEliminated && !myPlayer?.hasCalledUno,
       canCatchUno,
       canCatchUnoTargets,
       drawFourEvidence: room.lastDrawFourResult?.challengerId === playerId ? { id: room.lastDrawFourResult.id, ...room.lastDrawFourResult.evidence } : null,
