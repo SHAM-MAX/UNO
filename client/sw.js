@@ -1,8 +1,9 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-editable-setup-v15';
+const CACHE_NAME = 'uno-arena-back-navigation-v16';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
+  '/navigation.js',
   '/install.js?v=1',
   '/install.css?v=1',
   '/settings.css?v=1',

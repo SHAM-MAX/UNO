@@ -1,3 +1,4 @@
+import { initBackNavigation } from './navigation.js';
 import { CLASSIC_COLORS, FLIP_DARK_COLORS, COLOR_METADATA } from '../shared/constants.js';
 import { defaultHouseRules } from '../shared/rules.js';
 import { sounds } from './audio.js';
@@ -57,6 +58,7 @@ class UnoArenaApp {
     this.initEvents();
     this.initDialogAccessibility();
     this.initPWA();
+    initBackNavigation(this);
     this.checkUrlForRoomCode();
   }
 
@@ -1619,7 +1621,7 @@ class UnoArenaApp {
         // Update URL immediately so room link is accurate
         const roomUrl = new URL(window.location.href);
         roomUrl.searchParams.set('room', this.roomId);
-        window.history.replaceState({}, '', roomUrl);
+        if (!history.state?.unoNavigation) window.history.replaceState(history.state, '', roomUrl);
 
         // Immediate lobby transition: do not wait for WebSocket handshake roundtrip
         const initialHost = {
@@ -1765,7 +1767,7 @@ class UnoArenaApp {
 
         const roomUrl = new URL(window.location.href);
         roomUrl.searchParams.set('room', this.roomId);
-        window.history.replaceState({}, '', roomUrl);
+        if (!history.state?.unoNavigation) window.history.replaceState(history.state, '', roomUrl);
 
         this.connectWebSocket(data.roomId, data.playerId, data.sessionToken, hostName);
       } else {
@@ -1850,7 +1852,7 @@ class UnoArenaApp {
           localStorage.setItem(`player_${this.roomId}`, this.playerId);
           const roomUrl = new URL(window.location.href);
           roomUrl.searchParams.set('room', this.roomId);
-          window.history.replaceState({}, '', roomUrl);
+          if (!history.state?.unoNavigation) window.history.replaceState(history.state, '', roomUrl);
         } else if (msg.type === 'quick_match_cancelled') {
           this.cancelQuickMatchTimerOnly();
         } else if (msg.type === 'room:state') {
