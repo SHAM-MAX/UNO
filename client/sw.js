@@ -1,8 +1,9 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-back-navigation-v16';
+const CACHE_NAME = 'uno-arena-friends-nav-v17';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
+  '/assets/friends-uno-nav.png',
   '/navigation.js',
   '/install.js?v=1',
   '/install.css?v=1',
@@ -18,7 +19,7 @@ const STATIC_SHELL_ASSETS = [
   '/shared/constants.js',
   '/shared/rules.js',
   '/manifest.json',
-  '/branding.css?v=2',
+  '/branding.css?v=3',
   '/victory.css?v=3',
   '/mobile-layout.css?v=3',
   '/assets/victory-champion-trophy.png',

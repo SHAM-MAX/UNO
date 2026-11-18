@@ -246,7 +246,7 @@ async function main() {
         }
         if(label==='generic-lobby'){
           const aligned=await cdp.evaluate(()=>{
-            const word=document.querySelector('#brandNavToggle .nav-uno-wordmark').getBoundingClientRect();
+            const word=document.querySelector('#brandNavToggle .nav-friends-wordmark').getBoundingClientRect();
             return ['leaveBtn','fullscreenToggleBtn','settingsBtn'].every(id=>{const r=document.getElementById(id).getBoundingClientRect();return r.width>0&&r.height>0&&(r.right<=word.left||r.left>=word.right||r.bottom<=word.top||r.top>=word.bottom);});
           });
           if(!aligned)throw Error('Lobby brand overlaps controls');

@@ -27,3 +27,9 @@ body.in-arena #brandNavToggle .app-brand-logo {height:38px;max-width:100px;}
 @media(max-width:600px) {
  #brandNavToggle .nav-uno-wordmark,.mobile-brand .nav-uno-wordmark { font-size:28px; letter-spacing:1.5px; }
 }
+
+/* Supplied friendship wordmark; the viewBox trims only the outer empty margin. */
+#brandNavToggle .nav-friends-wordmark,.mobile-brand .nav-friends-wordmark { display:block; width:89px; height:46px; overflow:hidden; border-radius:4px; background:#fff6df; }
+@media(max-width:600px) {
+ #brandNavToggle .nav-friends-wordmark,.mobile-brand .nav-friends-wordmark { width:77.5px; height:40px; }
+}
