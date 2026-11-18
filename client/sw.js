@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-mobile-layout-v7';
+const CACHE_NAME = 'uno-arena-new-logo-v8';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -18,11 +18,11 @@ const STATIC_SHELL_ASSETS = [
   '/victory.css?v=3',
   '/mobile-layout.css?v=1',
   '/assets/victory-champion-trophy.png',
-  '/assets/game-logo.png',
-  '/assets/game-icon-round-32.png?v=2',
-  '/assets/game-icon-round-180.png?v=2',
-  '/assets/game-icon-round-192.png',
-  '/assets/game-icon-round-512.png',
+  '/assets/uno-brand-v3.png',
+  '/assets/uno-brand-v3-32.png?v=3',
+  '/assets/uno-brand-v3-180.png?v=3',
+  '/assets/uno-brand-v3-192.png',
+  '/assets/uno-brand-v3-512.png',
   '/assets/tabletop-wood.jpg',
   '/assets/uno-arena-mobile-hero.png',
   '/assets/game-modes/classic-card.png',
