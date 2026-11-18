@@ -1,0 +1,11 @@
+#installSuggestion[hidden] { display:none !important; }
+#installSuggestion { position:fixed; z-index:250; left:50%; bottom:max(12px,env(safe-area-inset-bottom)); transform:translateX(-50%); width:min(480px,calc(100% - 24px)); box-sizing:border-box; display:grid; grid-template-columns:44px minmax(0,1fr) auto; align-items:center; gap:10px; padding:16px 30px 16px 14px; border:1px solid #d3ae54; border-radius:18px; background:#fff7e8; color:#123b2d; box-shadow:0 12px 42px #0005; font-family:'Outfit',sans-serif; }
+#installSuggestion img { width:44px; height:44px; object-fit:contain; border-radius:9px; }
+#installSuggestion strong { font-size:15px; line-height:1.2; display:block; }
+#installSuggestion p { margin:5px 0 0; font-size:12px; line-height:1.4; }
+#installSuggestionAction { min-height:44px; padding:8px 12px; border:1px solid #a37d22; border-radius:9px; background:#ffdb59; color:#24200f; font:800 12px 'Outfit',sans-serif; cursor:pointer; }
+#installSuggestionClose { position:absolute; top:0; right:0; width:30px; height:30px; border:0; background:transparent; color:#123b2d; font-size:24px; cursor:pointer; }
+#installSuggestion button:focus-visible { outline:3px solid #14543e; outline-offset:3px; }
+#installSuggestionHelp:not([hidden]) { margin-top:10px; }
+@media(max-width:360px) { #installSuggestion { grid-template-columns:36px minmax(0,1fr); } #installSuggestion img { width:36px; height:36px; } #installSuggestionAction { grid-column:1 / -1; } }
+@media(min-width:1025px) { #installSuggestion { display:none; } }

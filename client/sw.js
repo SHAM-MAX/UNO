@@ -1,8 +1,10 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-gameplay-controls-v11';
+const CACHE_NAME = 'uno-arena-install-v12';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
+  '/install.js?v=1',
+  '/install.css?v=1',
   '/style.css?v=2.2.0',
   '/home.css?v=2.2.0',
   '/lobby.css?v=2.2.0',
