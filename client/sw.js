@@ -1,10 +1,12 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-settings-close-v18';
+const CACHE_NAME = 'uno-arena-card-entrance-v19';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
   '/assets/friends-uno-nav.png',
   '/navigation.js',
+  '/mode-entrance.js',
+  '/assets/no-mercy-cards/wild_draw10.webp',
   '/install.js?v=1',
   '/install.css?v=1',
   '/settings.css?v=1',

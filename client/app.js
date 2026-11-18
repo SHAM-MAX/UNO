@@ -1,3 +1,4 @@
+import { playNoMercyEntrance } from './mode-entrance.js';
 import { initBackNavigation } from './navigation.js';
 import { CLASSIC_COLORS, FLIP_DARK_COLORS, COLOR_METADATA } from '../shared/constants.js';
 import { defaultHouseRules } from '../shared/rules.js';
@@ -1405,6 +1406,7 @@ class UnoArenaApp {
   }
 
   openModeSetup(mode) {
+    this.cancelModeEntrance?.();
     const details = {
       classic: ['Classic UNO', 'Play the familiar classic rules with your friends.'],
       flip: ['UNO Flip', 'Two-sided cards. Flip the deck and change the whole table.'],
@@ -1475,9 +1477,11 @@ class UnoArenaApp {
 
     this.el.modeHomeScreen.hidden = true;
     this.el.modeSetupSection.hidden = false;
+    if (isNoMercy) this.cancelModeEntrance = playNoMercyEntrance(nmCard);
   }
 
   showModePicker() {
+    this.cancelModeEntrance?.();
     const enteredName = this.el.noMercyPlayerNameInput?.value?.trim() ||
       this.el.noMercyMobilePlayerNameInput?.value?.trim() ||
       this.el.flipPlayerNameInput?.value?.trim() ||
