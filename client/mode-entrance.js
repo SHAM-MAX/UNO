@@ -25,7 +25,7 @@ export function playNoMercyEntrance(card) {
     {opacity:0, transform:'perspective(1200px) rotateY(-90deg)', offset:.65},
     {opacity:1, transform:'perspective(1200px) rotateY(7deg) scale(1.015)', offset:.9},
     {opacity:1, transform:'perspective(1200px) rotateY(0deg) scale(1)', offset:1},
-  ], {duration:1170, easing:'cubic-bezier(.16,1,.3,1)'});
+  ], {duration:1170, easing:'linear'});
   const wasInert = card.inert;
   card.inert = true;
   let cleaned = false;
