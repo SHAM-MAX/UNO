@@ -63,7 +63,11 @@ export function initBackNavigation(app) {
     else write({ ...current, modal:'settings', tab });
   });
   wrap('closeSettingsModal', () => {
-    if (current.modal === 'settings') history.back();
+    if (current.modal === 'settings') {
+      // Consume the modal before asynchronous popstate so repeated closes cannot leave the site.
+      current = { ...current, modal:null };
+      history.back();
+    }
   });
   wrap('leaveRoom', () => {
     if (current.modal !== 'leave') write({ ...current, modal:'leave' });

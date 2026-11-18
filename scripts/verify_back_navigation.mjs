@@ -209,6 +209,20 @@ async function main() {
 
 
 
+    for (const action of ['x', 'done', 'escape', 'backdrop', 'repeated']) {
+      await cdp.evaluate(()=>window.app.openSettingsModal());
+      await cdp.evaluate(new Function(`const app=window.app;
+        switch (${JSON.stringify(action)}) {
+          case 'x': app.el.settingsModalClose.click(); break;
+          case 'done': app.el.ruleApplyBtn.click(); break;
+          case 'escape': document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})); break;
+          case 'backdrop': app.el.settingsModal.click(); break;
+          default: app.closeSettingsModal(); app.closeSettingsModal(); app.closeSettingsModal();
+        }`));
+      await cdp.waitForFunction(()=>history.state?.screen==='home' && !history.state.modal);
+      await delay(200);
+      if (!await cdp.evaluate(()=>!!window.app && !window.app.el.settingsModal.classList.contains('active') && history.state?.screen==='home')) throw Error('Settings close left website: '+action);
+    }
     await cdp.setViewport(390,844,true);
     await cdp.evaluate(()=>window.app.openModeSetup('flip'));
     await cdp.evaluate(()=>history.back());await cdp.waitForFunction(()=>window.app.selectedSetupMode===null);

@@ -408,7 +408,7 @@ class UnoArenaApp {
     if (this.el.howToPlayBtn) {
       this.el.howToPlayBtn.addEventListener('click', () => this.openRulesModal());
     }
-    if (this.el.rulesModalClose) {
+    if (this.el.rulesModalClose && this.el.rulesModalClose !== this.el.settingsModalClose) {
       this.el.rulesModalClose.addEventListener('click', () => this.closeRulesModal());
     }
 
@@ -909,13 +909,13 @@ class UnoArenaApp {
     }
 
     // Game Rules Modal Close & Apply
-    if (this.el.gameRulesModalClose) {
+    if (this.el.gameRulesModalClose && this.el.gameRulesModalClose !== this.el.settingsModalClose) {
       this.el.gameRulesModalClose.addEventListener('click', () => this.closeGameRulesModal());
     }
     if (this.el.ruleApplyBtn) {
       this.el.ruleApplyBtn.addEventListener('click', () => this.closeGameRulesModal());
     }
-    if (this.el.gameRulesModal) {
+    if (this.el.gameRulesModal && this.el.gameRulesModal !== this.el.settingsModal) {
       this.el.gameRulesModal.addEventListener('click', (e) => {
         if (e.target === this.el.gameRulesModal) this.closeGameRulesModal();
       });

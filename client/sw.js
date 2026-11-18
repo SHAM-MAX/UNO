@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-friends-nav-v17';
+const CACHE_NAME = 'uno-arena-settings-close-v18';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
