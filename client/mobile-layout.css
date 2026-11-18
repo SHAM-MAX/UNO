@@ -1,0 +1,88 @@
+/* One viewport contract for browser chrome, rotation and native fullscreen. */
+@media (max-width: 800px), (max-width: 1024px) and (max-height: 540px) {
+  html { width:100%; overflow-x:clip; }
+  body { width:100%; max-width:100%; min-height:var(--app-height,100dvh); overflow-x:clip; }
+  .main-content, #entryView, #modeSetupSection, .mode-lobby-slot { min-width:0; box-sizing:border-box; }
+  .mode-setup-screen:not([hidden]) { max-width:100%; }
+  body:not(.in-arena) .mode-setup-screen,
+  body.in-mode-lobby .mode-setup-screen,
+  body.in-mode-lobby .standard-setup-layout,
+  body.in-mode-lobby .no-mercy-setup-container,
+  body.in-mode-lobby .flip-setup-container {
+    height:auto !important; max-height:none !important; min-height:var(--app-height,100dvh);
+    overflow:visible !important; justify-content:flex-start !important;
+    padding-top:max(64px,env(safe-area-inset-top)) !important;
+    padding-bottom:max(64px,env(safe-area-inset-bottom)) !important;
+  }
+  body.in-flip-setup:not(.in-mode-lobby) .flip-card-wrapper { width:min(100%,420px); min-width:0; }
+  body:not(.in-arena) #lobbySection.mode-specific-lobby { max-height:none !important; overflow:visible !important; flex-shrink:0; }
+  .mode-lobby-slot { max-height:none; }
+  .modal-overlay:not(#gameOverModal) { height:var(--visible-height,100dvh); max-height:100dvh; box-sizing:border-box; overflow:hidden; padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); align-items:center; }
+  .modal-overlay:not(#gameOverModal) .modal-card { width:min(100%,560px); min-width:0; max-height:calc(var(--visible-height,100dvh) - 32px) !important; overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box; }
+  .modal-overlay .modal-body { min-height:0; overflow-y:auto; }
+  input,select,textarea { font-size:max(16px,1em); }
+
+  /* The table and hand share available space; neither extends below the screen. */
+  html:has(body.in-arena), body.in-arena { height:var(--app-height,100dvh) !important; min-height:0 !important; max-height:var(--app-height,100dvh) !important; overflow:hidden !important; }
+  body.in-arena .main-content { height:calc(var(--app-height,100dvh) - var(--arena-nav-height,0px)) !important; min-height:0 !important; overflow:hidden !important; padding:0 !important; }
+  body.in-arena #arenaView.arena-container {
+    display:grid !important; grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:max-content minmax(0,1fr) max-content !important;
+    width:100% !important; height:100% !important; min-height:0 !important; max-height:100% !important;
+    gap:8px !important; padding:max(10px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)) !important;
+    overflow:hidden !important; box-sizing:border-box; align-items:stretch !important;
+  }
+  body.in-arena .opponents-row { grid-column:1 !important; grid-row:1 !important; min-height:56px !important; max-height:88px !important; margin:0 !important; padding:4px 96px 4px 0 !important; display:flex !important; flex-wrap:nowrap !important; justify-content:flex-start !important; gap:6px !important; overflow-x:auto !important; overflow-y:hidden !important; }
+  body.in-arena .opponent-wrapper { flex:0 0 auto !important; min-width:92px !important; }
+  body.in-arena .opponent-cards-fan { display:none !important; }
+  body.in-arena .center-table { grid-column:1 !important; grid-row:2 !important; width:100% !important; min-height:0 !important; height:100% !important; max-height:none !important; margin:0 !important; padding:0 0 42px !important; display:flex !important; justify-content:center !important; align-items:center !important; box-sizing:border-box; }
+  body.in-arena .table-felt { width:min(94%,520px) !important; height:min(210px,30dvh) !important; min-height:120px !important; max-height:100% !important; gap:24px !important; flex-shrink:1; }
+  body.in-arena .table-action-bar { bottom:-40px !important; width:max-content !important; max-width:100% !important; gap:6px !important; flex-wrap:wrap; }
+  body.in-arena .table-action-bar .action-btn { min-height:40px !important; padding:7px 12px !important; font-size:12px !important; }
+  body.in-arena .player-bottom-area { grid-column:1 !important; grid-row:3 !important; width:100%; min-height:0; margin:0 !important; padding:0 !important; gap:2px; }
+  body.in-arena .local-player-profile { position:relative !important; inset:auto !important; align-self:flex-start; padding:3px 8px !important; margin:0; }
+  body.in-arena .card-rack-container { width:100% !important; }
+  body.in-arena .card-rack-groove { padding:0 !important; min-height:0 !important; background:transparent; border:0; box-shadow:none; }
+  body.in-arena .card-rack-lip { display:none !important; }
+  body.in-arena .hand-scroll-container { padding:12px 2px 2px !important; min-height:0; overflow:visible !important; }
+  body.in-arena .hand-cards { min-height:90px !important; }
+  body.in-arena .hand-cards.two-rows { min-height:142px !important; }
+  body.in-arena .hand-row-top { margin-bottom:-18px !important; }
+  body.in-arena .arena-fullscreen-btn { top:max(8px,env(safe-area-inset-top)) !important; right:max(8px,env(safe-area-inset-right)) !important; min-height:40px; z-index:60; }
+}
+@media (max-width:1024px) and (max-height:540px) and (orientation:landscape) {
+  body.in-arena #arenaView.arena-container { gap:4px !important; padding-top:4px !important; }
+  body.in-arena .opponents-row { min-height:40px !important; max-height:48px !important; }
+  body.in-arena .table-felt { height:130px !important; min-height:92px !important; width:min(68%,500px) !important; }
+  body.in-arena .center-table { padding-bottom:36px !important; }
+  body.in-arena .table-action-bar { bottom:-34px !important; }
+  body.in-arena .table-action-bar .action-btn { min-height:34px !important; }
+  body.in-arena .hand-cards { min-height:64px !important; }
+  body.in-arena .hand-cards.two-rows { min-height:100px !important; }
+  body.in-arena .hand-cards .card-wrapper { height:64px !important; }
+  body.in-arena .local-player-profile { position:absolute !important; left:4px !important; bottom:0 !important; }
+  body.in-arena .hand-scroll-container { padding-top:6px !important; }
+}
+@media (max-width:800px), (max-width:1024px) and (max-height:540px) {
+ body.in-arena .center-table { max-width:none !important; }
+ body.in-arena .opponent-wrapper { width:140px !important; max-width:140px !important; flex:0 0 140px !important; }
+ body.in-arena .opponent-card-badge { width:100%; max-width:140px; box-sizing:border-box; }
+ body.in-arena .pile-container { flex:0 0 auto !important; }
+}
+@media (max-width:800px), (max-width:1024px) and (max-height:540px) {
+ html:has(body:not(.in-arena)), body:not(.in-arena) { height:auto !important; max-height:none !important; overflow-y:auto !important; }
+ body:not(.in-arena) { min-height:var(--app-height,100dvh) !important; }
+}
+@media (max-width:800px), (max-width:1024px) and (max-height:540px) {
+ .modal-overlay .leave-confirm-card { width:min(100%,480px); max-height:calc(var(--visible-height,100dvh) - 32px) !important; overflow-y:auto; box-sizing:border-box; }
+ .modal-overlay .color-picker-wrapper { width:min(100%,560px); max-height:100%; min-height:0; }
+}
+@media (max-width:800px), (max-width:1024px) and (max-height:540px) {
+ body.in-arena .main-content { max-height:none !important; flex:none !important; }
+}
+@media (max-width:800px), (max-width:1024px) and (max-height:540px) {
+ body:not(.in-arena) .mode-setup-screen { padding:0 !important; }
+ body.in-mode-lobby .standard-setup-layout,
+ body.in-mode-lobby .no-mercy-setup-container,
+ body.in-mode-lobby .flip-setup-container { padding-top:max(16px,env(safe-area-inset-top)) !important; padding-bottom:max(16px,env(safe-area-inset-bottom)) !important; }
+}

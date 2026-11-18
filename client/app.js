@@ -429,8 +429,8 @@ class UnoArenaApp {
     this.el.arenaFullscreenBtn?.addEventListener('click', () => this.toggleFullscreen());
     this.el.modeLobbyFullscreenBtn?.addEventListener('click', () => this.toggleFullscreen());
     this.el.modeLobbyLeaveBtn?.addEventListener('click', () => this.leaveRoom());
-    document.addEventListener('fullscreenchange', () => this.syncFullscreenState());
-    document.addEventListener('webkitfullscreenchange', () => this.syncFullscreenState());
+    document.addEventListener('fullscreenchange', () => this.handleOrientationOrResize());
+    document.addEventListener('webkitfullscreenchange', () => this.handleOrientationOrResize());
     window.addEventListener('orientationchange', () => this.handleOrientationOrResize());
     if (window.screen?.orientation) {
       try {
@@ -438,6 +438,7 @@ class UnoArenaApp {
       } catch (_) { }
     }
     this.syncFullscreenState();
+    window.visualViewport?.addEventListener('resize', () => this.handleOrientationOrResize());
 
     // Quick Match controls
     this.el.quickMatchBtn?.addEventListener('click', () => this.startQuickMatch());
@@ -1253,23 +1254,21 @@ class UnoArenaApp {
       } else {
         const el = document.documentElement;
         if (el.requestFullscreen) {
-          await el.requestFullscreen();
+          await el.requestFullscreen({ navigationUI: 'hide' });
         } else if (el.webkitRequestFullscreen) {
           await el.webkitRequestFullscreen();
         } else if (el.mozRequestFullScreen) {
           await el.mozRequestFullScreen();
         } else if (el.msRequestFullscreen) {
           await el.msRequestFullscreen();
+        } else {
+          this.showToast('Fullscreen is unavailable in this browser. You can still play in either orientation.');
         }
-        if (window.screen?.orientation?.lock && (navigator.maxTouchPoints > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent))) {
-          await window.screen.orientation.lock('landscape').catch((e) => {
-            console.warn('Orientation lock notice:', e);
-          });
-        }
+
       }
     } catch (err) {
       console.warn('Fullscreen/Orientation request notice:', err);
-      this.showToast('Rotate your phone to landscape for the best arena experience! 🔄');
+      this.showToast('Fullscreen could not open. Try the fullscreen button again.');
     }
     this.syncFullscreenState();
   }
@@ -1295,7 +1294,16 @@ class UnoArenaApp {
     if (arenaFsText) arenaFsText.textContent = isFull ? 'EXIT FULL' : 'FULLSCREEN';
     const arenaFsIcon = this.el.arenaFullscreenBtn?.querySelector('.arena-fs-icon');
     if (arenaFsIcon) arenaFsIcon.textContent = fsIcon;
+    for (const button of [this.el.fullscreenToggleBtn, this.el.mobileNavFullscreenBtn, this.el.arenaFullscreenBtn, this.el.modeLobbyFullscreenBtn]) {
+      button?.setAttribute('aria-pressed', String(isFull));
+      button?.setAttribute('aria-label', isFull ? 'Exit fullscreen' : 'Enter fullscreen');
+    }
     this.syncLandscapeState();
+    const root = document.documentElement;
+    root.style.setProperty('--app-height', `${window.innerHeight}px`);
+    root.style.setProperty('--visible-height', `${window.visualViewport?.height || window.innerHeight}px`);
+    const nav = this.el.topNav || document.querySelector('.top-nav');
+    root.style.setProperty('--arena-nav-height', `${nav?.getBoundingClientRect().height || 0}px`);
   }
 
   syncLandscapeState() {
@@ -1307,15 +1315,15 @@ class UnoArenaApp {
 
   handleOrientationOrResize() {
     this.syncFullscreenState();
-    if (this.gameState && this.gameState.status === 'playing' && this.clientView) {
-      const canPlayIds = this.clientView.canPlayCards || [];
-      this.renderPlayerHand(
-        this.clientView.myHand || [],
-        canPlayIds,
-        this.gameState.mode || 'classic',
-        this.gameState.flipSide || 'light'
-      );
-    }
+    cancelAnimationFrame(this.viewportLayoutFrame);
+    this.viewportLayoutFrame = requestAnimationFrame(() => {
+      if (this.gameState?.status === 'playing' && this.clientView) {
+        this.renderPlayerHand(this.clientView.myHand || [], this.clientView.canPlayCards || [], this.gameState.mode || 'classic', this.gameState.flipSide || 'light');
+      }
+      if (window.visualViewport?.height < window.innerHeight * .8 && document.activeElement?.matches('input, textarea, select')) {
+        document.activeElement.scrollIntoView({ block: 'center', inline: 'nearest' });
+      }
+    });
   }
 
   startQuickMatch(modeOverride) {
@@ -3035,7 +3043,7 @@ class UnoArenaApp {
       return;
     }
 
-    const isMobile = window.innerWidth <= 760;
+    const isMobile = document.body.classList.contains('mobile-viewport') || window.innerWidth <= 800;
     // On mobile, if > 7 cards, use two compact rows. On desktop, if > 14 cards, use two rows.
     const useTwoRows = isMobile ? count > 7 : count > 14;
     container.classList.toggle('two-rows', useTwoRows);
@@ -3839,6 +3847,12 @@ class UnoArenaApp {
     this.el.arenaView.style.display = 'none';
     this.el.leaveBtn.style.display = 'none';
     this.el.navRoomDetails.style.display = 'none';
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.classList.remove('active');
+      if (modal.style.display === 'flex') modal.style.display = '';
+    });
+    clearTimeout(this.rouletteAutoSpinTimer);
+    this.closeRouletteModal?.();
     this.showModePicker();
     history.replaceState(null, '', window.location.pathname);
   }
