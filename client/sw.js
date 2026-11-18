@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-card-entrance-v19';
+const CACHE_NAME = 'uno-arena-loaded-card-entrance-v20';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',

@@ -1,4 +1,4 @@
-import { playNoMercyEntrance } from './mode-entrance.js';
+import { playNoMercyEntrance, preloadNoMercyEntrance } from './mode-entrance.js';
 import { initBackNavigation } from './navigation.js';
 import { CLASSIC_COLORS, FLIP_DARK_COLORS, COLOR_METADATA } from '../shared/constants.js';
 import { defaultHouseRules } from '../shared/rules.js';
@@ -55,6 +55,7 @@ class UnoArenaApp {
       document.body.classList.add('reduced-motion');
     }
 
+    preloadNoMercyEntrance();
     this.initElements();
     this.initEvents();
     this.initDialogAccessibility();

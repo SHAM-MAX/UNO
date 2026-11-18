@@ -186,7 +186,7 @@ async function main() {
   const { server } = await import('../server/src/index.js');
   await new Promise((res) => server.listen(0, res));
   const port = server.address().port;
-  const baseUrl = `http://localhost:${port}`;
+  const baseUrl = process.env.ENTRANCE_TEST_URL || `http://localhost:${port}`;
   console.log(`Server running at ${baseUrl}`);
 
   const { proc: chromeProc, tempDir } = await startHeadlessChrome();
@@ -201,9 +201,14 @@ async function main() {
     console.log('\n--- 1. Testing Direct Create Room -> Lobby with 3 Mode Choices ---');
     await cdp.setViewport(1280, 800, false);
     console.log('Set viewport, navigating to baseUrl...');
+    if (process.env.ENTRANCE_SLOW_NETWORK) {
+      await cdp.send('Network.enable');
+      await cdp.send('Network.setCacheDisabled',{cacheDisabled:true});
+      await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:300,downloadThroughput:600000,uploadThroughput:600000});
+    }
     await cdp.navigate(baseUrl);
     console.log('Navigated to baseUrl, waiting for window.app...');
-    await cdp.waitForFunction(() => window.app !== undefined && window.app.el !== undefined);
+    await cdp.waitForFunction(() => window.app !== undefined && window.app.el !== undefined, 60000);
     console.log('window.app is loaded and ready.');
     await cdp.screenshot(path.join(ARTIFACT_DIR, 'tabletop_brand_landing.png'));
 
@@ -212,9 +217,11 @@ async function main() {
 
     for (const [width,height] of [[1440,900],[390,844],[844,390]]) {
       await cdp.setViewport(width,height,width<900);
-      await cdp.evaluate(()=>window.app.openModeSetup('no_mercy'));
-      if (!await cdp.evaluate(()=>!!document.querySelector('[data-mode-entrance]') && document.querySelector('.nm-card-container').inert)) throw Error('Entrance did not start');
+      await cdp.evaluate(()=>document.querySelector('[data-home-mode="no_mercy"]').click());
+      await cdp.waitForFunction(()=>!!document.querySelector('[data-mode-entrance]') && document.querySelector('.nm-card-container').inert, 60000);
+      if (!await cdp.evaluate(()=>{const image=document.querySelector('[data-mode-entrance]');return image.complete && image.naturalWidth>0;})) throw Error('Entrance artwork not ready');
       await delay(350);
+      console.log('mid-animation',await cdp.evaluate(()=>({motion:matchMedia('(prefers-reduced-motion: reduce)').matches,face:!!document.querySelector('[data-mode-entrance]'),opacity:getComputedStyle(document.querySelector('.nm-card-container')).opacity,animations:document.querySelector('.nm-card-container').getAnimations().map(a=>({time:a.currentTime,state:a.playState}))})));
       await cdp.screenshot(path.join(ARTIFACT_DIR,'entrance-'+width+'.png'));
       await cdp.waitForFunction(()=>!document.querySelector('[data-mode-entrance]') && !document.querySelector('.nm-card-container').inert);
       await cdp.evaluate(()=>{const input=window.app.el.noMercyPlayerNameInput;input.focus();input.value='Animation Host';});
