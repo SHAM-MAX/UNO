@@ -2874,6 +2874,7 @@ class UnoArenaApp {
   }
 
   renderOpponents(opponents, gameState) {
+    this.el.opponentsRow.dataset.opponentCount = String(opponents.length);
     const avatarPalettes = ['#1e3a8a', '#065f46', '#78350f', '#831843', '#4c1d95'];
     const activeIds = new Set(opponents.map((p) => p.id));
 
@@ -3007,8 +3008,9 @@ class UnoArenaApp {
           let fanInner = '';
           for (let c = 0; c < fanCardsCount; c++) {
             const rot = startAngle + c * spread;
-            const xOffset = (c - (fanCardsCount - 1) / 2) * (document.body.classList.contains('mobile-viewport') ? 10 : 17);
-            fanInner += `<div class="opponent-fan-card opponent-card-back" data-card-index="${c}" style="transform: translateX(${xOffset.toFixed(1)}px) rotate(${rot.toFixed(1)}deg); z-index: ${c + 1};">
+            const offset = c - (fanCardsCount - 1) / 2;
+            const arc = fanCardsCount > 1 ? Math.pow(offset / ((fanCardsCount - 1) / 2), 2) * 7 : 0;
+            fanInner += `<div class="opponent-fan-card opponent-card-back" data-card-index="${c}" style="--fan-offset:${offset}; transform: translateX(calc(var(--fan-offset) * var(--opponent-fan-step, 17px))) translateY(${arc.toFixed(1)}px) rotate(${rot.toFixed(1)}deg); z-index: ${c + 1};">
               ${renderCardBackHTML(gameState.flipSide === 'dark', true, gameState.mode)}
             </div>`;
           }

@@ -236,6 +236,20 @@ async function main() {
             return {header:['leaveBtn','fullscreenToggleBtn','settingsBtn'].every(id=>visible(document.getElementById(id))),singleFullscreen:!document.getElementById('arenaFullscreenBtn'),backs:[...document.querySelectorAll('.opponent-cards-fan')].some(visible),clock:!document.querySelector('.direction-indicator')};
           });
           if(Object.values(controls).some(v=>!v))throw Error('Missing gameplay controls: '+JSON.stringify(controls));
+          const seating=await cdp.evaluate(()=>{
+            const row=document.getElementById('opponentsRow'),fan=row.querySelector('.opponent-cards-fan');
+            const upright=fan&&getComputedStyle(fan).transform==='none';
+            const r=row.getBoundingClientRect(),p=row.firstElementChild.getBoundingClientRect();
+            return upright&&(row.dataset.opponentCount!=='1'||Math.abs((r.left+r.right)/2-(p.left+p.right)/2)<2);
+          });
+          if(!seating)throw Error('Opponent fan is rotated or single opponent not centered');
+        }
+        if(label==='generic-lobby'){
+          const aligned=await cdp.evaluate(()=>{
+            const word=document.querySelector('#brandNavToggle .nav-uno-wordmark').getBoundingClientRect();
+            return ['leaveBtn','fullscreenToggleBtn','settingsBtn'].every(id=>{const r=document.getElementById(id).getBoundingClientRect();return r.width>0&&r.height>0&&(r.right<=word.left||r.left>=word.right||r.bottom<=word.top||r.top>=word.bottom);});
+          });
+          if(!aligned)throw Error('Lobby brand overlaps controls');
         }
         // Headless mobile Chromium rejects native fullscreen. Exercise both native
         // event states with the same viewport metrics; device testing remains needed.
@@ -247,6 +261,10 @@ async function main() {
       }
     };
     await audit('landing');
+    await cdp.evaluate(()=>window.app.createRoom('Lobby Host','classic',undefined,'selectable'));
+    await cdp.waitForFunction(()=>window.app.clientView?.gameState.status==='lobby');
+    await audit('generic-lobby');
+    await cdp.evaluate(()=>window.app.confirmLeaveRoom());
     for(const mode of ['classic','flip','no_mercy']){
       await cdp.setViewport(390,844,true);
       await cdp.evaluate(new Function('window.app.openModeSetup('+JSON.stringify(mode)+')'));
@@ -254,7 +272,7 @@ async function main() {
       await cdp.evaluate(new Function('window.app.createRoom(\"Mobile Host\",'+JSON.stringify(mode)+',undefined,\"fixed\")'));
       await cdp.waitForFunction(()=>window.app.clientView?.gameState.status==='lobby');
       await audit('lobby-'+mode);
-      for(let i=0;i<2;i++){await cdp.evaluate(()=>window.app.send({type:'add_bot'}));await delay(150);}
+      for(let i=0;i<1;i++){await cdp.evaluate(()=>window.app.send({type:'add_bot'}));await delay(150);}
       await cdp.evaluate(()=>window.app.send({type:'start_game'}));
       await cdp.waitForFunction(()=>window.app.gameState.status==='playing');
       await audit('arena-'+mode);
