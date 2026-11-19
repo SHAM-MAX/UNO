@@ -216,6 +216,19 @@ async function main() {
 
 
 
+    await cdp.setViewport(390,844,true);
+    await cdp.evaluate(()=>{
+      const app=window.app;
+      const original=app.showToast;
+      let popups=0;app.showToast=()=>popups++;
+      try {
+        for(const text of ['Sam played +2! Pending penalty: 2 cards.','Sam played Wild Draw Four (+4 penalty, stacking active).','Sam played Reverse','Sam played Skip']) {
+          app.clientView={gameState:{mode:'classic',status:'lobby',players:[],eventLogs:[{id:text,text}]}};
+          app.animateClassicState({gameState:{mode:'classic',status:'lobby',players:[],eventLogs:[]}},{});
+        }
+        if(popups)throw Error('Ordinary power card produced popup');
+      } finally {app.showToast=original;}
+    });
     await cdp.evaluate(()=>{
       const app=window.app;
       app.roomId='test';app.clientView={canProposeRematch:true};
@@ -224,6 +237,9 @@ async function main() {
     });
     if(await cdp.evaluate(()=>window.app.el.gameOverModal.classList.contains('active')))throw Error('Winner appeared before roulette');
     await cdp.evaluate(()=>window.app.showRouletteDrawNotice(window.app.gameState.rouletteResult));
+    const receipt=await cdp.evaluate(()=>{const n=document.getElementById('rouletteDrawNotice'),r=n.getBoundingClientRect();return {text:n.textContent,right:r.right,top:r.top};});
+    if(!receipt.text.includes('Sam')||!receipt.text.includes('YELLOW')||!receipt.text.includes('3')||receipt.right>390||receipt.top>100)throw Error('Incorrect roulette receipt');
+    await cdp.screenshot(path.join(ARTIFACT_DIR,'roulette-receipt-mobile.png'));
     await delay(1000);
     await cdp.evaluate(()=>window.app.showGameOver(window.app.gameState));
     if(!await cdp.evaluate(()=>!!document.getElementById('rouletteDrawNotice')&&!window.app.el.gameOverModal.classList.contains('active')))throw Error('Result interrupted by victory');

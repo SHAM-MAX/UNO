@@ -1412,7 +1412,10 @@ class UnoArenaApp {
     notice.className = 'roulette-draw-notice';
     notice.setAttribute('role','status');
     const count = roulette.revealed.length;
-    notice.textContent = `Roulette · ${player?.name || 'Player'} · ${roulette.color.toUpperCase()} · drew ${count} card${count === 1 ? '' : 's'}`;
+    const colors = { red:'#f45151',yellow:'#ffe14b',green:'#40cd87',blue:'#53a9ff' };
+    notice.style.setProperty('--roulette-color', colors[roulette.color] || '#ffe14b');
+    notice.innerHTML = `<span class="roulette-notice-heading"><span class="roulette-notice-dot" aria-hidden="true"></span>ROULETTE RESULT</span><strong class="roulette-notice-player">${escapeHtml(player?.name || 'Player')}</strong><span class="roulette-notice-details"><span class="roulette-notice-color">${escapeHtml(roulette.color.toUpperCase())}</span><span>Drew <b>${count}</b> card${count === 1 ? '' : 's'}</span></span>`;
+
     document.body.append(notice);
     this.rouletteNoticeTimer = setTimeout(() => {
       notice.remove();
@@ -2375,8 +2378,6 @@ class UnoArenaApp {
     this.pendingClassicMotion = null;
     const me = current.gameState.players.find(p => p.id === this.playerId);
     const beforeMe = previous.gameState.players.find(p => p.id === this.playerId);
-    const useful = current.gameState.eventLogs?.[0];
-    if (useful && useful.id !== previous.gameState.eventLogs?.[0]?.id && /call(?:ed)? UNO|CAUGHT|Draw Four challenge|penalty/i.test(useful.text)) this.showToast(useful.text);
     if (me?.hasCalledUno && !beforeMe?.hasCalledUno) this.showToast('UNO!');
     if (previous.gameState.mode !== current.gameState.mode || previous.gameState.status !== 'playing' || previous.gameState.roomId !== current.gameState.roomId || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (current.gameState.mode === 'no_mercy') this.animateNoMercyAction(previous, geometry);
