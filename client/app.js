@@ -1,3 +1,4 @@
+import { animatePowerCard } from './power-effects.js';
 import { playNoMercyEntrance, preloadNoMercyEntrance, playFlipEntrance, preloadFlipEntrance, playClassicEntrance, preloadClassicEntrance } from './mode-entrance.js';
 import { initBackNavigation } from './navigation.js';
 import { CLASSIC_COLORS, FLIP_DARK_COLORS, COLOR_METADATA } from '../shared/constants.js';
@@ -2321,7 +2322,7 @@ class UnoArenaApp {
     Object.assign(ghost.style, { left: `${source.left}px`, top: `${source.top}px`, width: `${source.width}px`, height: `${source.height}px` });
     document.body.appendChild(ghost);
     this.cardTargetCleanups ||= new WeakMap();
-    this.cardTargetCleanups.get(target)?.();
+    if (faceHTML) this.cardTargetCleanups.get(target)?.();
     const originalVisibility = target.style.visibility;
     if (faceHTML) target.style.visibility = 'hidden';
     const duration = Math.min(450, Math.max(300, Math.hypot(destination.left - source.left, destination.top - source.top) * .45));
@@ -2333,11 +2334,23 @@ class UnoArenaApp {
       const front = document.createElement('div'); front.className = 'classic-motion-front'; front.innerHTML = faceHTML; ghost.appendChild(front);
       reveal = front.animate([{ opacity: 0, offset: 0 }, { opacity: 0, offset: .72 }, { opacity: 1, offset: .86 }, { opacity: 1, offset: 1 }], { duration, delay, fill: 'both' });
     }
-    const dispose = () => { reveal?.cancel(); animation.cancel(); ghost.remove(); target.style.visibility = originalVisibility; this.classicAnimationCleanups.delete(dispose); this.cardTargetCleanups.delete(target); };
+    const dispose = () => { reveal?.cancel(); animation.cancel(); ghost.remove(); if (faceHTML) { target.style.visibility = originalVisibility; this.cardTargetCleanups.delete(target); } this.classicAnimationCleanups.delete(dispose); };
     this.classicAnimationCleanups ||= new Set();
     this.classicAnimationCleanups.add(dispose);
-    this.cardTargetCleanups.set(target, dispose);
+    if (faceHTML) this.cardTargetCleanups.set(target, dispose);
     animation.onfinish = dispose;
+  }
+
+  animateHandTransfer(from, to, back, delay = 0) {
+    if (!from || !to) return;
+    const bounds = from.getBoundingClientRect();
+    const card = this.el.drawPile.querySelector('.game-card')?.getBoundingClientRect();
+    const width = card?.width || 64, height = card?.height || 96;
+    const source = {left:bounds.left+bounds.width/2-width/2,top:bounds.top+bounds.height/2-height/2,width,height};
+    const end = to.getBoundingClientRect();
+    const destination = {style:{},getBoundingClientRect:()=>({left:end.left+end.width/2-width/2,top:end.top+end.height/2-height/2,width,height})};
+    // A small packet represents the whole hand without exposing opponents' faces.
+    for (let i=0;i<3;i++) this.travelClassicCard(source,destination,back,null,delay+i*65);
   }
 
   animateNoMercyAction(previous, geometry) {
@@ -2349,11 +2362,11 @@ class UnoArenaApp {
       const active = state.players.filter(p => !p.isEliminated);
       if (event.type === 'number' && state.topDiscard?.value === 7) {
         const a = destination(event.playerId), b = destination(event.targetPlayerId);
-        if (a && b) { this.travelClassicCard(a.getBoundingClientRect(), b, back); this.travelClassicCard(b.getBoundingClientRect(), a, back, null, 120); }
+        if (a && b) { this.animateHandTransfer(a, b, back); this.animateHandTransfer(b, a, back, 90); }
       }
       if (event.type === 'number' && state.topDiscard?.value === 0) active.forEach((p, i) => {
         const a = destination(p.id), b = destination(active[(i + event.direction + active.length) % active.length].id);
-        if (a && b) this.travelClassicCard(a.getBoundingClientRect(), b, back, null, i * 80);
+        if (a && b) this.animateHandTransfer(a, b, back, i * 60);
       });
       if (event.type === 'discard_all') event.discardedIds.forEach((id, i) => {
         const source = geometry.hand.get(id); if (source) this.travelClassicCard(source.rect, this.el.discardPile, source.html, null, i * 70);
@@ -2381,7 +2394,8 @@ class UnoArenaApp {
     const me = current.gameState.players.find(p => p.id === this.playerId);
     const beforeMe = previous.gameState.players.find(p => p.id === this.playerId);
     if (me?.hasCalledUno && !beforeMe?.hasCalledUno) this.showToast('UNO!');
-    if (previous.gameState.mode !== current.gameState.mode || previous.gameState.status !== 'playing' || previous.gameState.roomId !== current.gameState.roomId || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (previous.gameState.mode !== current.gameState.mode || previous.gameState.status !== 'playing' || previous.gameState.roomId !== current.gameState.roomId || matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduced-motion')) return;
+    animatePowerCard(this, previous.gameState);
     if (current.gameState.mode === 'no_mercy') this.animateNoMercyAction(previous, geometry);
     const newTop = current.gameState.topDiscard;
     if (newTop?.id !== previous.gameState.topDiscard?.id && geometry.hand.has(newTop?.id)) {
@@ -2399,7 +2413,7 @@ class UnoArenaApp {
     const oldIds = new Set(previous.myHand.map(c => c.id));
     current.myHand.filter(c => !transfer && !roulette && !oldIds.has(c.id)).forEach((card, index) => {
       const target = this.el.playerHandCards.querySelector(`[data-card-id="${card.id}"] .game-card`);
-      this.travelClassicCard(geometry.pending?.type === 'draw_card' ? geometry.pending.rect : geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), renderCardHTML(card, { mode: current.gameState.mode }), Math.min(index * 35, 210));
+      this.travelClassicCard(geometry.pending?.type === 'draw_card' ? geometry.pending.rect : geometry.deck, target, renderCardBackHTML(false, false, current.gameState.mode), renderCardHTML(card, { mode: current.gameState.mode, flipSide: current.gameState.flipSide }), Math.min(index * 35, 210));
     });
     for (const player of current.gameState.players.filter(p => p.id !== this.playerId)) {
       const before = previous.gameState.players.find(p => p.id === player.id);

@@ -4643,3 +4643,7 @@ body.is-fullscreen .arena-fullscreen-btn .arena-fs-text {
 .roulette-notice-player {display:block;margin:6px 0 8px;font-size:18px;line-height:1.2;color:#fff8e6;}
 .roulette-notice-details {display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:#ede9de;}
 .roulette-notice-color {padding:3px 8px;border-radius:6px;background:#ffffff10;color:var(--roulette-color);font-size:10px;letter-spacing:.06em;font-weight:800;}
+
+.power-card-effect {position:fixed;z-index:180;pointer-events:none;display:grid;place-items:center;filter:drop-shadow(0 3px 12px #0009);will-change:transform,opacity;}
+.power-card-effect svg {width:66%;height:66%;background:#101c1be6;border-radius:50%;padding:10px;box-sizing:border-box;}
+.power-card-ring {position:absolute;inset:0;border:2px solid currentColor;border-radius:50%;box-shadow:0 0 22px currentColor,inset 0 0 12px currentColor;opacity:.65;}

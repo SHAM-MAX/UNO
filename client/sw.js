@@ -1,11 +1,12 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-clean-ai-form-v29';
+const CACHE_NAME = 'uno-arena-power-motion-v30';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
   '/assets/friends-uno-nav.png',
   '/navigation.js',
   '/mode-entrance.js',
+  '/power-effects.js',
   '/assets/flip-cards/Purple_FLIP.jpg',
   '/assets/no-mercy-cards/wild_draw10.webp',
   '/install.js?v=1',
@@ -14,7 +15,7 @@ const STATIC_SHELL_ASSETS = [
   '/style.css?v=2.2.0',
   '/home.css?v=2.2.1',
   '/lobby.css?v=2.2.0',
-  '/arena.css?v=2.2.3',
+  '/arena.css?v=2.2.4',
   '/mobile.css?v=2.2.0',
   '/app.js?v=2.2.0',
   '/audio.js',
