@@ -1,66 +1,72 @@
 import { sounds } from './audio.js';
 
-// Original 24-bar composition: Cmaj9 / Am7 / Fmaj7 / G6 with a playful mallet lead.
-// No external recordings, copied melodies, downloads or network requests.
-const melody = [
-  [76,79,81,79,74,76,72,74], [76,79,84,81,79,76,74,null],
-  [76,81,83,81,79,76,74,72], [71,74,79,76,74,null,72,74],
-  [77,81,84,81,79,77,76,72], [74,77,81,79,77,74,72,null],
-  [74,79,83,81,79,74,76,74], [71,74,79,76,74,71,72,null],
-];
-const chords = [[48,55,59,64],[45,52,55,60],[41,48,52,57],[43,50,55,59]];
-const hz = midi => 440 * 2 ** ((midi-69)/12);
-const nextTask = () => new Promise(resolve => setTimeout(resolve,0));
-
+// Original late-night lounge groove: Dm9 / Bbmaj9 / Gm9 / A7(b9).
+// Sparse electric-piano phrases, syncopated bass, dry drums; no borrowed recordings.
+const harmony=[{root:38,notes:[53,57,60,64]},{root:34,notes:[53,57,60,62]},{root:43,notes:[53,58,62,69]},{root:33,notes:[55,58,61,64]}];
+const phrase=[[null,null,69,null,null,67,null,null],[65,null,null,null,null,null,64,null],[null,65,null,null,69,null,null,null],[null,null,72,null,null,69,null,null],[null,null,70,null,null,null,69,null],[67,null,null,null,null,65,null,null],[null,64,null,null,null,null,61,null],[64,null,null,null,null,null,null,null]];
+const hz=midi=>440*2**((midi-69)/12);
+const nextTask=()=>new Promise(resolve=>setTimeout(resolve,0));
 export async function composeTheme(style='warm') {
-  const bpm=style==='mercy'?120:style==='flip'?112:104;
-  const beat=60/bpm, bars=24, duration=bars*4*beat;
-  const Offline=window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const bpm=style==='mercy'?112:style==='flip'?108:98;
+  const beat=60/bpm,duration=24*4*beat,rate=24000,frames=Math.ceil(duration*rate);
+  const Offline=window.OfflineAudioContext||window.webkitOfflineAudioContext;
   if(!Offline)throw Error('Offline audio is unavailable');
-  const ctx=new Offline(2,Math.ceil(duration*24000),24000);
-  const output=ctx.createGain();output.gain.value=.7;output.connect(ctx.destination);
-  function tone(midi,time,length,volume,type='sine',bend) {
-    const oscillator=ctx.createOscillator(),gain=ctx.createGain();
-    oscillator.type=type;oscillator.frequency.setValueAtTime(hz(midi),time);
-    if(bend)oscillator.frequency.exponentialRampToValueAtTime(hz(bend),time+length);
-    gain.gain.setValueAtTime(.0001,time);gain.gain.exponentialRampToValueAtTime(volume,time+.009);
-    gain.gain.exponentialRampToValueAtTime(.0001,time+length);
-    oscillator.connect(gain);gain.connect(output);oscillator.start(time);oscillator.stop(time+length+.01);
+  const ctx=new Offline(2,frames+rate*2,rate),bus=ctx.createGain();bus.gain.value=.8;
+  const glue=ctx.createDynamicsCompressor();glue.threshold.value=-16;glue.knee.value=16;glue.ratio.value=2;glue.attack.value=.015;glue.release.value=.16;bus.connect(glue);glue.connect(ctx.destination);
+  function note(midi,time,length,volume,type='sine',pan=0,partial=1) {
+    const osc=ctx.createOscillator(),amp=ctx.createGain(),position=ctx.createStereoPanner();
+    osc.type=type;osc.frequency.setValueAtTime(hz(midi)*partial,time);position.pan.value=pan;
+    amp.gain.setValueAtTime(.0001,time);amp.gain.exponentialRampToValueAtTime(volume,time+.018);amp.gain.exponentialRampToValueAtTime(.0001,time+length);
+    osc.connect(amp);amp.connect(position);position.connect(bus);osc.start(time);osc.stop(time+length+.02);
   }
-  const noise=ctx.createBuffer(1,2400,24000),data=noise.getChannelData(0);
-  let seed=731;for(let i=0;i<data.length;i++){seed=(seed*16807)%2147483647;data[i]=(seed/2147483647*2-1);}
-  function percussion(time,snare=false) {
-    const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();
-    source.buffer=noise;filter.type=snare?'bandpass':'highpass';filter.frequency.value=snare?1800:6500;
-    gain.gain.setValueAtTime(snare?.055:.023,time);gain.gain.exponentialRampToValueAtTime(.0001,time+(snare?.095:.045));
-    source.connect(filter);filter.connect(gain);gain.connect(output);source.start(time);source.stop(time+.1);
+  function keys(notes,time,length,volume=.055) {
+    notes.forEach((m,i)=>{const pan=(i%2?1:-1)*.28;note(m,time+i*.007,length,volume,'sine',pan);note(m,time+i*.007,length*.45,volume*.17,'sine',pan,2.003);note(m,time+i*.007,length*.22,volume*.045,'sine',pan,3.99);});
   }
-  for(let bar=0;bar<bars;bar++) {
-    const start=bar*4*beat,chord=chords[Math.floor((bar%8)/2)];
-    for(let step=0;step<8;step++) {
-      // Slight eighth-note swing gives the phrase a relaxed, bouncing rhythm.
-      const time=start+step*beat/2+(step%2?beat*.065:0);
-      const note=melody[bar%8][step];
-      if(note!==null){tone(note,time,beat*.58,.2,'sine');tone(note+12,time,beat*.18,.035,'sine');}
-      if(step%2===1)chord.slice(1).forEach(n=>tone(n+12,time,beat*.28,.025,'triangle'));
-      percussion(time);
-      if(style==='flip' && step%2===0)tone(chord[(step/2)%4]+24,time,beat*.3,.055,'triangle');
+  const noise=ctx.createBuffer(1,rate/4,rate),samples=noise.getChannelData(0);let seed=4291;
+  for(let i=0;i<samples.length;i++){seed=seed*16807%2147483647;samples[i]=seed/2147483647*2-1;}
+  function drum(time,kind,accent=1) {
+    if(kind==='kick'){
+      const osc=ctx.createOscillator(),amp=ctx.createGain();osc.frequency.setValueAtTime(115,time);osc.frequency.exponentialRampToValueAtTime(43,time+.075);
+      amp.gain.setValueAtTime(.3*accent,time);amp.gain.exponentialRampToValueAtTime(.0001,time+.23);osc.connect(amp);amp.connect(bus);osc.start(time);osc.stop(time+.24);return;
     }
-    for(let step=0;step<4;step++) {
-      const time=start+step*beat;
-      tone(chord[0]+(step===2?7:0),time,beat*.65,.18,'sine');
-      if(step%2===0 || style==='mercy')tone(43,time,.11,.18,'sine',25);
-      else percussion(time,true);
-      if(style==='mercy' && step%2===1)percussion(time,true);
+    const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),amp=ctx.createGain(),pan=ctx.createStereoPanner();src.buffer=noise;
+    const snare=kind==='snare';filter.type=snare?'bandpass':'highpass';filter.frequency.value=snare?1650:7200;filter.Q.value=snare?.65:.4;
+    pan.pan.value=snare?-.08:.25;amp.gain.setValueAtTime((snare?.13:.032)*accent,time);amp.gain.exponentialRampToValueAtTime(.0001,time+(snare?.13:.045));
+    src.connect(filter);filter.connect(amp);amp.connect(pan);pan.connect(bus);src.start(time);src.stop(time+.15);
+    if(snare)note(50,time,.06,.055,'triangle');
+  }
+  for(let bar=0;bar<24;bar++){
+    const start=bar*4*beat,chord=harmony[Math.floor((bar%8)/2)],next=harmony[(Math.floor((bar%8)/2)+1)%4];
+    // Chord stabs leave room for conversation and game effects.
+    keys(chord.notes,start+.12*beat,beat*2.5);
+    if(bar%2===1)keys(chord.notes,start+2.75*beat,beat*.9,.038);
+    const bassSteps=bar%2===0?[0,3,7,10,14]:[0,6,9,12,15];
+    bassSteps.forEach((step,i)=>{
+      const m=step===15?next.root-1:chord.root+(i===2?7:0),time=start+step*beat/4;
+      note(m,time,beat*(step===15?.22:.52),.22,'sine');note(m,time,beat*.25,.025,'triangle');
+    });
+    for(let step=0;step<8;step++){
+      const time=start+step*beat/2+(step%2?beat*.055:0);
+      drum(time,'hat',step%2?.7:1);
+      const lead=phrase[bar%8][step];
+      if(lead!==null && bar%8>=2)keys([lead],time,beat*.9,.045);
+      if(style==='flip'&&[3,7].includes(step))note(chord.notes[step===3?1:3],time,beat*.3,.035,'triangle',-.35);
     }
+    for(const step of (style==='mercy'?[0,1.5,2,2.75,3.5]:[0,1.75,2.5]))drum(start+step*beat,'kick',step===0?1:.75);
+    drum(start+beat,'snare');drum(start+3*beat,'snare');
+    if(bar%4===3)drum(start+3.75*beat,'snare',.28);
     if(bar%4===3)await nextTask();
   }
-  const buffer=await ctx.startRendering();
-  // Finish the final release at zero so looping never clicks.
-  for(let channel=0;channel<buffer.numberOfChannels;channel++){
-    const samples=buffer.getChannelData(channel),fade=240;
-    for(let i=0;i<fade;i++){samples[i]*=i/fade;samples[samples.length-1-i]*=i/fade;}
+  const rendered=await ctx.startRendering(),buffer=ctx.createBuffer(2,frames,rate);
+  let peak=0,energy=0;
+  for(let ch=0;ch<2;ch++){
+    const source=rendered.getChannelData(ch),out=buffer.getChannelData(ch);out.set(source.subarray(0,frames));
+    // Carry the final chord release across the loop boundary.
+    for(let i=frames;i<source.length;i++)out[i-frames]+=source[i];
+    for(let i=0;i<frames;i++){peak=Math.max(peak,Math.abs(out[i]));energy+=out[i]*out[i];}
   }
+  const rms=Math.sqrt(energy/(frames*2)),gain=Math.min(.85/Math.max(peak,.001),.095/Math.max(rms,.001));
+  for(let ch=0;ch<2;ch++){const out=buffer.getChannelData(ch);for(let i=0;i<frames;i++)out[i]*=gain;for(let i=0;i<120;i++){out[i]*=i/120;out[frames-1-i]*=i/120;}}
   return buffer;
 }
 

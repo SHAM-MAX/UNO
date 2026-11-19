@@ -258,7 +258,7 @@ async function main() {
     if(!await cdp.evaluate(()=>window.themeTest.voices.size===0))throw Error('Zero music volume ignored');
     await cdp.evaluate(()=>window.themeTest.setVolume(.22));await cdp.waitForFunction(()=>window.themeTest.voices.size===1,20000);
     await cdp.setViewport(390,844,true);await cdp.screenshot(path.join(ARTIFACT_DIR,'music-settings-mobile.png'));
-    console.log('PASS original 55-second loop, no clipping, gesture unlock, mode crossfades, bounded sources/cache, background pause/resume and independent persisted controls');cdp.close();
+    console.log('PASS original lounge loop, no clipping, gesture unlock, mode crossfades, bounded sources/cache, background pause/resume and independent persisted controls');cdp.close();
   } finally {
     chromeProc.kill();
     server.close();
