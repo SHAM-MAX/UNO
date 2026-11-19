@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-roulette-only-v28';
+const CACHE_NAME = 'uno-arena-clean-ai-form-v29';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -12,7 +12,7 @@ const STATIC_SHELL_ASSETS = [
   '/install.css?v=1',
   '/settings.css?v=1',
   '/style.css?v=2.2.0',
-  '/home.css?v=2.2.0',
+  '/home.css?v=2.2.1',
   '/lobby.css?v=2.2.0',
   '/arena.css?v=2.2.3',
   '/mobile.css?v=2.2.0',

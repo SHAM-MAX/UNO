@@ -4796,3 +4796,15 @@ body.in-no-mercy-setup:not(.in-mode-lobby) #noMercySetupContainer > .mode-setup-
  .nm-corner-top {top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));}
  .nm-corner-bottom {bottom:max(12px,env(safe-area-inset-bottom));right:max(12px,env(safe-area-inset-right));}
 }
+/* The AI pane fully replaces the room form, including the form printed in the hero artwork. */
+@media (min-width:769px) {
+  .home-playbox.show-ai-form {
+    width:49.5%;
+    min-width:380px;
+    max-width:calc(100% - 12.4%);
+  }
+  .home-playbox.show-ai-form .home-default-form {
+    visibility:hidden !important;
+    opacity:0 !important;
+  }
+}

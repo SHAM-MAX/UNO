@@ -1728,6 +1728,7 @@ class UnoArenaApp {
 
     const homePlaybox = document.getElementById('homePlaybox') || this.el.homePlaybox;
     if (homePlaybox) homePlaybox.classList.add('show-ai-form');
+    document.getElementById('homeDefaultForm')?.setAttribute('inert','');
 
     const mobileWrap = document.getElementById('mobileFormWrap') || this.el.mobileFormWrap;
     if (mobileWrap) mobileWrap.classList.add('show-ai-form');
@@ -1739,6 +1740,7 @@ class UnoArenaApp {
   closeAiSetup() {
     const homePlaybox = document.getElementById('homePlaybox') || this.el.homePlaybox;
     if (homePlaybox) homePlaybox.classList.remove('show-ai-form');
+    document.getElementById('homeDefaultForm')?.removeAttribute('inert');
 
     const mobileWrap = document.getElementById('mobileFormWrap') || this.el.mobileFormWrap;
     if (mobileWrap) mobileWrap.classList.remove('show-ai-form');
