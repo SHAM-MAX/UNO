@@ -39,11 +39,12 @@
   </script>
 </head>
 <body>
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none"><defs><filter id="navBlackInk" color-interpolation-filters="sRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -12 12 0 0 0" result="ink"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="ink"/></feMerge></filter></defs></svg>
 
   <!-- Top Navigation Bar -->
   <header class="top-nav">
     <div class="nav-left">
-      <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="UNO Arena home" title="UNO Arena"><svg class="nav-friends-wordmark" viewBox="450 45 1240 640" role="img" aria-label="UNO friends"><image href="./assets/friends-uno-nav.png" width="2172" height="724" /></svg></button>
+      <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="UNO Arena home" title="UNO Arena"><svg class="nav-friends-wordmark" viewBox="450 45 1240 640" role="img" aria-label="UNO friends"><image filter="url(#navBlackInk)" href="./assets/friends-uno-nav.png" width="2172" height="724" /></svg></button>
     </div>
 
     <div id="navRoomDetails" class="nav-room-details" style="display: none;">
@@ -279,7 +280,7 @@
         <div id="mobileLandingContainer" class="mobile-landing-container" aria-label="UNO Arena Mobile Home">
           <!-- 1. Top Navigation Bar -->
           <header class="mobile-nav-bar" aria-label="Mobile Navigation">
-            <div class="mobile-brand"><svg class="nav-friends-wordmark" viewBox="450 45 1240 640" role="img" aria-label="UNO friends"><image href="./assets/friends-uno-nav.png" width="2172" height="724" /></svg></div>
+            <div class="mobile-brand"><svg class="nav-friends-wordmark" viewBox="450 45 1240 640" role="img" aria-label="UNO friends"><image filter="url(#navBlackInk)" href="./assets/friends-uno-nav.png" width="2172" height="724" /></svg></div>
             <div class="mobile-nav-actions">
               <button id="mobileNavFullscreenBtn" class="mobile-nav-action-btn nav-btn-icon" type="button" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">
                 <svg class="nav-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

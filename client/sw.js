@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-power-motion-v30';
+const CACHE_NAME = 'uno-arena-black-nav-v31';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
