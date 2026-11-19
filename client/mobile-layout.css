@@ -165,3 +165,17 @@ body.in-arena #btnUnoAction[style*="display: none"] { display:none !important; }
     flex-shrink:0;
   }
 }
+/* Classic uses the same compact mobile card footprint as No Mercy. */
+@media (max-width:800px), (max-width:1024px) and (max-height:540px) {
+  body.in-classic-setup:not(.in-mode-lobby):not(.in-arena) #standardSetupLayout {
+    min-height:var(--visible-height,100dvh) !important;
+    box-sizing:border-box;
+    justify-content:center !important;
+    padding:16px 12px !important;
+  }
+  body.in-classic-setup:not(.in-mode-lobby):not(.in-arena) .mode-setup-layout {
+    width:min(350px,100%) !important;
+    flex-shrink:0;
+    margin:auto;
+  }
+}
