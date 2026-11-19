@@ -1400,6 +1400,23 @@ class UnoArenaApp {
     }, 2800);
   }
 
+  showRouletteDrawNotice(roulette) {
+    if (!roulette?.id || !roulette.color || !Array.isArray(roulette.revealed)) return;
+    if (this.lastRouletteNoticeId === roulette.id) return;
+    this.lastRouletteNoticeId = roulette.id;
+    clearTimeout(this.rouletteNoticeTimer);
+    document.getElementById('rouletteDrawNotice')?.remove();
+    const player = this.gameState?.players.find(p => p.id === roulette.targetPlayerId);
+    const notice = document.createElement('div');
+    notice.id = 'rouletteDrawNotice';
+    notice.className = 'roulette-draw-notice';
+    notice.setAttribute('role','status');
+    const count = roulette.revealed.length;
+    notice.textContent = `Roulette · ${player?.name || 'Player'} · ${roulette.color.toUpperCase()} · drew ${count} card${count === 1 ? '' : 's'}`;
+    document.body.append(notice);
+    this.rouletteNoticeTimer = setTimeout(() => notice.remove(), 2000);
+  }
+
   highlightSelectedMode(mode) {
     document.querySelectorAll('[data-home-mode]').forEach((tile) => {
       const isSelected = tile.dataset.homeMode === mode;
@@ -2107,7 +2124,7 @@ class UnoArenaApp {
     if (view.gameState.mode === 'no_mercy' && view.gameState.rouletteResult && view.gameState.rouletteResult.id !== this.lastHandledRouletteId && (!previous || view.isSpectator)) {
       this.lastHandledRouletteId = view.gameState.rouletteResult.id;
       this.displayRouletteResult(view.gameState.rouletteResult, () => {
-        this.showToast(`Roulette: ${view.gameState.rouletteResult.color.toUpperCase()} · ${view.gameState.rouletteResult.revealed.length} cards`);
+        this.showRouletteDrawNotice(view.gameState.rouletteResult);
       });
     }
     this.renderRematchProposal();
@@ -2337,7 +2354,7 @@ class UnoArenaApp {
       this.displayRouletteResult(roulette, () => {
         const target = destination(roulette.targetPlayerId);
         roulette.revealed.forEach((card, i) => this.travelClassicCard(geometry.deck, target, renderCardHTML(card, { mode: 'no_mercy' }), null, i * 160));
-        this.showToast(`Roulette: ${roulette.color.toUpperCase()} · ${roulette.revealed.length} cards`);
+        this.showRouletteDrawNotice(roulette);
       });
     }
     state.players.filter(p => p.isEliminated && !previous.gameState.players.find(old => old.id === p.id)?.isEliminated).forEach(p => {
@@ -2352,7 +2369,7 @@ class UnoArenaApp {
     const me = current.gameState.players.find(p => p.id === this.playerId);
     const beforeMe = previous.gameState.players.find(p => p.id === this.playerId);
     const useful = current.gameState.eventLogs?.[0];
-    if (useful && useful.id !== previous.gameState.eventLogs?.[0]?.id && /call(?:ed)? UNO|CAUGHT|Draw Four challenge|penalty|drew [246]|played \+[246]/i.test(useful.text)) this.showToast(useful.text);
+    if (useful && useful.id !== previous.gameState.eventLogs?.[0]?.id && /call(?:ed)? UNO|CAUGHT|Draw Four challenge|penalty/i.test(useful.text)) this.showToast(useful.text);
     if (me?.hasCalledUno && !beforeMe?.hasCalledUno) this.showToast('UNO!');
     if (previous.gameState.mode !== current.gameState.mode || previous.gameState.status !== 'playing' || previous.gameState.roomId !== current.gameState.roomId || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (current.gameState.mode === 'no_mercy') this.animateNoMercyAction(previous, geometry);
@@ -3806,6 +3823,8 @@ class UnoArenaApp {
   }
 
   confirmLeaveRoom() {
+    clearTimeout(this.rouletteNoticeTimer);
+    document.getElementById('rouletteDrawNotice')?.remove();
     this.clearClassicAnimations();
     this.cancelCardDrag?.();
     this.send({ type: 'leave' });
