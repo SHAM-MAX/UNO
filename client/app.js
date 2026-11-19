@@ -1414,7 +1414,14 @@ class UnoArenaApp {
     const count = roulette.revealed.length;
     notice.textContent = `Roulette · ${player?.name || 'Player'} · ${roulette.color.toUpperCase()} · drew ${count} card${count === 1 ? '' : 's'}`;
     document.body.append(notice);
-    this.rouletteNoticeTimer = setTimeout(() => notice.remove(), 2000);
+    this.rouletteNoticeTimer = setTimeout(() => {
+      notice.remove();
+      this.completedRouletteNoticeId = roulette.id;
+      if (this.pendingWinnerRouletteId === roulette.id) {
+        this.pendingWinnerRouletteId = null;
+        if (this.gameState?.rouletteResult?.id === roulette.id && ['game_over','round_over'].includes(this.gameState.status)) this.showGameOver(this.gameState);
+      }
+    }, 2000);
   }
 
   highlightSelectedMode(mode) {
@@ -3754,6 +3761,13 @@ class UnoArenaApp {
   }
 
   showGameOver(gameState) {
+    // Finish the roulette reveal and its two-second draw receipt before victory.
+    const roulette = gameState.mode === 'no_mercy' && gameState.rouletteResult;
+    if (roulette && gameState.players.some(p => p.id === roulette.targetPlayerId && p.isEliminated) && this.completedRouletteNoticeId !== roulette.id) {
+      this.pendingWinnerRouletteId = roulette.id;
+      return;
+    }
+
     const currentMatchKey = gameState.matchId || `${this.roomId || ''}_${gameState.roundNumber || 0}`;
     if (this.dismissedGameOverMatchId && this.dismissedGameOverMatchId === currentMatchKey) {
       if (this.el.btnViewVictory) this.el.btnViewVictory.style.display = 'inline-flex';
@@ -3823,6 +3837,7 @@ class UnoArenaApp {
   }
 
   confirmLeaveRoom() {
+    this.pendingWinnerRouletteId = null;
     clearTimeout(this.rouletteNoticeTimer);
     document.getElementById('rouletteDrawNotice')?.remove();
     this.clearClassicAnimations();

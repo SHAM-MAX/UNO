@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-roulette-notice-v26';
+const CACHE_NAME = 'uno-arena-roulette-before-victory-v27';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
