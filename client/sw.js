@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-compact-classic-v24';
+const CACHE_NAME = 'uno-arena-compact-flip-v25';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -24,7 +24,7 @@ const STATIC_SHELL_ASSETS = [
   '/manifest.json',
   '/branding.css?v=3',
   '/victory.css?v=3',
-  '/mobile-layout.css?v=5',
+  '/mobile-layout.css?v=6',
   '/assets/victory-champion-trophy.png',
   '/assets/uno-brand-v4.png',
   '/assets/uno-brand-v4-32.png?v=4',

@@ -179,3 +179,18 @@ body.in-arena #btnUnoAction[style*="display: none"] { display:none !important; }
     margin:auto;
   }
 }
+/* Match Flip's mobile form to the compact Classic/No Mercy cards. */
+@media (max-width:800px), (max-width:1024px) and (max-height:540px) {
+  body.in-flip-setup:not(.in-mode-lobby):not(.in-arena) .flip-setup-container {
+    min-height:var(--visible-height,100dvh) !important;
+    box-sizing:border-box;
+    justify-content:center !important;
+    align-items:center !important;
+    padding:16px 12px !important;
+  }
+  body.in-flip-setup:not(.in-mode-lobby):not(.in-arena) #flipCardWrapper {
+    width:min(350px,100%) !important;
+    flex-shrink:0;
+    margin:auto;
+  }
+}
