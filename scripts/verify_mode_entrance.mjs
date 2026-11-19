@@ -215,9 +215,9 @@ async function main() {
 
 
 
-    for (const mode of ['no_mercy','flip']) {
+    for (const mode of ['no_mercy','flip','classic']) {
     await cdp.evaluate(new Function(`window.entranceMode=${JSON.stringify(mode)}`));
-    const selector = mode==='flip' ? '#flipCardWrapper' : '.nm-card-container';
+    const selector = mode==='classic' ? '#standardSetupLayout .setup-panel' : mode==='flip' ? '#flipCardWrapper' : '.nm-card-container';
     await cdp.evaluate(new Function(`window.entranceSelector=${JSON.stringify(selector)}`));
     for (const [width,height] of [[1440,900],[390,844],[844,390]]) {
       await cdp.setViewport(width,height,width<900);
@@ -228,8 +228,8 @@ async function main() {
       console.log('mid-animation',await cdp.evaluate(()=>({motion:matchMedia('(prefers-reduced-motion: reduce)').matches,face:!!document.querySelector('[data-mode-entrance]'),opacity:getComputedStyle(document.querySelector(window.entranceSelector)).opacity,animations:document.querySelector(window.entranceSelector).getAnimations().map(a=>({time:a.currentTime,state:a.playState}))})));
       await cdp.screenshot(path.join(ARTIFACT_DIR,'entrance-'+mode+'-'+width+'.png'));
       await cdp.waitForFunction(()=>!document.querySelector('[data-mode-entrance]') && !document.querySelector(window.entranceSelector).inert);
-      await cdp.evaluate(()=>{const input=window.entranceMode==='flip'?window.app.el.flipPlayerNameInput:window.app.el.noMercyPlayerNameInput;input.focus();input.value='Animation Host';});
-      if (!await cdp.evaluate(()=>document.activeElement===(window.entranceMode==='flip'?window.app.el.flipPlayerNameInput:window.app.el.noMercyPlayerNameInput))) throw Error('Form unusable after entrance');
+      await cdp.evaluate(()=>{const input=window.entranceMode==='classic'?window.app.el.setupPlayerNameInput:window.entranceMode==='flip'?window.app.el.flipPlayerNameInput:window.app.el.noMercyPlayerNameInput;input.focus();input.value='Animation Host';});
+      if (!await cdp.evaluate(()=>document.activeElement===(window.entranceMode==='classic'?window.app.el.setupPlayerNameInput:window.entranceMode==='flip'?window.app.el.flipPlayerNameInput:window.app.el.noMercyPlayerNameInput))) throw Error('Form unusable after entrance');
       await cdp.evaluate(()=>window.app.openModeSetup(window.entranceMode));
       await cdp.evaluate(()=>window.app.showModePicker());
       await cdp.waitForFunction(()=>window.app.selectedSetupMode===null);

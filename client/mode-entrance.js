@@ -8,11 +8,16 @@ const artworkByMode = { no_mercy: [
   './assets/flip-cards/Purple_FLIP.jpg',
   './assets/uno-flip-setup-bg.jpg',
   './assets/uno-flip-create-reference.png',
+], classic: [
+  './assets/uno-classic-back.png',
+  './assets/classic-setup-collage.svg',
+  './assets/classic-exact-form.png',
 ] };
 for (const mode of Object.keys(artworkByMode)) artworkByMode[mode] = artworkByMode[mode].map(path => new URL(path, import.meta.url).href);
 const artworkReady = {};
 export function preloadNoMercyEntrance() { return preloadModeEntrance('no_mercy'); }
 export function preloadFlipEntrance() { return preloadModeEntrance('flip'); }
+export function preloadClassicEntrance() { return preloadModeEntrance('classic'); }
 function preloadModeEntrance(mode) {
   return artworkReady[mode] ||= Promise.all(artworkByMode[mode].map(src => {
     const image = new Image();
@@ -22,6 +27,7 @@ function preloadModeEntrance(mode) {
 }
 export function playNoMercyEntrance(card) { return playModeEntrance(card,'no_mercy'); }
 export function playFlipEntrance(card) { return playModeEntrance(card,'flip'); }
+export function playClassicEntrance(card) { return playModeEntrance(card,'classic'); }
 function playModeEntrance(card, mode) {
   const artworkUrls = artworkByMode[mode];
   if (!card || matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduced-motion')) return () => {};

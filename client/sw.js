@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-flip-card-entrance-v21';
+const CACHE_NAME = 'uno-arena-classic-card-entrance-v22';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
