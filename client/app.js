@@ -1,3 +1,4 @@
+import { updateTurnStatus, renderMatchStandings, playPowerSound } from './game-experience.js';
 import { initFriendWordmark } from './friend-wordmark.js';
 import { animatePowerCard } from './power-effects.js';
 import { playNoMercyEntrance, preloadNoMercyEntrance, playFlipEntrance, preloadFlipEntrance, playClassicEntrance, preloadClassicEntrance } from './mode-entrance.js';
@@ -61,6 +62,15 @@ class UnoArenaApp {
     preloadFlipEntrance();
     preloadClassicEntrance();
     this.initElements();
+    window.addEventListener('online',()=>{
+      if(this.roomId && this.ws?.readyState!==WebSocket.OPEN){
+        clearTimeout(this.reconnectTimeout);
+        this.connectWebSocket(this.roomId,this.playerId,this.sessionToken,this.playerName);
+      }
+    });
+    window.addEventListener('offline',()=>{
+      if(this.roomId){this.connectionRecovering=true;this.el.banner.textContent='You’re offline · reconnecting when your network returns';this.el.banner.classList.add('visible');this.el.playerHandCards.setAttribute('inert','');this.ws?.close();}
+    });
     initFriendWordmark();
     this.initEvents();
     this.initDialogAccessibility();
@@ -1842,7 +1852,7 @@ class UnoArenaApp {
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
-      this.el.banner.classList.remove('visible');
+      if (!this.roomId) this.el.banner.classList.remove('visible');
       if (this.reconnectTimeout) {
         clearTimeout(this.reconnectTimeout);
         this.reconnectTimeout = null;
@@ -1897,6 +1907,7 @@ class UnoArenaApp {
         } else if (msg.type === 'quick_match_cancelled') {
           this.cancelQuickMatchTimerOnly();
         } else if (msg.type === 'room:state') {
+          this.connectionRecovering=false;this.reconnectAttempts=0;this.el.banner.classList.remove('visible');
           this.cancelQuickMatchTimerOnly();
           this.handleRoomState(msg.data);
         } else if (msg.type === 'player_card_hovered') {
@@ -1933,7 +1944,7 @@ class UnoArenaApp {
     };
 
     this.ws.onclose = () => {
-      if (['classic', 'no_mercy'].includes(this.gameState?.mode)) {
+      if (this.gameState) {
         this.cancelCardDrag?.();
         this.clearClassicAnimations?.();
         this.pendingClassicMotion = null;
@@ -1950,8 +1961,12 @@ class UnoArenaApp {
         clearInterval(this.pingInterval);
         this.pingInterval = null;
       }
+      this.connectionRecovering=true;
+      this.pendingMessages=[];
+      this.reconnectAttempts=(this.reconnectAttempts||0)+1;
+      this.el.banner.textContent=navigator.onLine?'Reconnecting… Your seat is saved.':'You’re offline · reconnecting when your network returns';
       this.el.banner.classList.add('visible');
-      // Auto-reconnect after 2 seconds
+      // Retry progressively, without hammering a disconnected mobile connection.
       if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = setTimeout(() => {
         if (this.roomId) {
@@ -1959,7 +1974,7 @@ class UnoArenaApp {
           const pId = this.gameState?.mode === 'no_mercy' ? this.playerId : localStorage.getItem(`player_${this.roomId}`);
           this.connectWebSocket(this.roomId, pId, sToken, this.playerName);
         }
-      }, 2000);
+      }, Math.min(15000,1000*2**Math.min(this.reconnectAttempts-1,4)));
     };
 
     this.ws.onerror = (err) => {
@@ -1968,6 +1983,8 @@ class UnoArenaApp {
   }
 
   send(payload) {
+    const roomAction=!['join','ping'].includes(payload.type);
+    if(this.roomId && this.connectionRecovering && roomAction){this.isMoveInFlight=false;return false;}
     if (['classic', 'no_mercy'].includes(this.gameState?.mode) && ['draw_card', 'play_card'].includes(payload.type)) {
       const element = payload.type === 'draw_card' ? this.el.drawPile.querySelector('.game-card') : this.el.playerHandCards.querySelector(`[data-card-id="${payload.data?.cardId}"]`);
       if (element) this.pendingClassicMotion = { type: payload.type, cardId: payload.data?.cardId, rect: element.getBoundingClientRect(), html: element.querySelector('.game-card')?.outerHTML || element.outerHTML };
@@ -1982,7 +1999,7 @@ class UnoArenaApp {
     };
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(full));
-    } else if (['classic', 'no_mercy'].includes(this.gameState?.mode) && ['play_card', 'draw_card', 'pass_turn', 'choose_color', 'challenge_draw4', 'call_uno', 'catch_uno', 'rematch', 'start_game', 'rematch_propose', 'rematch_respond', 'rematch_vote', 'rematch_cancel'].includes(payload.type)) {
+    } else if (this.gameState && ['play_card', 'draw_card', 'pass_turn', 'choose_color', 'challenge_draw4', 'call_uno', 'catch_uno', 'rematch', 'start_game', 'rematch_propose', 'rematch_respond', 'rematch_vote', 'rematch_cancel'].includes(payload.type)) {
       this.isMoveInFlight = false;
       this.showToast('Connection lost. Wait for the table to reconnect.');
       return false;
@@ -2046,6 +2063,7 @@ class UnoArenaApp {
     this.cancelCardDrag?.();
     document.querySelectorAll('.classic-returning-card').forEach(el => el.remove());
     this.el.playerHandCards.removeAttribute('inert');
+    if(!view.isMyTurn || !view.myHand.some(c=>c.id===this.selectedCardId) || !view.canPlayCards.includes(this.selectedCardId) || previous?.gameState.flipSide!==view.gameState.flipSide) this.selectedCardId=null;
     this.clientView = view;
     this.gameState = view.gameState;
     this.isPlayInFlight = false;
@@ -2396,6 +2414,7 @@ class UnoArenaApp {
     const me = current.gameState.players.find(p => p.id === this.playerId);
     const beforeMe = previous.gameState.players.find(p => p.id === this.playerId);
     if (me?.hasCalledUno && !beforeMe?.hasCalledUno) this.showToast('UNO!');
+    if(previous.gameState.status==='playing' && previous.gameState.roomId===current.gameState.roomId) playPowerSound(previous.gameState,current.gameState);
     if (previous.gameState.mode !== current.gameState.mode || previous.gameState.status !== 'playing' || previous.gameState.roomId !== current.gameState.roomId || matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduced-motion')) return;
     animatePowerCard(this, previous.gameState);
     if (current.gameState.mode === 'no_mercy') this.animateNoMercyAction(previous, geometry);
@@ -3162,7 +3181,7 @@ class UnoArenaApp {
         wrapper.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          this.handleCardClick(card, wrapper);
+          this.handleCardClick(card, wrapper, e.detail!==0 && (e.pointerType==='touch' || matchMedia('(pointer: coarse)').matches));
         });
         wrapper.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -3200,9 +3219,7 @@ class UnoArenaApp {
       wrapper.setAttribute('aria-label', isPlayable ? `Play card: ${cardTitle}` : `Card: ${cardTitle}`);
 
       wrapper.style.setProperty('--card-rot', `${rot}deg`);
-      if (!isSelected) {
-        wrapper.style.transform = `rotate(${rot}deg)`;
-      }
+      wrapper.style.transform = isSelected ? 'translateY(-14px) rotate(0deg) scale(1.12)' : `rotate(${rot}deg)`;
 
       if (rowEl.children[idx] !== wrapper) {
         rowEl.appendChild(wrapper);
@@ -3219,14 +3236,15 @@ class UnoArenaApp {
     this.activeTurnStatus = status;
     this.activeTurnIsMyTurn = Boolean(isMyTurn);
 
-    let ringCircles = Array.from(document.querySelectorAll('.avatar-turn-circle'));
-    let ringSvgs = Array.from(document.querySelectorAll('.avatar-turn-ring'));
-    let secondsEls = Array.from(document.querySelectorAll('.avatar-turn-seconds'));
+    let ringCircles = Array.from(document.querySelectorAll('.avatar-turn-circle, .classic-profile-ring circle'));
+    let ringSvgs = Array.from(document.querySelectorAll('.avatar-turn-ring, .classic-profile-ring'));
+    let secondsEls = Array.from(document.querySelectorAll('.avatar-turn-seconds, .classic-profile-seconds'));
     let discBadges = Array.from(document.querySelectorAll('.disconnect-countdown-badge'));
     let lastQuery = Date.now();
 
     const tick = () => {
       if (this.activeTurnStatus !== 'playing' || !this.activeTurnDeadline) {
+        const label=document.getElementById('tableTurnStatus');if(label)label.hidden=true;
         if (this.turnTimerInterval) {
           clearInterval(this.turnTimerInterval);
           this.turnTimerInterval = null;
@@ -3237,9 +3255,9 @@ class UnoArenaApp {
       const now = Date.now();
       // Periodically refresh cached element refs in case badges were dynamically added
       if (now - lastQuery > 1000) {
-        ringCircles = Array.from(document.querySelectorAll('.avatar-turn-circle'));
-        ringSvgs = Array.from(document.querySelectorAll('.avatar-turn-ring'));
-        secondsEls = Array.from(document.querySelectorAll('.avatar-turn-seconds'));
+        ringCircles = Array.from(document.querySelectorAll('.avatar-turn-circle, .classic-profile-ring circle'));
+        ringSvgs = Array.from(document.querySelectorAll('.avatar-turn-ring, .classic-profile-ring'));
+        secondsEls = Array.from(document.querySelectorAll('.avatar-turn-seconds, .classic-profile-seconds'));
         discBadges = Array.from(document.querySelectorAll('.disconnect-countdown-badge'));
         lastQuery = now;
       }
@@ -3249,7 +3267,8 @@ class UnoArenaApp {
       const fraction = Math.max(0, Math.min(1, remainingMs / durationMs));
       const remainingSec = Math.ceil(remainingMs / 1000);
       const ringOffset = (138.23 * (1 - fraction)).toFixed(2);
-      const isCritical = remainingMs <= 7000;
+      const isCritical = remainingMs <= 5000;
+      updateTurnStatus(this,remainingSec,isCritical);
 
       // Update disconnect countdown badges
       for (let i = 0; i < discBadges.length; i++) {
@@ -3283,7 +3302,7 @@ class UnoArenaApp {
     }
   }
 
-  handleCardClick(card, wrapperEl) {
+  handleCardClick(card, wrapperEl, previewFirst = false) {
     if (!this.clientView?.isMyTurn) {
       if (wrapperEl) {
         wrapperEl.animate([{ transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'none' }], { duration: 160 });
@@ -3302,7 +3321,14 @@ class UnoArenaApp {
       return;
     }
 
-    if (this.isPlayInFlight) return;
+    if (this.isPlayInFlight || this.connectionRecovering) return;
+    if(previewFirst && this.selectedCardId!==card.id){
+      this.selectedCardId=card.id;
+      this.renderPlayerHand(this.clientView.myHand,this.clientView.canPlayCards,this.gameState.mode,this.gameState.flipSide);
+      this.handCardElements.get(card.id)?.setAttribute('aria-label','Selected card. Tap again to play.');
+      return;
+    }
+    this.selectedCardId=null;
 
     const face = card.color ? card : (this.gameState.flipSide === 'dark' ? card.dark : card.light);
 
@@ -3818,6 +3844,7 @@ class UnoArenaApp {
     if (modeDetail) modeDetail.textContent = { classic: 'CLASSIC UNO', flip: 'UNO FLIP', no_mercy: 'NO MERCY' }[gameState.mode] || 'UNO';
     if (playersDetail) playersDetail.textContent = `${gameState.players.length} PLAYERS`;
     this.el.gameOverModal.dataset.mode = gameState.mode;
+    renderMatchStandings(this,gameState);
     const me = gameState.players.find((p) => p.id === this.playerId);
     this.el.rematchBtn.style.display = (gameState.status === 'round_over' ? me?.isHost : this.clientView.canProposeRematch) ? 'block' : 'none';
 
@@ -3856,6 +3883,7 @@ class UnoArenaApp {
   }
 
   confirmLeaveRoom() {
+    this.connectionRecovering=false;this.reconnectAttempts=0;this.selectedCardId=null;this.el.banner.classList.remove('visible');
     this.pendingWinnerRouletteId = null;
     clearTimeout(this.rouletteNoticeTimer);
     document.getElementById('rouletteDrawNotice')?.remove();

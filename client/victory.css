@@ -93,3 +93,16 @@
 }
 #gameOverModal .modal-card.victory-card { max-height:none !important; height:auto; overflow:visible !important; flex-shrink:0; }
 #gameOverModal .victory-stage { max-height:none; height:max-content; overflow:visible; }
+
+#gameOverModal .match-standings {width:min(660px,100%);margin:10px auto 14px;text-align:left;}
+.match-standings h3 {font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#d9bd75;margin:0 0 6px;}
+.match-standings ol {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;list-style:none;padding:0;margin:0;}
+.match-standings li {display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #ddc07830;background:#ffffff06;border-radius:8px;padding:6px 9px;font-size:12px;min-width:0;}
+.match-standings li strong {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:45%;}
+.match-standings li span {color:#c8c4b7;font-size:10px;}
+.match-standings li[data-winner="true"] {border-color:#e9bf58;color:#ffe29a;}
+.match-standings p {text-align:center;color:#c8c4b7;font-size:11px;margin:7px 0 0;}
+@media(max-width:420px){.match-standings ol{gap:4px;}.match-standings li{padding:5px;font-size:11px;}.match-standings li span{font-size:9px;}}
+
+#gameOverModal .match-standings li strong {color:#fff2d5;}
+#gameOverModal .match-standings li[data-winner="true"] strong {color:#ffe29a;}

@@ -179,6 +179,7 @@ export class RoomManager {
         hasCalledUno: p.hasCalledUno,
         isEliminated: p.isEliminated,
         eliminatedReason: p.eliminatedReason,
+        eliminationOrder: p.eliminationOrder || null,
         score: p.score,
         sessionToken: p.sessionToken,
       }));
@@ -722,6 +723,7 @@ export class RoomManager {
       p.hasCalledUno = false;
       p.isEliminated = false;
       p.eliminatedReason = null;
+      p.eliminationOrder = null;
     });
 
     const fullDeck = shuffleDeck(createDeckForMode(room.mode));
@@ -939,6 +941,7 @@ export class RoomManager {
     const hand = room.playerHands[player.id] || [];
     const knockoutLimit = Number(room.houseRules?.mercyKnockoutLimit) || NO_MERCY_MAX_CARDS;
     if (room.mode === 'no_mercy' && room.houseRules?.mercyKnockout !== false && hand.length >= knockoutLimit && !player.isEliminated) {
+      player.eliminationOrder = room.players.filter(p => p.isEliminated).length + 1;
       player.isEliminated = true;
       player.eliminatedReason = `Knocked out by Mercy rule (${knockoutLimit} cards)!`;
       room.mercyPile = [...(room.mercyPile || []), ...hand];
@@ -2114,6 +2117,7 @@ export class RoomManager {
       isUnoArmed: p.isUnoArmed || false,
       isEliminated: p.isEliminated,
       eliminatedReason: p.eliminatedReason,
+      eliminationOrder: p.eliminationOrder || null,
       score: p.score,
     }));
 

@@ -3,7 +3,8 @@ class SoundSynthesizer {
     this.ctx = null;
     this.masterGain = null;
     this.enabled = localStorage.getItem('uno_arena_sound') !== 'false';
-    const savedVol = Number(localStorage.getItem('uno_arena_volume'));
+    const storedVol = localStorage.getItem('uno_arena_volume');
+    const savedVol = storedVol === null ? 0.65 : Number(storedVol);
     this.volume = !isNaN(savedVol) && savedVol >= 0 && savedVol <= 1 ? savedVol : 0.8;
   }
 
@@ -93,6 +94,19 @@ class SoundSynthesizer {
 
   playCard(freq = 480, duration = 0.08) {
     this.playSnap(freq, duration);
+  }
+
+  playPower(kind) {
+    if(!this.enabled)return;
+    this.init();if(!this.ctx)return;
+    const notes={reverse:[520,360,520],swap:[330,550,440],skip:[420,260],draw:[210,290,370],flip:[300,600,450],wild:[440,550,660]};
+    const now=this.ctx.currentTime;
+    (notes[kind]||notes.wild).forEach((frequency,index)=>{
+      const start=now+index*.055,osc=this.ctx.createOscillator(),gain=this.ctx.createGain();
+      osc.type='sine';osc.frequency.setValueAtTime(frequency,start);
+      gain.gain.setValueAtTime(.001,start);gain.gain.linearRampToValueAtTime(.09,start+.012);gain.gain.exponentialRampToValueAtTime(.001,start+.11);
+      osc.connect(gain);this.connectGain(gain);osc.start(start);osc.stop(start+.12);
+    });
   }
 
   playDraw() {

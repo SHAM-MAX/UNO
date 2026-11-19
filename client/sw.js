@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-original-friends-v34';
+const CACHE_NAME = 'uno-arena-game-experience-v35';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -7,6 +7,7 @@ const STATIC_SHELL_ASSETS = [
   '/navigation.js',
   '/mode-entrance.js',
   '/power-effects.js',
+  '/game-experience.js',
   '/friend-wordmark.js',
   '/assets/flip-cards/Purple_FLIP.jpg',
   '/assets/no-mercy-cards/wild_draw10.webp',
@@ -16,7 +17,7 @@ const STATIC_SHELL_ASSETS = [
   '/style.css?v=2.2.0',
   '/home.css?v=2.2.1',
   '/lobby.css?v=2.2.0',
-  '/arena.css?v=2.2.4',
+  '/arena.css?v=2.2.5',
   '/mobile.css?v=2.2.0',
   '/app.js?v=2.2.0',
   '/audio.js',
@@ -25,7 +26,7 @@ const STATIC_SHELL_ASSETS = [
   '/shared/rules.js',
   '/manifest.json',
   '/branding.css?v=6',
-  '/victory.css?v=3',
+  '/victory.css?v=4',
   '/mobile-layout.css?v=6',
   '/assets/victory-champion-trophy.png',
   '/assets/uno-brand-v4.png',
