@@ -1,3 +1,4 @@
+import { music } from './music.js';
 import { updateTurnStatus, renderMatchStandings, playPowerSound } from './game-experience.js';
 import { initFriendWordmark } from './friend-wordmark.js';
 import { animatePowerCard } from './power-effects.js';
@@ -62,6 +63,7 @@ class UnoArenaApp {
     preloadFlipEntrance();
     preloadClassicEntrance();
     this.initElements();
+    music.init();
     window.addEventListener('online',()=>{
       if(this.roomId && this.ws?.readyState!==WebSocket.OPEN){
         clearTimeout(this.reconnectTimeout);
@@ -1449,6 +1451,7 @@ class UnoArenaApp {
   }
 
   openModeSetup(mode) {
+    music.setScene(mode);
     this.cancelModeEntrance?.();
     const details = {
       classic: ['Classic UNO', 'Play the familiar classic rules with your friends.'],
@@ -1526,6 +1529,7 @@ class UnoArenaApp {
   }
 
   showModePicker() {
+    music.setScene('lobby');
     this.cancelModeEntrance?.();
     const enteredName = this.el.noMercyPlayerNameInput?.value?.trim() ||
       this.el.noMercyMobilePlayerNameInput?.value?.trim() ||
@@ -2064,6 +2068,7 @@ class UnoArenaApp {
     document.querySelectorAll('.classic-returning-card').forEach(el => el.remove());
     this.el.playerHandCards.removeAttribute('inert');
     if(!view.isMyTurn || !view.myHand.some(c=>c.id===this.selectedCardId) || !view.canPlayCards.includes(this.selectedCardId) || previous?.gameState.flipSide!==view.gameState.flipSide) this.selectedCardId=null;
+    music.setScene(['game_over','round_over'].includes(view.gameState.status)?'victory':view.gameState.status==='playing'?view.gameState.mode:'lobby');
     this.clientView = view;
     this.gameState = view.gameState;
     this.isPlayInFlight = false;
@@ -4489,6 +4494,7 @@ class UnoArenaApp {
   }
 
   openSettingsModal(tab = 'general') {
+    music.syncControls();
     if (!this.roomId && this.rulesModalContext !== 'ai') {
       this.rulesModalContext = 'setup';
       this.activeRulesModalMode = this.selectedSetupMode || this.preferredMode || 'classic';

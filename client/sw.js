@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-game-experience-v35';
+const CACHE_NAME = 'uno-arena-original-music-v36';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -8,6 +8,7 @@ const STATIC_SHELL_ASSETS = [
   '/mode-entrance.js',
   '/power-effects.js',
   '/game-experience.js',
+  '/music.js',
   '/friend-wordmark.js',
   '/assets/flip-cards/Purple_FLIP.jpg',
   '/assets/no-mercy-cards/wild_draw10.webp',
