@@ -1,3 +1,4 @@
+import { initFriendWordmark } from './friend-wordmark.js';
 import { animatePowerCard } from './power-effects.js';
 import { playNoMercyEntrance, preloadNoMercyEntrance, playFlipEntrance, preloadFlipEntrance, playClassicEntrance, preloadClassicEntrance } from './mode-entrance.js';
 import { initBackNavigation } from './navigation.js';
@@ -60,6 +61,7 @@ class UnoArenaApp {
     preloadFlipEntrance();
     preloadClassicEntrance();
     this.initElements();
+    initFriendWordmark();
     this.initEvents();
     this.initDialogAccessibility();
     this.initPWA();

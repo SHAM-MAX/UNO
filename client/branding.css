@@ -33,3 +33,15 @@ body.in-arena #brandNavToggle .app-brand-logo {height:38px;max-width:100px;}
 @media(max-width:600px) {
  #brandNavToggle .nav-friends-wordmark,.mobile-brand .nav-friends-wordmark { width:77.5px; height:40px; }
 }
+
+/* Three friends walk into their original UNO positions once on page entry. */
+.friends-ready .nav-walking-friend {animation:friendWalkIn 1.8s cubic-bezier(.22,.61,.36,1) var(--friend-delay) both;}
+.friends-ready .nav-friend-body {animation:friendWalkBob .22s ease-in-out var(--friend-delay) 7;}
+.friends-ready .nav-friend-leg {transform-box:fill-box;transform-origin:center top;animation:friendWalkStep .22s ease-in-out var(--friend-delay) 7;}
+.friends-ready .nav-friend-leg-right {animation-name:friendWalkStepOther;}
+@keyframes friendWalkIn {0%{opacity:0;transform:translateX(var(--friend-start));}8%{opacity:1;}85%,100%{opacity:1;transform:translateX(0);}}
+@keyframes friendWalkBob {0%,100%{transform:translateY(0);}50%{transform:translateY(-15px);}}
+@keyframes friendWalkStep {0%,100%{transform:rotate(0deg);}30%{transform:rotate(3deg);}70%{transform:rotate(-3deg);}}
+@keyframes friendWalkStepOther {0%,100%{transform:rotate(0deg);}30%{transform:rotate(-3deg);}70%{transform:rotate(3deg);}}
+@media(prefers-reduced-motion:reduce) {.friends-ready .nav-walking-friend,.friends-ready .nav-friend-body,.friends-ready .nav-friend-leg {animation:none;}}
+body.reduced-motion .nav-walking-friend,body.reduced-motion .nav-friend-body,body.reduced-motion .nav-friend-leg {animation:none;}

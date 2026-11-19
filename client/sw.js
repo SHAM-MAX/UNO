@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-black-nav-v31';
+const CACHE_NAME = 'uno-arena-walking-friends-v32';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -7,6 +7,7 @@ const STATIC_SHELL_ASSETS = [
   '/navigation.js',
   '/mode-entrance.js',
   '/power-effects.js',
+  '/friend-wordmark.js',
   '/assets/flip-cards/Purple_FLIP.jpg',
   '/assets/no-mercy-cards/wild_draw10.webp',
   '/install.js?v=1',
@@ -23,7 +24,7 @@ const STATIC_SHELL_ASSETS = [
   '/shared/constants.js',
   '/shared/rules.js',
   '/manifest.json',
-  '/branding.css?v=3',
+  '/branding.css?v=4',
   '/victory.css?v=3',
   '/mobile-layout.css?v=6',
   '/assets/victory-champion-trophy.png',
