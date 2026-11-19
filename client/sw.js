@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-smooth-friends-v33';
+const CACHE_NAME = 'uno-arena-original-friends-v34';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -24,7 +24,7 @@ const STATIC_SHELL_ASSETS = [
   '/shared/constants.js',
   '/shared/rules.js',
   '/manifest.json',
-  '/branding.css?v=5',
+  '/branding.css?v=6',
   '/victory.css?v=3',
   '/mobile-layout.css?v=6',
   '/assets/victory-champion-trophy.png',
