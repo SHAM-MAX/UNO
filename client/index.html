@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="./victory.css?v=4">
   <link rel="stylesheet" href="./mobile-layout.css?v=6">
   <link rel="stylesheet" href="./settings.css?v=1">
+  <link rel="stylesheet" href="./interaction-motion.css?v=1">
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/uno-brand-v4-32.png?v=4">
   <link rel="icon" type="image/png" sizes="192x192" href="./assets/uno-brand-v4-192.png?v=4">
   <link rel="icon" type="image/png" sizes="512x512" href="./assets/uno-brand-v4-512.png?v=4">
@@ -883,12 +884,12 @@
   </div>
 
   <!-- ACTION MODAL: 7 HAND SWAP TARGET PICKER -->
-  <div id="swapPickerModal" class="modal-overlay">
-    <div class="modal-card">
+  <div id="swapPickerModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="swapPickerTitle">
+    <div class="modal-card swap-picker-card">
       <div class="modal-header">
-        <h3 class="modal-title">7 Hand-Swap!</h3>
+        <span class="swap-kicker">PLAY YOUR SEVEN</span><h3 id="swapPickerTitle" class="modal-title">Swap your hand <span aria-hidden="true">↔</span></h3>
       </div>
-      <p style="color: #94A3B8; font-size: 0.9rem; margin-bottom: 12px;">Choose a player to swap your entire hand with:</p>
+      <p class="swap-picker-subtitle">Choose a player. You’ll exchange your entire hands.</p>
       <div id="swapOptionsContainer" class="player-picker-list"></div>
     </div>
   </div>

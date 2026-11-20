@@ -1,3 +1,4 @@
+import { setActionVisible, setGameModal, jumpControl, exitControl, clearInteractionMotion } from './interaction-motion.js';
 import { music } from './music.js';
 import { updateTurnStatus, renderMatchStandings, playPowerSound } from './game-experience.js';
 import { initFriendWordmark } from './friend-wordmark.js';
@@ -1432,6 +1433,7 @@ class UnoArenaApp {
     notice.innerHTML = `<span class="roulette-notice-heading"><span class="roulette-notice-dot" aria-hidden="true"></span>ROULETTE RESULT</span><strong class="roulette-notice-player">${escapeHtml(player?.name || 'Player')}</strong><span class="roulette-notice-details"><span class="roulette-notice-color">${escapeHtml(roulette.color.toUpperCase())}</span><span>Drew <b>${count}</b> card${count === 1 ? '' : 's'}</span></span>`;
 
     document.body.append(notice);
+    if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&!document.body.classList.contains('reduced-motion'))notice.animate([{opacity:0,transform:'translateY(-10px) scale(.97)'},{opacity:1,transform:'none',offset:.09},{opacity:1,transform:'none',offset:.91},{opacity:0,transform:'translateY(-8px) scale(.97)'}],{duration:2000,easing:'ease-out'});
     this.rouletteNoticeTimer = setTimeout(() => {
       notice.remove();
       this.completedRouletteNoticeId = roulette.id;
@@ -1955,8 +1957,8 @@ class UnoArenaApp {
         this.isMoveInFlight = false;
         this.pendingPlayCard = null;
         this.pendingPlayWrapper = null;
-        this.el.colorPickerModal.classList.remove('active');
-        this.el.swapPickerModal.classList.remove('active');
+        setGameModal(this.el.colorPickerModal,false);
+        setGameModal(this.el.swapPickerModal,false);
         this.el.playerHandCards.setAttribute('inert', '');
         this.el.btnDrawAction.disabled = true;
         this.el.drawPileBtn.disabled = true;
@@ -2092,13 +2094,13 @@ class UnoArenaApp {
     if (!view.isMyTurn && !openingChoice) {
       this.pendingPlayCard = null;
       this.pendingPlayWrapper = null;
-      this.el.colorPickerModal.classList.remove('active');
-      if (view.gameState.mode === 'no_mercy') this.el.swapPickerModal.classList.remove('active');
+      setGameModal(this.el.colorPickerModal,false);
+      if (view.gameState.mode === 'no_mercy') setGameModal(this.el.swapPickerModal,false);
     } else if (view.gameState.mode !== 'flip' && !pendingStillPlayable && !openingChoice) {
       this.pendingPlayCard = null;
       this.pendingPlayWrapper = null;
-      this.el.colorPickerModal.classList.remove('active');
-      if (view.gameState.mode === 'no_mercy') this.el.swapPickerModal.classList.remove('active');
+      setGameModal(this.el.colorPickerModal,false);
+      if (view.gameState.mode === 'no_mercy') setGameModal(this.el.swapPickerModal,false);
     }
     if (view.gameState.status === 'playing') {
       this.dismissedGameOverMatchId = null;
@@ -2323,7 +2325,7 @@ class UnoArenaApp {
     profile.dataset.profileId = me.id;
     profile.innerHTML = `<div class="opponent-avatar">${this.classicAvatarHTML(me, isMyTurn && !!gameState.turnDeadline)}</div><span>${escapeHtml(me.name)}<small>${myHand.length} cards</small></span>`;
     controls.appendChild(this.el.btnUnoAction);
-    this.el.btnUnoAction.style.display = myHand.length === 2 && canCallUno && !me.hasCalledUno ? 'inline-flex' : 'none';
+    setActionVisible(this.el.btnUnoAction,myHand.length === 2 && canCallUno && !me.hasCalledUno);
   }
 
   captureClassicGeometry() {
@@ -2874,23 +2876,19 @@ class UnoArenaApp {
     if (gameState.mode === 'no_mercy' && !gameState.pendingDrawPenalty) this.el.btnDrawAction.textContent = 'DRAW TO PLAY';
     // Pass button (visible if drawn this turn and eligible to pass)
     const canPass = Boolean(this.clientView?.canPass ?? (gameState.turnDrawnCard && isMyTurn && !gameState.pendingDrawPenalty));
-    if (canPass) {
-      this.el.btnPassAction.style.display = 'inline-flex';
-    } else {
-      this.el.btnPassAction.style.display = 'none';
-    }
+    setActionVisible(this.el.btnPassAction,canPass);
 
     // UNO and Catch buttons
     this.el.btnUnoAction.disabled = !canCallUno;
-    this.el.btnUnoAction.style.display = myHand.length === 2 && canCallUno ? 'inline-flex' : 'none';
+    setActionVisible(this.el.btnUnoAction,myHand.length === 2 && canCallUno);
     this.el.btnUnoAction.innerHTML = '<span class="btn-icon">📢</span> CALL UNO!';
     if (canCatchUno) {
       const caughtPlayer = gameState.players.find((p) => p.id === canCatchUno);
-      this.el.btnCatchAction.style.display = 'inline-flex';
+      setActionVisible(this.el.btnCatchAction,true);
       this.el.btnCatchAction.textContent = gameState.mode !== 'flip' ? 'CAUGHT' : `CATCH ${caughtPlayer?.name?.toUpperCase()} (MISSED UNO)!`;
       this.el.btnCatchAction.setAttribute('aria-label', `Catch ${caughtPlayer?.name} for missed UNO`);
     } else {
-      this.el.btnCatchAction.style.display = 'none';
+      setActionVisible(this.el.btnCatchAction,false);
     }
 
     if (gameState.mode === 'classic') {
@@ -3070,7 +3068,10 @@ class UnoArenaApp {
           '<button class="opponent-caught-btn" data-catch-target="' + p.id + '" type="button">CAUGHT</button>';
       }
       if (unoStatusSlot.innerHTML !== unoStatusHtml) {
+        const oldCatch=unoStatusSlot.querySelector('.opponent-caught-btn');
+        if(oldCatch)exitControl(oldCatch);
         unoStatusSlot.innerHTML = unoStatusHtml;
+        jumpControl(unoStatusSlot.querySelector('.opponent-caught-btn'));
       }
 
       // Fan cards: only recalculate if count, flipSide, or mode changed
@@ -3463,7 +3464,7 @@ class UnoArenaApp {
         sounds.playSnap(520, 0.1);
 
         setTimeout(() => {
-          this.el.colorPickerModal.classList.remove('active');
+          setGameModal(this.el.colorPickerModal,false);
           this.send({
             type: ['opening_color'].includes(this.gameState?.pendingAction?.type) ? 'choose_color' : 'play_card',
             data: {
@@ -3480,7 +3481,7 @@ class UnoArenaApp {
 
   openColorPicker() {
     this.renderColorPickerContent();
-    this.el.colorPickerModal.classList.add('active');
+    setGameModal(this.el.colorPickerModal,true);
   }
 
   static ROULETTE_ANGLES = {
@@ -3633,14 +3634,14 @@ class UnoArenaApp {
       }
     }
 
-    this.el.rouletteModal.classList.add('active');
+    setGameModal(this.el.rouletteModal,true);
   }
 
   closeRouletteModal() {
     if (!this.el.rouletteModal) return;
     if (this.rouletteLandedTimer) { clearTimeout(this.rouletteLandedTimer); this.rouletteLandedTimer = null; }
     if (this.rouletteCloseTimer) { clearTimeout(this.rouletteCloseTimer); this.rouletteCloseTimer = null; }
-    this.el.rouletteModal.classList.remove('active');
+    setGameModal(this.el.rouletteModal,false);
     this.el.rouletteWheelFrame?.classList.remove('spinning-free');
     this.isRouletteInteractive = false;
     this.isRouletteDecelerating = false;
@@ -3752,8 +3753,7 @@ class UnoArenaApp {
       .map(
         (p) => `
         <button class="player-target-btn" data-player-id="${p.id}">
-          <span>👤 ${escapeHtml(p.name)}</span>
-          <span style="font-size: 0.85rem; opacity: 0.8;">${p.cardCount} cards</span>
+          <span class="swap-player-avatar">${this.classicAvatarInner(p)}</span><span class="swap-player-name">${escapeHtml(p.name)}<small>${p.isBot ? 'AI opponent' : 'Player'}</small></span><span class="swap-card-count">${p.cardCount}<small>cards</small></span><span class="swap-player-arrow" aria-hidden="true">↔</span>
         </button>
       `
       )
@@ -3771,7 +3771,7 @@ class UnoArenaApp {
         }
 
         const targetPlayerId = e.currentTarget.dataset.playerId;
-        this.el.swapPickerModal.classList.remove('active');
+        setGameModal(this.el.swapPickerModal,false);
         sounds.playSnap(400, 0.1);
         this.send({
           type: 'play_card',
@@ -3785,7 +3785,7 @@ class UnoArenaApp {
       });
     });
 
-    this.el.swapPickerModal.classList.add('active');
+    setGameModal(this.el.swapPickerModal,true);
   }
 
   showCaughtFailedModal(data) {
@@ -3807,13 +3807,11 @@ class UnoArenaApp {
       }
     }
     msgEl.textContent = messageText;
-    modal.style.display = 'flex';
-    modal.classList.add('active');
+    setGameModal(modal,true);
 
     if (this.caughtFailedTimer) clearTimeout(this.caughtFailedTimer);
     this.caughtFailedTimer = setTimeout(() => {
-      modal.classList.remove('active');
-      modal.style.display = 'none';
+      setGameModal(modal,false);
       this.caughtFailedTimer = null;
     }, 2400);
   }
@@ -3896,6 +3894,7 @@ class UnoArenaApp {
   }
 
   confirmLeaveRoom() {
+    clearInteractionMotion();
     this.connectionRecovering=false;this.reconnectAttempts=0;this.selectedCardId=null;this.el.banner.classList.remove('visible');
     this.pendingWinnerRouletteId = null;
     clearTimeout(this.rouletteNoticeTimer);

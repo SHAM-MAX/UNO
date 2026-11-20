@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-fast-card-faces-v38';
+const CACHE_NAME = 'uno-arena-smooth-interactions-v39';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -24,6 +24,8 @@ const STATIC_SHELL_ASSETS = [
   '/audio.js',
   '/cardGraphics.js',
   '/instant-cards.js',
+  '/interaction-motion.js',
+  '/interaction-motion.css?v=1',
   '/shared/constants.js',
   '/shared/rules.js',
   '/manifest.json',
