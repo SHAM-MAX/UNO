@@ -72,9 +72,9 @@ export function renderNoMercyFace(cardOrFace, explicitFace = null, mini = false)
   if (!imagePath) {
     return `<div class="nm-card-fallback" data-face="${key}">${label}</div>`;
   }
-  return `<img class="nm-card-image nm-face-image nm-vector-face" src="${imagePath}" alt="${label}" title="${label}" draggable="false" data-face="${key}">`;
+  return `<img class="nm-card-image nm-face-image nm-vector-face" src="${imagePath}" alt="${label}" title="${label}" draggable="false" decoding="sync" loading="eager" data-face="${key}">`;
 }
 
 export function renderNoMercyBack(mini = false) {
-  return '<img class="nm-card-image nm-back-image nm-vector-face" src="/assets/no-mercy-cards/card_back.webp" alt="No Mercy card back" title="No Mercy card back" draggable="false">';
+  return '<img class="nm-card-image nm-back-image nm-vector-face" src="/assets/no-mercy-cards/card_back.webp" alt="No Mercy card back" title="No Mercy card back" draggable="false" decoding="sync" loading="eager">';
 }

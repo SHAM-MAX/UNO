@@ -28,8 +28,9 @@ export function animatePowerCard(app, previous) {
   effect.className = 'power-card-effect';
   effect.setAttribute('aria-hidden','true');
   effect.innerHTML = `<span class="power-card-ring"></span><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
-  const size = Math.min(140,Math.max(82,rect.width*1.2));
-  Object.assign(effect.style,{left:rect.left+rect.width/2-size/2+'px',top:rect.top+rect.height/2-size/2+'px',width:size+'px',height:size+'px',color});
+  const size = Math.min(96,Math.max(58,rect.width*.85));
+  const left = rect.right+8+size<innerWidth-12?rect.right+8:rect.left-size-8;
+  Object.assign(effect.style,{left:left+'px',top:rect.top+rect.height/2-size/2+'px',width:size+'px',height:size+'px',color});
   document.body.append(effect);
   const animation = effect.animate([
     {opacity:0,transform:'scale(.4) rotate(-18deg)'},

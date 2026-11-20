@@ -2330,7 +2330,10 @@ class UnoArenaApp {
     const hand = new Map();
     this.el.playerHandCards.querySelectorAll('[data-card-id]').forEach(el => hand.set(el.dataset.cardId, { rect: el.getBoundingClientRect(), html: el.querySelector('.game-card')?.outerHTML }));
     const opponents = new Map();
-    this.el.opponentsRow.querySelectorAll('[data-profile-id]').forEach(el => opponents.set(el.dataset.profileId, el.getBoundingClientRect()));
+    this.el.opponentsRow.querySelectorAll('[data-profile-id]').forEach(el => {
+      const back=el.querySelector('.opponent-fan-card:last-child img');
+      opponents.set(el.dataset.profileId,(back?.getClientRects().length?back:el).getBoundingClientRect());
+    });
     return { hand, opponents, deck: this.el.drawPile.querySelector('.game-card')?.getBoundingClientRect(), pending: this.pendingClassicMotion };
   }
 
@@ -2343,6 +2346,10 @@ class UnoArenaApp {
     if (!source || source.width <= 0 || source.height <= 0 || !target || !html) return;
     const destination = target.getBoundingClientRect();
     if (destination.width <= 0 || destination.height <= 0) return;
+    this.classicAnimationCleanups ||= new Set();
+    if(this.classicAnimationCleanups.size>=18)this.classicAnimationCleanups.values().next().value?.();
+    const pileMotion=target instanceof Node && this.el.discardPile.contains(target);
+    if(pileMotion)for(const dispose of this.discardMotionCleanups||[])dispose();
     const ghost = document.createElement('div'); ghost.className = 'classic-motion-ghost'; ghost.setAttribute('aria-hidden', 'true'); ghost.innerHTML = html;
     Object.assign(ghost.style, { left: `${source.left}px`, top: `${source.top}px`, width: `${source.width}px`, height: `${source.height}px` });
     document.body.appendChild(ghost);
@@ -2350,18 +2357,19 @@ class UnoArenaApp {
     if (faceHTML) this.cardTargetCleanups.get(target)?.();
     const originalVisibility = target.style.visibility;
     if (faceHTML) target.style.visibility = 'hidden';
-    const duration = Math.min(450, Math.max(300, Math.hypot(destination.left - source.left, destination.top - source.top) * .45));
+    const duration = Math.min(240, Math.max(160, Math.hypot(destination.left - source.left, destination.top - source.top) * .25));
     const dx = destination.left - source.left, dy = destination.top - source.top;
     const scaleX = destination.width / source.width, scaleY = destination.height / source.height;
     const animation = ghost.animate([{ transform: 'translate(0,0) rotate(-5deg)' }, { transform: `translate(${dx * .55}px,${dy * .55 - 18}px) rotate(4deg) scale(${(1 + scaleX) / 2},${(1 + scaleY) / 2})`, offset: .55 }, { transform: `translate(${dx}px,${dy}px) rotate(0deg) scale(${scaleX},${scaleY})` }], { duration, delay, easing: 'cubic-bezier(.22,.65,.3,1)', fill: 'both' });
     let reveal;
     if (faceHTML && faceHTML !== html) {
       const front = document.createElement('div'); front.className = 'classic-motion-front'; front.innerHTML = faceHTML; ghost.appendChild(front);
-      reveal = front.animate([{ opacity: 0, offset: 0 }, { opacity: 0, offset: .72 }, { opacity: 1, offset: .86 }, { opacity: 1, offset: 1 }], { duration, delay, fill: 'both' });
+      reveal = front.animate([{ opacity: 0, offset: 0 }, { opacity: 1, offset: .18 }, { opacity: 1, offset: .4 }, { opacity: 1, offset: 1 }], { duration, delay, fill: 'both' });
     }
-    const dispose = () => { reveal?.cancel(); animation.cancel(); ghost.remove(); if (faceHTML) { target.style.visibility = originalVisibility; this.cardTargetCleanups.delete(target); } this.classicAnimationCleanups.delete(dispose); };
+    const dispose = () => { reveal?.cancel(); animation.cancel(); ghost.remove(); if (faceHTML) { target.style.visibility = originalVisibility; this.cardTargetCleanups.delete(target); } this.classicAnimationCleanups.delete(dispose); this.discardMotionCleanups?.delete(dispose); };
     this.classicAnimationCleanups ||= new Set();
     this.classicAnimationCleanups.add(dispose);
+    if(pileMotion){this.discardMotionCleanups ||= new Set();this.discardMotionCleanups.add(dispose);}
     if (faceHTML) this.cardTargetCleanups.set(target, dispose);
     animation.onfinish = dispose;
   }
@@ -2434,7 +2442,7 @@ class UnoArenaApp {
     if (newTop?.id !== previous.gameState.topDiscard?.id && !geometry.hand.has(newTop?.id)) {
       const actor = action?.playerId || previous.gameState.players[previous.gameState.currentTurn]?.id;
       const source = geometry.opponents.get(actor);
-      if (source) this.travelClassicCard(source, this.el.discardPile.querySelector('.game-card'), renderCardBackHTML(false, false, current.gameState.mode), renderCardHTML(newTop, { mode: current.gameState.mode, flipSide: current.gameState.flipSide }));
+      if (source) this.travelClassicCard(source, this.el.discardPile.querySelector('.game-card'), renderCardHTML(newTop, { mode: current.gameState.mode, flipSide: current.gameState.flipSide }), null);
     }
     const oldIds = new Set(previous.myHand.map(c => c.id));
     current.myHand.filter(c => !transfer && !roulette && !oldIds.has(c.id)).forEach((card, index) => {
@@ -2451,7 +2459,7 @@ class UnoArenaApp {
     this.el.playerHandCards.querySelectorAll('[data-card-id]').forEach(el => {
       const old = geometry.hand.get(el.dataset.cardId); if (!old) return;
       const now = el.getBoundingClientRect();
-      if (Math.abs(old.rect.left - now.left) > 1) el.animate([{ transform: `translate(${old.rect.left - now.left}px,${old.rect.top - now.top}px) ${el.style.transform}` }, { transform: el.style.transform }], { duration: 350, easing: 'ease-out' });
+      if (Math.abs(old.rect.left - now.left) > 1) el.animate([{ transform: `translate(${old.rect.left - now.left}px,${old.rect.top - now.top}px) ${el.style.transform}` }, { transform: el.style.transform }], { duration: 190, easing: 'cubic-bezier(.2,.8,.2,1)' });
     });
   }
 

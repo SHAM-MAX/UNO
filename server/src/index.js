@@ -223,7 +223,7 @@ app.get('*', (req, res) => {
 const server = http.createServer(app);
 
 // WebSocket Server attached to HTTP server
-const wss = new WebSocketServer({ server, maxPayload: 64 * 1024, perMessageDeflate: false });
+const wss = new WebSocketServer({ server, maxPayload: 64 * 1024, perMessageDeflate: { threshold:1024, concurrencyLimit:4, serverNoContextTakeover:true, clientNoContextTakeover:true, zlibDeflateOptions:{level:3,memLevel:4} } });
 
 wss.on('connection', (ws, req) => {
   ws.isAlive = true;

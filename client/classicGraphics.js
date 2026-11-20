@@ -40,10 +40,10 @@ export function getClassicCardLabel(card, face) {
 export function renderClassicFace(card, face, mini = false) {
   const imagePath = getClassicCardImagePath(card, face);
   const label = getClassicCardLabel(card, face);
-  return `<img class="classic-card-image classic-face-image" src="${imagePath}" alt="${label}" title="${label}" draggable="false">`;
+  return `<img class="classic-card-image classic-face-image" src="${imagePath}" alt="${label}" title="${label}" draggable="false" decoding="sync" loading="eager">`;
 }
 
 export function renderClassicBack(mini = false) {
-  return '<img class="classic-card-image classic-back-image" src="/assets/classic-cards-svg/back.svg" alt="Classic UNO card back" title="Classic UNO card back" draggable="false">';
+  return '<img class="classic-card-image classic-back-image" src="/assets/classic-cards-svg/back.svg" alt="Classic UNO card back" title="Classic UNO card back" draggable="false" decoding="sync" loading="eager">';
 }
 

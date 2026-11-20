@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-lounge-music-v37';
+const CACHE_NAME = 'uno-arena-fast-card-faces-v38';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -18,11 +18,12 @@ const STATIC_SHELL_ASSETS = [
   '/style.css?v=2.2.0',
   '/home.css?v=2.2.1',
   '/lobby.css?v=2.2.0',
-  '/arena.css?v=2.2.5',
+  '/arena.css?v=2.2.6',
   '/mobile.css?v=2.2.0',
   '/app.js?v=2.2.0',
   '/audio.js',
   '/cardGraphics.js',
+  '/instant-cards.js',
   '/shared/constants.js',
   '/shared/rules.js',
   '/manifest.json',

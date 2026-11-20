@@ -85,11 +85,11 @@ export function renderFlipFace(card, face, side = 'light', mini = false) {
   const imagePath = getFlipCardImagePath(card, face, side);
   const label = getFlipCardLabel(card, face, side);
   const isDark = side === 'dark';
-  return `<img class="flip-card-image flip-face-image ${isDark ? 'flip-dark' : 'flip-light'}" src="${imagePath}" alt="${label}" title="${label}" draggable="false" data-side="${side}">`;
+  return `<img class="flip-card-image flip-face-image ${isDark ? 'flip-dark' : 'flip-light'}" src="${imagePath}" alt="${label}" title="${label}" draggable="false" decoding="sync" loading="eager" data-side="${side}">`;
 }
 
 export function renderFlipBack(side = 'light', mini = false) {
   const isDark = side === 'dark';
-  return `<img class="flip-card-image flip-back-image ${isDark ? 'flip-dark' : 'flip-light'}" src="/assets/flip-cards/TOP_CARD.jpg" alt="UNO Flip card back" title="UNO Flip card back" draggable="false">`;
+  return `<img class="flip-card-image flip-back-image ${isDark ? 'flip-dark' : 'flip-light'}" src="/assets/flip-cards/TOP_CARD.jpg" alt="UNO Flip card back" title="UNO Flip card back" draggable="false" decoding="sync" loading="eager">`;
 }
 

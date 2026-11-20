@@ -8,6 +8,7 @@ const dir=await mkdtemp(path.join(tmpdir(),'uno-load-'));
 process.env.NODE_ENV='test';process.env.DATA_DIR=dir;
 const {server,wss,roomManager}=await import('../server/src/index.js');
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
+let receivedBytes=0;
 const sockets=[],latencies=[],delay=monitorEventLoopDelay({resolution:10});delay.enable();
 const rooms=Number(process.env.LOAD_ROOMS||100);
 const players=Number(process.env.LOAD_PLAYERS||4);
@@ -24,7 +25,7 @@ try {
  await Promise.all(Array.from({length:rooms},async(_,i)=>{
   let roomId;const members=[];
   for(let j=0;j<players;j++){
-   const ws=new WebSocket(`ws://127.0.0.1:${server.address().port}`);sockets.push(ws);
+   const ws=new WebSocket(`ws://127.0.0.1:${server.address().port}`);sockets.push(ws);ws.on('message',raw=>{receivedBytes+=raw.length;});
    await new Promise((r,e)=>{ws.once('open',r);ws.once('error',e);});
    const joined=await request(ws,{type:j?'join':'create',roomId,playerName:`P${i}-${j}`,data:{mode,houseRules:{startingHandSize:handSize,turnDuration:60,mercyKnockoutLimit:50}}},'joined');
    roomId=joined.data.roomId;members.push({ws,...joined.data});
@@ -46,7 +47,7 @@ try {
   }
  }));
  latencies.sort((a,b)=>a-b);
- console.log(JSON.stringify({rooms,playersPerRoom:players,mode,startingHandSize:handSize,connections:sockets.length,updates:latencies.length,seconds:(performance.now()-started)/1000,p50ms:latencies[Math.floor(latencies.length*.5)],p95ms:latencies[Math.floor(latencies.length*.95)],p99ms:latencies[Math.floor(latencies.length*.99)],eventLoopP99ms:delay.percentile(99)/1e6,rssMB:process.memoryUsage().rss/1048576},null,2));
+ console.log(JSON.stringify({rooms,playersPerRoom:players,mode,startingHandSize:handSize,connections:sockets.length,compressedConnections:sockets.filter(ws=>ws.extensions.includes('permessage-deflate')).length,receivedPayloadMB:receivedBytes/1048576,wireMB:sockets.reduce((sum,ws)=>sum+(ws._socket?.bytesRead||0),0)/1048576,updates:latencies.length,seconds:(performance.now()-started)/1000,p50ms:latencies[Math.floor(latencies.length*.5)],p95ms:latencies[Math.floor(latencies.length*.95)],p99ms:latencies[Math.floor(latencies.length*.99)],eventLoopP99ms:delay.percentile(99)/1e6,rssMB:process.memoryUsage().rss/1048576},null,2));
 } finally {
  delay.disable();for(const ws of sockets)ws.terminate();
  await new Promise(r=>wss.close(r));await new Promise(r=>server.close(r));

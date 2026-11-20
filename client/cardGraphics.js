@@ -1,3 +1,4 @@
+import { instantFace } from './instant-cards.js';
 import { renderNoMercyFace, renderNoMercyBack, noMercyFaceKey, getNoMercyCardLabel, getNoMercyCardImagePath } from './noMercyGraphics.js';
 import { renderClassicFace, renderClassicBack, getClassicCardLabel, getClassicCardImagePath } from './classicGraphics.js';
 import { renderFlipFace, renderFlipBack, getFlipCardLabel, getFlipCardImagePath } from './flipGraphics.js';
@@ -73,7 +74,7 @@ export function renderCardHTML(card, options = {}) {
     const key = noMercyFaceKey(face);
     const label = getNoMercyCardLabel(card, face);
     return `<div class="game-card nm-card nm-image-card nm-vector-card ${mini ? 'mini' : ''}" data-face="${key}" role="img" aria-label="${label}" title="${label}">
-      ${renderNoMercyFace(card, face, mini)}
+      ${instantFace(face)}${renderNoMercyFace(card, face, mini)}
     </div>`;
   }
 
@@ -82,29 +83,29 @@ export function renderCardHTML(card, options = {}) {
     const isDark = flipSide === 'dark';
     const label = getFlipCardLabel(card, face, flipSide);
     return `<div class="game-card flip-card flip-image-card ${isDark ? 'flip-dark' : 'flip-light'} ${mini ? 'mini' : ''}" role="img" aria-label="${label}" title="${label}" data-side="${flipSide}">
-      ${renderFlipFace(card, face, flipSide, mini)}
+      ${instantFace(face)}${renderFlipFace(card, face, flipSide, mini)}
     </div>`;
   }
 
   // 3. CLASSIC UNO MODE: Dedicated authentic vector SVG card system
   const label = getClassicCardLabel(card, face);
   return `<div class="game-card classic-card classic-image-card ${mini ? 'mini' : ''}" role="img" aria-label="${label}" title="${label}">
-    ${renderClassicFace(card, face, mini)}
+    ${instantFace(face)}${renderClassicFace(card, face, mini)}
   </div>`;
 }
 
 export function renderCardBackHTML(isDark = false, mini = false, mode = 'classic') {
   if (mode === 'no_mercy') {
     return `<div class="game-card nm-card nm-image-card nm-image-back nm-vector-card ${mini ? 'mini' : ''}" role="img" aria-label="No Mercy card back" title="No Mercy card back">
-      ${renderNoMercyBack(mini)}
+      ${instantFace(null,true)}${renderNoMercyBack(mini)}
     </div>`;
   }
   if (mode === 'flip') {
     return `<div class="game-card flip-card flip-image-card flip-image-back ${isDark ? 'flip-dark' : 'flip-light'} ${mini ? 'mini' : ''}" role="img" aria-label="UNO Flip card back" title="UNO Flip card back">
-      ${renderFlipBack(isDark ? 'dark' : 'light', mini)}
+      ${instantFace(null,true)}${renderFlipBack(isDark ? 'dark' : 'light', mini)}
     </div>`;
   }
   return `<div class="game-card classic-card classic-image-card classic-image-back ${mini ? 'mini' : ''}" role="img" aria-label="Classic UNO card back" title="Classic UNO card back">
-    ${renderClassicBack(mini)}
+    ${instantFace(null,true)}${renderClassicBack(mini)}
   </div>`;
 }
