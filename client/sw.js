@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-table-tools-v42';
+const CACHE_NAME = 'uno-arena-round-seating-v43';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -27,6 +27,8 @@ const STATIC_SHELL_ASSETS = [
   '/interaction-motion.js',
   '/social-features.js',
   '/table-tools.js',
+  '/round-seating.js',
+  '/round-seating.css?v=1',
   '/table-tools.css?v=1',
   '/social-features.css?v=1',
   '/vendor/qrcode.mjs',

@@ -1,3 +1,4 @@
+import {syncRoundSeating} from './round-seating.js';
 import {initTableTools,syncTableTools,sortedHand,warnTurn} from './table-tools.js';
 import { initSocial, syncSocial, syncRulePresets, stopSocial, onPong } from './social-features.js';
 import { setActionVisible, setGameModal, jumpControl, exitControl, clearInteractionMotion } from './interaction-motion.js';
@@ -1348,6 +1349,7 @@ class UnoArenaApp {
     document.body.classList.toggle('is-landscape', isLandscape);
     const isMobile = window.innerWidth <= 800 || (isLandscape && window.innerHeight <= 540);
     document.body.classList.toggle('mobile-viewport', isMobile);
+    syncRoundSeating(this);
   }
 
   handleOrientationOrResize() {
@@ -2186,6 +2188,7 @@ class UnoArenaApp {
     this.renderRematchProposal();
     syncSocial(this);
     syncTableTools(this);
+    syncRoundSeating(this);
   }
 
   sendRematchAction(type, data = {}) {
@@ -3915,6 +3918,7 @@ class UnoArenaApp {
 
   confirmLeaveRoom() {
     stopSocial(this);
+    document.body.classList.remove('round-table-layout');
     const tools=document.getElementById('tableTools');if(tools)tools.hidden=true;
     clearInteractionMotion();
     this.connectionRecovering=false;this.reconnectAttempts=0;this.selectedCardId=null;this.el.banner.classList.remove('visible');
