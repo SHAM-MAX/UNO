@@ -1,3 +1,4 @@
+import {initTableTools,syncTableTools,sortedHand,warnTurn} from './table-tools.js';
 import { initSocial, syncSocial, syncRulePresets, stopSocial, onPong } from './social-features.js';
 import { setActionVisible, setGameModal, jumpControl, exitControl, clearInteractionMotion } from './interaction-motion.js';
 import { music } from './music.js';
@@ -66,6 +67,8 @@ class UnoArenaApp {
     preloadClassicEntrance();
     this.initElements();
     initSocial(this);
+    initTableTools(this);
+    this.playTurnWarning=frequency=>sounds.playSnap(frequency,.06);
     music.init();
     window.addEventListener('online',()=>{
       if(this.roomId && this.ws?.readyState!==WebSocket.OPEN){
@@ -1921,9 +1924,11 @@ class UnoArenaApp {
         } else if (msg.type === 'quick_match_cancelled') {
           this.cancelQuickMatchTimerOnly();
         } else if (msg.type === 'room:state') {
+          const recovered=this.connectionRecovering;
           this.connectionRecovering=false;this.reconnectAttempts=0;this.el.banner.classList.remove('visible');
           this.cancelQuickMatchTimerOnly();
           this.handleRoomState(msg.data);
+          if(recovered)this.showToast('Reconnected · your hand and seat are restored.');
         } else if (msg.type === 'room_removed') {
           this.confirmLeaveRoom();this.showToast(msg.data?.message||'You were removed from the room.');
         } else if (msg.type === 'player_card_hovered') {
@@ -2180,6 +2185,7 @@ class UnoArenaApp {
     }
     this.renderRematchProposal();
     syncSocial(this);
+    syncTableTools(this);
   }
 
   sendRematchAction(type, data = {}) {
@@ -2263,7 +2269,7 @@ class UnoArenaApp {
       ${isMeAccepted && live ? `<p class="rematch-vote-hint">Choose one mode. You can change your vote until voting closes. Uncast votes use the previous mode.</p><div class="rematch-mode-grid">${Object.keys(labels).map(mode => `<button data-rematch-mode="${mode}" class="${p.modeVotes[this.playerId] === mode ? 'selected' : ''}" aria-pressed="${p.modeVotes[this.playerId] === mode}" ${mode !== 'classic' && p.acceptedPlayerIds.length > 6 ? 'disabled' : ''}><img src="/assets/game-modes/${artwork[mode]}.png" alt=""><strong>${labels[mode]}</strong><span>${counts[mode]} vote${counts[mode] === 1 ? '' : 's'}</span></button>`).join('')}</div><small>${p.acceptedPlayerIds.length > 6 ? 'More than six accepted players: Classic is the supported mode.' : ''}</small>` : ''}
       ${p.selectedMode ? `<div class="rematch-result">${labels[p.selectedMode]} selected${p.status === 'resolved' ? ' · Starting together…' : ''}</div>` : ''}
       ${p.reason ? `<p class="rematch-reason">${escapeHtml(p.reason)}</p>` : ''}
-      <ul class="rematch-roster">${p.participants.map(player => {
+      <p class="rematch-ready-summary" role="status">${p.acceptedPlayerIds.length} ready · ${p.pendingPlayerIds.length} waiting · ${p.declinedPlayerIds.length} declined</p><ul class="rematch-roster">${p.participants.map(player => {
       const isAccepted = player.id === p.initiatorPlayerId || p.acceptedPlayerIds.includes(player.id) || player.status === 'accepted';
       const isDeclined = !isAccepted && (p.declinedPlayerIds.includes(player.id) || player.status === 'declined');
       const statusClass = isAccepted ? 'accepted' : isDeclined ? 'declined' : 'pending';
@@ -3059,7 +3065,7 @@ class UnoArenaApp {
       if (!p.isConnected && p.disconnectedAt) {
         const elapsedSec = Math.floor((Date.now() - p.disconnectedAt) / 1000);
         const leftSec = Math.max(0, 60 - elapsedSec);
-        disconnectBadge = `<span class="disconnect-countdown-badge" data-disconnected-at="${p.disconnectedAt}" title="Disconnect grace period">DISCONNECTED (${leftSec}s)</span>`;
+        disconnectBadge = `<span class="disconnect-countdown-badge" data-disconnected-at="${p.disconnectedAt}" title="Your opponent can reconnect to this seat">RECONNECTING · SEAT SAVED</span>`;
       }
       info.innerHTML = `
         <div class="opponent-name">${nameHtml}</div>
@@ -3120,6 +3126,7 @@ class UnoArenaApp {
   }
 
   renderPlayerHand(hand, canPlayIds, mode, flipSide) {
+    hand=sortedHand(hand,this.handSort,mode,flipSide);
     const container = this.el.playerHandCards;
     const count = hand.length;
     if (count === 0) {
@@ -3295,6 +3302,7 @@ class UnoArenaApp {
       const ringOffset = (138.23 * (1 - fraction)).toFixed(2);
       const isCritical = remainingMs <= 5000;
       updateTurnStatus(this,remainingSec,isCritical);
+      warnTurn(this,remainingSec);
 
       // Update disconnect countdown badges
       for (let i = 0; i < discBadges.length; i++) {
@@ -3302,7 +3310,7 @@ class UnoArenaApp {
         const discAt = Number(badge.dataset.disconnectedAt);
         if (discAt) {
           const leftSec = Math.max(0, 60 - Math.floor((now - discAt) / 1000));
-          badge.textContent = `DISCONNECTED (${leftSec}s)`;
+          badge.textContent = 'RECONNECTING · SEAT SAVED';
         }
       }
 
@@ -3907,6 +3915,7 @@ class UnoArenaApp {
 
   confirmLeaveRoom() {
     stopSocial(this);
+    const tools=document.getElementById('tableTools');if(tools)tools.hidden=true;
     clearInteractionMotion();
     this.connectionRecovering=false;this.reconnectAttempts=0;this.selectedCardId=null;this.el.banner.classList.remove('visible');
     this.pendingWinnerRouletteId = null;

@@ -713,6 +713,7 @@ export class RoomManager {
       if (room.status !== 'round_over') {
         room.players.forEach(p => { p.score = 0; });
         room.roundNumber = 1;
+        room.roundHistory=[];
         room.dealerIndex = this.determineClassicDealer(room);
       } else {
         room.dealerIndex = (room.dealerIndex + 1) % room.players.length;
@@ -726,6 +727,7 @@ export class RoomManager {
       room.turnDrawnPlayable = false;
     }
     if (room.mode === 'no_mercy') { room.dealerIndex = Math.floor(Math.random() * room.players.length); room.mercyPile = []; room.turnDrawnCardId = null; room.turnDrawnCount = 0; room.turnDrawnPlayable = false; room.lastRoulette = null; room.unoChallengeTargets = []; room.lastNoMercyAction = null; }
+    if(room.mode!=='classic')room.roundHistory=[];
     room.status = 'playing';
     room.winnerId = null;
     room.winReason = null;
@@ -777,6 +779,7 @@ export class RoomManager {
     const topCard = fullDeck.splice(initialDiscardIndex, 1)[0];
     room.discardPile = room.mode === 'no_mercy' ? [...fullDeck.splice(0, initialDiscardIndex), topCard] : [topCard];
     room.topDiscard = topCard;
+    room.lastPlay=null;
     room.drawPile = fullDeck;
 
     const initialFace = getActiveFace(topCard, room.mode, 'light');
@@ -878,6 +881,7 @@ export class RoomManager {
     const winner = room.players.find(p => p.id === winnerId);
     winner.score = (winner.score || 0) + points;
     room.roundResult = { winnerId, points, total: winner.score };
+    room.roundHistory=[...(room.roundHistory||[]),{round:room.roundNumber,winnerId,winnerName:winner.name,points,total:winner.score}].slice(-50);
     room.winnerId = winnerId;
     room.status = winner.score >= 500 ? 'game_over' : 'round_over';
     room.winReason = `${winner.name} earned ${points} points (${winner.score}/500).`;
@@ -1415,6 +1419,7 @@ export class RoomManager {
     hand.splice(cardIdx, 1);
     room.discardPile.push(card);
     room.topDiscard = card;
+    room.lastPlay={id:randomUUID(),playerId,playerName:currentPlayer.name,card:structuredClone(card),flipSide:room.flipSide,at:Date.now()};
     currentPlayer.cardCount = hand.length;
     room.turnDrawnCard = false;
     room.turnDrawnCardId = null;
@@ -2172,6 +2177,8 @@ export class RoomManager {
       noMercyAction: room.mode === 'no_mercy' ? room.lastNoMercyAction || null : null,
       rouletteResult: room.mode === 'no_mercy' ? room.lastRoulette || null : null,
       roundResult: room.roundResult,
+      roundHistory: room.roundHistory||[],
+      lastPlay: room.lastPlay||null,
       dealerIndex: room.dealerIndex,
       turnDrawnCard: room.turnDrawnCard,
       turnDrawnCardId: room.turnDrawnCardId,

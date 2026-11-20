@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-qr-icon-v41';
+const CACHE_NAME = 'uno-arena-table-tools-v42';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -26,6 +26,8 @@ const STATIC_SHELL_ASSETS = [
   '/instant-cards.js',
   '/interaction-motion.js',
   '/social-features.js',
+  '/table-tools.js',
+  '/table-tools.css?v=1',
   '/social-features.css?v=1',
   '/vendor/qrcode.mjs',
   '/interaction-motion.css?v=1',

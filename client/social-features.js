@@ -1,3 +1,4 @@
+import {renderTablePanel} from './table-tools.js';
 import { defaultHouseRules } from '../shared/rules.js';
 import { setGameModal } from './interaction-motion.js';
 const names={classic:'Classic',flip:'Flip',no_mercy:'No Mercy'};
@@ -28,7 +29,7 @@ export function syncRulePresets(mode,readOnly){
 }
 function statsMarkup(){const data=readHistory(),favourite=Object.entries(data.modes).sort((a,b)=>b[1]-a[1])[0]?.[0];return `<div class="table-stats-grid"><span><strong>${data.games}</strong>Games</span><span><strong>${data.wins}</strong>Wins</span><span><strong>${names[favourite]||'—'}</strong>Favourite</span></div>`;}
 async function renderPanel(app,kind){
- const content=document.getElementById('socialContent'),title=document.getElementById('socialTitle');content.replaceChildren();
+ const content=document.getElementById('socialContent'),title=document.getElementById('socialTitle');content.replaceChildren();if(renderTablePanel(app,kind,content,title))return;
  if(kind==='invite'){
    title.textContent='Invite your friends';if(!app.roomId){content.textContent='Create a room to invite friends.';return;}
    const url=new URL(location.pathname,location.origin);url.searchParams.set('room',app.roomId);
@@ -74,7 +75,7 @@ export function syncSocial(app){
  const summary=document.getElementById('deviceStatsSummary');if(summary)summary.innerHTML=statsMarkup();
  const lock=document.getElementById('roomLockStatus');if(lock){lock.hidden=!app.gameState?.isLocked;lock.textContent='Room locked';}
  const manage=document.getElementById('manageRoomBtn');if(manage)manage.hidden=app.gameState?.status!=='lobby'||!app.gameState.players.some(p=>p.id===app.playerId&&p.isHost);
- if(app.socialPanelKind==='host'&&document.getElementById('socialModal')?.classList.contains('active'))renderPanel(app,'host');
+ if(['host','scores'].includes(app.socialPanelKind)&&document.getElementById('socialModal')?.classList.contains('active'))renderPanel(app,app.socialPanelKind);
  if(app.gameState?.status==='playing'&&!localStorage.getItem('uno_quick_guide_seen')&&!tutorialRoom){tutorialRoom=app.roomId;tutorialStep=0;tutorialTimer=setTimeout(()=>{tutorialTimer=null;showTutorialStep(app);},500);}
  if(app.gameState?.status!=='playing'&&tutorialRoom)endTutorial();
 }
