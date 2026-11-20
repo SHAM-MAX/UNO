@@ -1,3 +1,4 @@
+import {prepareCardArt,gateCardArt,clearCardArtGate} from './card-atlas.js';
 import {syncRoundSeating} from './round-seating.js';
 import {initTableTools,syncTableTools,sortedHand,warnTurn} from './table-tools.js';
 import { initSocial, syncSocial, syncRulePresets, stopSocial, onPong } from './social-features.js';
@@ -63,6 +64,7 @@ class UnoArenaApp {
       document.body.classList.add('reduced-motion');
     }
 
+    prepareCardArt(this.preferredMode).catch(()=>{});
     preloadNoMercyEntrance();
     preloadFlipEntrance();
     preloadClassicEntrance();
@@ -2078,6 +2080,7 @@ class UnoArenaApp {
   }
 
   handleRoomState(view) {
+    if(gateCardArt(this,view))return;
     const previous = this.clientView;
     const classicGeometry = this.captureClassicGeometry();
     if (!previous || previous.gameState.matchId !== view.gameState.matchId) this.clearClassicAnimations();
@@ -2354,7 +2357,7 @@ class UnoArenaApp {
     this.el.playerHandCards.querySelectorAll('[data-card-id]').forEach(el => hand.set(el.dataset.cardId, { rect: el.getBoundingClientRect(), html: el.querySelector('.game-card')?.outerHTML }));
     const opponents = new Map();
     this.el.opponentsRow.querySelectorAll('[data-profile-id]').forEach(el => {
-      const back=el.querySelector('.opponent-fan-card:last-child img');
+      const back=el.querySelector('.opponent-fan-card:last-child .game-card');
       opponents.set(el.dataset.profileId,(back?.getClientRects().length?back:el).getBoundingClientRect());
     });
     return { hand, opponents, deck: this.el.drawPile.querySelector('.game-card')?.getBoundingClientRect(), pending: this.pendingClassicMotion };
@@ -2380,10 +2383,10 @@ class UnoArenaApp {
     if (faceHTML) this.cardTargetCleanups.get(target)?.();
     const originalVisibility = target.style.visibility;
     if (faceHTML) target.style.visibility = 'hidden';
-    const duration = Math.min(240, Math.max(160, Math.hypot(destination.left - source.left, destination.top - source.top) * .25));
+    const duration = Math.min(320, Math.max(240, Math.hypot(destination.left - source.left, destination.top - source.top) * .22));
     const dx = destination.left - source.left, dy = destination.top - source.top;
     const scaleX = destination.width / source.width, scaleY = destination.height / source.height;
-    const animation = ghost.animate([{ transform: 'translate(0,0) rotate(-5deg)' }, { transform: `translate(${dx * .55}px,${dy * .55 - 18}px) rotate(4deg) scale(${(1 + scaleX) / 2},${(1 + scaleY) / 2})`, offset: .55 }, { transform: `translate(${dx}px,${dy}px) rotate(0deg) scale(${scaleX},${scaleY})` }], { duration, delay, easing: 'cubic-bezier(.22,.65,.3,1)', fill: 'both' });
+    const animation = ghost.animate([{ transform: 'translate(0,0) rotate(-3deg)' },{ transform: `translate(${dx}px,${dy}px) rotate(0deg) scale(${scaleX},${scaleY})` }], { duration, delay, easing: 'cubic-bezier(.18,.65,.28,1)', fill: 'both' });
     let reveal;
     if (faceHTML && faceHTML !== html) {
       const front = document.createElement('div'); front.className = 'classic-motion-front'; front.innerHTML = faceHTML; ghost.appendChild(front);
@@ -2465,7 +2468,7 @@ class UnoArenaApp {
     if (newTop?.id !== previous.gameState.topDiscard?.id && !geometry.hand.has(newTop?.id)) {
       const actor = action?.playerId || previous.gameState.players[previous.gameState.currentTurn]?.id;
       const source = geometry.opponents.get(actor);
-      if (source) this.travelClassicCard(source, this.el.discardPile.querySelector('.game-card'), renderCardHTML(newTop, { mode: current.gameState.mode, flipSide: current.gameState.flipSide }), null);
+      if (source) {const html=renderCardHTML(newTop,{mode:current.gameState.mode,flipSide:current.gameState.flipSide});this.travelClassicCard(source,this.el.discardPile.querySelector('.game-card'),html,html);}
     }
     const oldIds = new Set(previous.myHand.map(c => c.id));
     current.myHand.filter(c => !transfer && !roulette && !oldIds.has(c.id)).forEach((card, index) => {
@@ -2481,8 +2484,9 @@ class UnoArenaApp {
     // Move retained cards into their new fan positions without a layout snap.
     this.el.playerHandCards.querySelectorAll('[data-card-id]').forEach(el => {
       const old = geometry.hand.get(el.dataset.cardId); if (!old) return;
+      this.handShiftAnimations ||=new WeakMap();this.handShiftAnimations.get(el)?.cancel();
       const now = el.getBoundingClientRect();
-      if (Math.abs(old.rect.left - now.left) > 1) el.animate([{ transform: `translate(${old.rect.left - now.left}px,${old.rect.top - now.top}px) ${el.style.transform}` }, { transform: el.style.transform }], { duration: 190, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      if (Math.abs(old.rect.left - now.left) > 1 || Math.abs(old.rect.top-now.top)>1) this.handShiftAnimations.set(el,el.animate([{ transform: `translate(${old.rect.left - now.left}px,${old.rect.top - now.top}px) ${el.style.transform}` }, { transform: el.style.transform }], { duration: 220, easing: 'cubic-bezier(.2,.7,.25,1)' }));
     });
   }
 
@@ -3917,6 +3921,7 @@ class UnoArenaApp {
   }
 
   confirmLeaveRoom() {
+    clearCardArtGate(this);
     stopSocial(this);
     document.body.classList.remove('round-table-layout');
     const tools=document.getElementById('tableTools');if(tools)tools.hidden=true;

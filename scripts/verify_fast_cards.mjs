@@ -219,36 +219,37 @@ async function main() {
 
     await cdp.send('Network.enable');await cdp.send('Network.setCacheDisabled',{cacheDisabled:true});
     await cdp.send('Network.setBlockedURLs',{urls:['*/assets/classic-cards-svg/*','*/assets/no-mercy-cards/*','*/assets/flip-cards/*']});
-    await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:400,downloadThroughput:32000,uploadThroughput:16000});
+    await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:250,downloadThroughput:128000,uploadThroughput:32000});
+    const gateHost=roomManager.createRoom('Artwork Host','no_mercy');roomManager.joinRoom(gateHost.roomId,'Artwork Opponent');roomManager.startGame(gateHost.roomId,gateHost.playerId);const gateView=roomManager.getClientView(gateHost.roomId,gateHost.playerId);gateView.gameState.pendingAction=null;
+    await cdp.send('Network.setBlockedURLs',{urls:['*/assets/card-atlases/no_mercy-v1.webp','*/assets/classic-cards-svg/*','*/assets/no-mercy-cards/*','*/assets/flip-cards/*']});
+    await cdp.evaluate(new Function('window.app.roomId='+JSON.stringify(gateHost.roomId)+';window.app.playerId='+JSON.stringify(gateHost.playerId)+';window.app.handleRoomState('+JSON.stringify(gateView)+');'));
+    const latest=structuredClone(gateView);latest.gameState.topDiscard={id:'gate-latest',color:'yellow',type:'draw4'};
+    await cdp.evaluate(new Function('window.app.handleRoomState('+JSON.stringify(latest)+');'));
+    await cdp.waitForFunction(()=>{const o=document.getElementById('cardArtworkLoading');return o&&!o.hidden&&!o.querySelector('button').hidden;},10000);
+    await cdp.send('Network.setBlockedURLs',{urls:['*/assets/classic-cards-svg/*','*/assets/no-mercy-cards/*','*/assets/flip-cards/*']});
+    await cdp.evaluate(()=>document.querySelector('#cardArtworkLoading button').click());await cdp.waitForFunction(()=>window.app.gameState?.topDiscard?.id==='gate-latest'&&document.getElementById('cardArtworkLoading').hidden,30000);
+    if(!await cdp.evaluate(()=>!!document.querySelector('#discardPile .card-atlas-face')&&!document.querySelector('#discardPile .card-instant-face')))throw Error('Artwork retry did not restore latest authentic face');
+    console.log('PASS cold artwork gate, retry, and latest-state recovery');
+    await cdp.evaluate(async()=>{const {prepareCardArt}=await import('./card-atlas.js');await Promise.all(['classic','flip','no_mercy'].map(prepareCardArt));});
+    let perCardRequests=0;cdp.ws.on('message',raw=>{const m=JSON.parse(raw);if(m.method==='Network.requestWillBeSent'&&/\/assets\/(classic-cards-svg|no-mercy-cards|flip-cards)\//.test(m.params.request.url))perCardRequests++;});
+    await cdp.send('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:0,uploadThroughput:0});
     for(const mode of ['classic','flip','no_mercy']){
       const host=roomManager.createRoom('Fast Host',mode);roomManager.joinRoom(host.roomId,'Fast Opponent');roomManager.startGame(host.roomId,host.playerId);
       const room=roomManager.getRoom(host.roomId);room.pendingAction=null;room.currentTurn=1;
-      const base=roomManager.getClientView(host.roomId,host.playerId);
-      await cdp.setViewport(390,844,true);
-      await cdp.evaluate(new Function(`window.app.roomId=${JSON.stringify(host.roomId)};window.app.playerId=${JSON.stringify(host.playerId)};window.app.handleRoomState(${JSON.stringify(base)});`));
-      let latest;
+      const base=roomManager.getClientView(host.roomId,host.playerId);await cdp.setViewport(844,390,true);
+      await cdp.evaluate(new Function('window.app.roomId='+JSON.stringify(host.roomId)+';window.app.playerId='+JSON.stringify(host.playerId)+';window.app.handleRoomState('+JSON.stringify(base)+');'));
       for(let i=0;i<12;i++){
-        const face={color:['red','blue','yellow','green'][i%4],type:i===0?'reverse':'number',value:i%9+1};
-        const card=mode==='flip'?{id:'fast-'+i,light:face,dark:{color:'purple',type:'number',value:4}}:{id:'fast-'+i,...face};
+        const face={color:['red','blue','yellow','green'][i%4],type:'number',value:i%9+1};const card=mode==='flip'?{id:'fast-'+i,light:face,dark:{color:'purple',type:'number',value:4}}:{id:'fast-'+i,...face};
         const view=structuredClone(base);view.gameState.topDiscard=card;view.gameState.activeColor=face.color;view.gameState.currentTurn=i%2;view.gameState.players[1].cardCount=6;
-        latest=card.id;
-        const elapsed=await cdp.evaluate(new Function(`const t=performance.now();window.app.handleRoomState(${JSON.stringify(view)});return performance.now()-t;`));
-        const visible=await cdp.evaluate(()=>{const n=window.app.el.discardPile.querySelector('.game-card'),f=n.querySelector('.card-instant-face');return !!f&&getComputedStyle(n).visibility!=='hidden'&&f.getBoundingClientRect().width>0;});
-        if(!visible)throw Error('Opponent face delayed with blocked artwork: '+mode);
-        if(i===0)await cdp.screenshot(path.join(ARTIFACT_DIR,'instant-card-'+mode+'.png'));
-        await delay(30);
-        if(elapsed>300)throw Error('Unexpected render stall '+elapsed);
+        const elapsed=await cdp.evaluate(new Function('const t=performance.now();window.app.handleRoomState('+JSON.stringify(view)+');return performance.now()-t;'));
+        const ready=await cdp.evaluate(()=>!!window.app.el.discardPile.querySelector('.card-atlas-face')&&!document.querySelector('#discardPile .card-instant-face,#discardPile img'));
+        if(!ready||elapsed>300)throw Error('Rapid move used fallback or stalled: '+mode+' '+elapsed);await delay(30);
       }
-      await delay(300);
-      if(await cdp.evaluate(()=>!!document.querySelector('.classic-motion-ghost')))throw Error('Rapid play left stale ghosts');
-      console.log('PASS blocked card art and rapid plays',mode,latest);
+      await delay(400);if(await cdp.evaluate(()=>!!document.querySelector('.classic-motion-ghost')))throw Error('Rapid play left stale ghosts');
+      await cdp.screenshot(path.join(ARTIFACT_DIR,'authentic-offline-'+mode+'.png'));console.log('PASS authentic artwork during rapid offline plays',mode);
     }
-    await cdp.send('Network.setBlockedURLs',{urls:[]});await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});
-    for(const mode of ['classic','flip','no_mercy']){
-      await cdp.evaluate(new Function(`return (async()=>{const {renderCardHTML}=await import('/cardGraphics.js');const card={id:'loaded',color:'red',type:'number',value:4,light:{color:'red',type:'number',value:4},dark:{color:'purple',type:'number',value:4}};window.app.el.discardPile.innerHTML=renderCardHTML(card,{mode:'${mode}'});})()`));
-      await cdp.waitForFunction(()=>{const image=window.app.el.discardPile.querySelector('img.card-art-ready');return image?.naturalWidth>0&&getComputedStyle(image).opacity==='1';},10000);
-    }
-    console.log('PASS authentic art replaces fallback when loaded');cdp.close();
+    if(perCardRequests)throw Error('Moves triggered individual artwork requests: '+perCardRequests);
+    console.log('PASS slow initial artwork preload, no mock faces, no individual card requests and rapid move cleanup');cdp.close();
   } finally {
     chromeProc.kill();
     server.close();

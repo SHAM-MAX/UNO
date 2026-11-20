@@ -1,3 +1,4 @@
+import {atlasFace} from './card-atlas.js';
 import { instantFace } from './instant-cards.js';
 import { renderNoMercyFace, renderNoMercyBack, noMercyFaceKey, getNoMercyCardLabel, getNoMercyCardImagePath } from './noMercyGraphics.js';
 import { renderClassicFace, renderClassicBack, getClassicCardLabel, getClassicCardImagePath } from './classicGraphics.js';
@@ -69,6 +70,10 @@ export function renderCardHTML(card, options = {}) {
   const mini = Boolean(options.mini);
   const face = getActiveFace(card, mode, flipSide);
 
+  const path=mode==='no_mercy'?getNoMercyCardImagePath(card,face):mode==='flip'?getFlipCardImagePath(card,face,flipSide):getClassicCardImagePath(card,face);
+  const art=atlasFace(mode,path);
+  if(art){const label=getCardLabel(face,mode,flipSide),classes=mode==='no_mercy'?'nm-card nm-image-card nm-vector-card':mode==='flip'?'flip-card flip-image-card '+(flipSide==='dark'?'flip-dark':'flip-light'):'classic-card classic-image-card';return '<div class="game-card '+classes+(mini?' mini':'')+'" role="img" aria-label="'+label+'" title="'+label+'" data-side="'+flipSide+'"'+(mode==='no_mercy'?' data-face="'+noMercyFaceKey(face)+'"':'')+'>'+art+'</div>';}
+
   // 1. NO MERCY MODE: Dedicated authentic WebP card system
   if (mode === 'no_mercy') {
     const key = noMercyFaceKey(face);
@@ -95,6 +100,8 @@ export function renderCardHTML(card, options = {}) {
 }
 
 export function renderCardBackHTML(isDark = false, mini = false, mode = 'classic') {
+  const path=mode==='no_mercy'?'/assets/no-mercy-cards/card_back.webp':mode==='flip'?'/assets/flip-cards/TOP_CARD.jpg':'/assets/classic-cards-svg/back.svg',art=atlasFace(mode,path);
+  if(art){const classes=mode==='no_mercy'?'nm-card nm-image-card nm-image-back nm-vector-card':mode==='flip'?'flip-card flip-image-card flip-image-back':'classic-card classic-image-card classic-image-back';return '<div class="game-card '+classes+(mini?' mini':'')+'" role="img" aria-label="'+(mode==='no_mercy'?'No Mercy':mode==='flip'?'UNO Flip':'Classic UNO')+' card back">'+art+'</div>';}
   if (mode === 'no_mercy') {
     return `<div class="game-card nm-card nm-image-card nm-image-back nm-vector-card ${mini ? 'mini' : ''}" role="img" aria-label="No Mercy card back" title="No Mercy card back">
       ${instantFace(null,true)}${renderNoMercyBack(mini)}

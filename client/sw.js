@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-desktop-seating-v44';
+const CACHE_NAME = 'uno-arena-ready-art-v45';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -23,6 +23,9 @@ const STATIC_SHELL_ASSETS = [
   '/app.js?v=2.2.0',
   '/audio.js',
   '/cardGraphics.js',
+  '/card-atlas.js',
+  '/card-atlas-manifest.js',
+  '/card-atlas.css?v=1',
   '/instant-cards.js',
   '/interaction-motion.js',
   '/social-features.js',

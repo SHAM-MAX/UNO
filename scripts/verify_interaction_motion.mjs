@@ -217,6 +217,7 @@ async function main() {
 
 
 
+    await cdp.evaluate(async()=>{const {prepareCardArt}=await import('./card-atlas.js');await prepareCardArt('no_mercy');});
     const host=roomManager.createRoom('Motion Host','no_mercy');for(const name of ['Sam','Alex','Jamie'])roomManager.joinRoom(host.roomId,name);roomManager.startGame(host.roomId,host.playerId);
     const room=roomManager.getRoom(host.roomId);room.currentTurn=0;room.pendingAction=null;
     const initial=roomManager.getClientView(host.roomId,host.playerId);initial.canPass=false;

@@ -23,7 +23,7 @@ test('No Mercy exhaustive inventory and authentic asset mappings for all 168 ide
     }
     for (const [type, count] of Object.entries({ wild_reverse_draw4: 8, wild_color_roulette: 8, wild_draw6: 4, wild_draw10: 4 })) assert.equal(d.filter(c => c.type === type).length, count);
     assert.equal(d.filter(c => c.type === 'wild').length, 0);
-    d.forEach(c => { const html = renderCardHTML(c, { mode: 'no_mercy' }); assert.match(html, /<img class="nm-card-image/); assert.match(html, /\/assets\/no-mercy-cards\//); assert.ok(html.includes(`data-face="${c.color}:${c.type}${c.type === 'number' ? ':' + c.value : ''}"`)); assert.doesNotMatch(html, /classic-cards/); });
+    d.forEach(c => { const html = renderCardHTML(c, { mode: 'no_mercy' }); assert.match(html, /class="card-atlas-face"/); assert.match(html, /\/assets\/no-mercy-cards\//); assert.ok(html.includes(`data-face="${c.color}:${c.type}${c.type === 'number' ? ':' + c.value : ''}"`)); assert.doesNotMatch(html, /classic-cards/); });
     assert.match(renderCardBackHTML(false, false, 'no_mercy'), /No Mercy card back/);
 });
 for (const a of ['draw2', 'draw4', 'wild_reverse_draw4', 'wild_draw6', 'wild_draw10']) for (const b of ['draw2', 'draw4', 'wild_reverse_draw4', 'wild_draw6', 'wild_draw10']) test(`No Mercy stack ${a} then ${b} compares last value`, () => {
