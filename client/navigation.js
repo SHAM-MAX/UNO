@@ -32,6 +32,7 @@ export function initBackNavigation(app) {
   function render(target) {
     applying = true;
     try {
+      app.closeSocialPanel?.();
       app.closeSettingsModal();
       app.closeLeaveConfirm();
       app.closeAiSetup();
@@ -39,6 +40,7 @@ export function initBackNavigation(app) {
       if (target.screen === 'mode') app.openModeSetup(target.mode);
       else if (target.screen === 'ai') { app.showModePicker(); app.openAiSetup(); }
       else if (target.screen === 'home') app.showModePicker();
+      if (target.modal === 'social') app.openSocialPanel(target.socialKind||'history');
       if (target.modal === 'settings') app.openSettingsModal(target.tab || 'general');
       if (target.modal === 'leave' && app.roomId) app.leaveRoom();
       current = target;
@@ -68,6 +70,13 @@ export function initBackNavigation(app) {
       current = { ...current, modal:null };
       history.back();
     }
+  });
+  wrap('openSocialPanel', kind => {
+    if(current.modal==='social')write({...current,socialKind:kind},true);
+    else write({...current,modal:'social',socialKind:kind});
+  });
+  wrap('closeSocialPanel',()=>{
+    if(current.modal==='social'){current={...current,modal:null};history.back();}
   });
   wrap('leaveRoom', () => {
     if (current.modal !== 'leave') write({ ...current, modal:'leave' });

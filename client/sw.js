@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-smooth-interactions-v39';
+const CACHE_NAME = 'uno-arena-friends-features-v40';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -25,6 +25,9 @@ const STATIC_SHELL_ASSETS = [
   '/cardGraphics.js',
   '/instant-cards.js',
   '/interaction-motion.js',
+  '/social-features.js',
+  '/social-features.css?v=1',
+  '/vendor/qrcode.mjs',
   '/interaction-motion.css?v=1',
   '/shared/constants.js',
   '/shared/rules.js',
@@ -103,7 +106,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Network-first with cache fallback for code assets (CSS, JS) to guarantee latest styles/logic
-  const isCodeAsset = url.pathname.endsWith('.css') || url.pathname.endsWith('.js') || url.search.includes('v=');
+  const isCodeAsset = url.pathname.endsWith('.css') || url.pathname.endsWith('.js') || url.pathname.endsWith('.mjs') || url.search.includes('v=');
   if (isCodeAsset) {
     event.respondWith(
       fetch(event.request)

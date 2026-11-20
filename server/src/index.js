@@ -239,7 +239,7 @@ wss.on('connection', (ws, req) => {
       let playerId = null;
 
       if (type === 'ping') {
-        ws.send(JSON.stringify({ type: 'pong' }));
+        ws.send(JSON.stringify({ type: 'pong', sentAt: payload.sentAt }));
         return;
       }
 
@@ -442,6 +442,19 @@ wss.on('connection', (ws, req) => {
           break;
         }
 
+        case 'manage_lobby': {
+          const room=roomManager.getRoom(cleanRoomId),target=room?.players.find(p=>p.id===data?.targetPlayerId);
+          const result=roomManager.manageLobby(cleanRoomId,playerId,data?.action,data?.targetPlayerId,data?.locked);
+          if(!result.success)sendError(ws,result.error);
+          else{
+            if(data?.action==='remove'&&target?.socket){
+              target.socket.send(JSON.stringify({type:'room_removed',data:{message:'The host removed you from this room.'}}));
+              clientSockets.delete(target.socket);target.socket.close(4003,'Removed by host');
+            }
+            broadcastRoomState(cleanRoomId);
+          }
+          break;
+        }
         case 'set_rules': {
           const res = roomManager.setHouseRules(cleanRoomId, playerId, data?.houseRules);
           if (!res.success) sendError(ws, res.error);
@@ -494,7 +507,7 @@ wss.on('connection', (ws, req) => {
         }
 
         case 'send_reaction': {
-          const validEmotes = ['laugh', 'shocked', 'fire', 'lightning', 'skull'];
+          const validEmotes = ['laugh', 'shocked', 'fire', 'lightning', 'skull', 'cry'];
           const emoteId = String(data?.emoteId || '').toLowerCase();
           if (!validEmotes.includes(emoteId)) break;
           const now = Date.now();

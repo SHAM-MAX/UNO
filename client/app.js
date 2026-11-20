@@ -1,3 +1,4 @@
+import { initSocial, syncSocial, syncRulePresets, stopSocial, onPong } from './social-features.js';
 import { setActionVisible, setGameModal, jumpControl, exitControl, clearInteractionMotion } from './interaction-motion.js';
 import { music } from './music.js';
 import { updateTurnStatus, renderMatchStandings, playPowerSound } from './game-experience.js';
@@ -64,6 +65,7 @@ class UnoArenaApp {
     preloadFlipEntrance();
     preloadClassicEntrance();
     this.initElements();
+    initSocial(this);
     music.init();
     window.addEventListener('online',()=>{
       if(this.roomId && this.ws?.readyState!==WebSocket.OPEN){
@@ -1069,6 +1071,10 @@ class UnoArenaApp {
       btn.addEventListener('click', (e) => {
         const emote = e.currentTarget.getAttribute('data-emote');
         if (emote) {
+          if(this.connectionRecovering||this.ws?.readyState!==WebSocket.OPEN||Date.now()<(this.reactionCooldownUntil||0))return;
+          this.reactionCooldownUntil=Date.now()+1500;
+          document.querySelectorAll('.reaction-item-btn').forEach(n=>n.disabled=true);
+          clearTimeout(this.reactionCooldownTimer);this.reactionCooldownTimer=setTimeout(()=>document.querySelectorAll('.reaction-item-btn').forEach(n=>n.disabled=false),1500);
           sounds.playSnap?.(520, 0.1);
           this.send({ type: 'send_reaction', data: { emoteId: emote } });
           if (this.el.reactionTray) this.el.reactionTray.style.display = 'none';
@@ -1867,9 +1873,10 @@ class UnoArenaApp {
       if (this.pingInterval) clearInterval(this.pingInterval);
       this.pingInterval = setInterval(() => {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-          this.ws.send(JSON.stringify({ type: 'ping' }));
+          this.ws.send(JSON.stringify({ type: 'ping', sentAt:Date.now() }));
         }
-      }, 20000);
+      }, 10000);
+      this.ws.send(JSON.stringify({type:'ping',sentAt:Date.now()}));
 
       // Send action or join message
       if (customAction) {
@@ -1897,6 +1904,7 @@ class UnoArenaApp {
       try {
         const msg = JSON.parse(event.data);
         if (msg.type === 'pong') {
+          onPong(this,msg.sentAt);
           // Heartbeat acknowledged
           return;
         }
@@ -1916,6 +1924,8 @@ class UnoArenaApp {
           this.connectionRecovering=false;this.reconnectAttempts=0;this.el.banner.classList.remove('visible');
           this.cancelQuickMatchTimerOnly();
           this.handleRoomState(msg.data);
+        } else if (msg.type === 'room_removed') {
+          this.confirmLeaveRoom();this.showToast(msg.data?.message||'You were removed from the room.');
         } else if (msg.type === 'player_card_hovered') {
           this.handleOpponentCardHover(msg.data);
         } else if (msg.type === 'player_reaction') {
@@ -2035,6 +2045,7 @@ class UnoArenaApp {
       fire: '🔥',
       lightning: '⚡',
       skull: '💀',
+      cry: '😭',
     };
     const emoji = EMOTE_MAP[emoteId] || '😄';
 
@@ -2168,6 +2179,7 @@ class UnoArenaApp {
       });
     }
     this.renderRematchProposal();
+    syncSocial(this);
   }
 
   sendRematchAction(type, data = {}) {
@@ -3894,6 +3906,7 @@ class UnoArenaApp {
   }
 
   confirmLeaveRoom() {
+    stopSocial(this);
     clearInteractionMotion();
     this.connectionRecovering=false;this.reconnectAttempts=0;this.selectedCardId=null;this.el.banner.classList.remove('visible');
     this.pendingWinnerRouletteId = null;
@@ -4092,6 +4105,7 @@ class UnoArenaApp {
   }
 
   syncGameRulesModalInputs(mode, rules, isReadOnly, isHost) {
+    syncRulePresets(mode,isReadOnly);
     const currentRules = { ...defaultHouseRules(mode), ...(rules || {}) };
     const isCustom = this.isCustomRules(mode, currentRules);
     const modeNames = { classic: 'CLASSIC UNO', flip: 'UNO FLIP', no_mercy: 'NO MERCY' };

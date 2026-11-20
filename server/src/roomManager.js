@@ -305,6 +305,7 @@ export class RoomManager {
       return { success: false, error: 'Invalid player session. Rejoin with a valid invite or create a new room.' };
     }
 
+    if (room.isLocked) return {success:false,error:'This room is locked. Ask the host to unlock it.'};
     if (room.status !== 'lobby') {
       return { success: false, error: 'Game has already started in this room.' };
     }
@@ -557,6 +558,28 @@ export class RoomManager {
     this.addLog(room, `Game mode changed to ${mode.toUpperCase()} by host. Ready status reset.`);
     this.persist(roomId);
     return true;
+  }
+
+  manageLobby(roomId, actorId, action, targetId, locked) {
+    const room=this.rooms.get(roomId);
+    if(!room)return {success:false,error:'Room not found'};
+    const host=room.players.find(p=>p.id===actorId);
+    if(!host?.isHost)return {success:false,error:'Only the host can manage the room'};
+    if(room.status!=='lobby')return {success:false,error:'Host controls are available in the lobby only'};
+    if(action==='lock'){
+      if(typeof locked!=='boolean')return {success:false,error:'Choose lock or unlock'};
+      room.isLocked=Boolean(locked);this.addLog(room,room.isLocked?'The host locked the room.':'The host unlocked the room.');
+    }else{
+      const target=room.players.find(p=>p.id===targetId);
+      if(!target||target.id===actorId)return {success:false,error:'Choose another player'};
+      if(action==='transfer'){
+        if(target.isBot||!target.isConnected)return {success:false,error:'Choose a connected human player'};
+        room.players.forEach(p=>p.isHost=p.id===target.id);target.isReady=true;this.addLog(room,target.name+' is now the host.');
+      }else if(action==='remove'){
+        this.leaveRoom(roomId,targetId);this.addLog(room,'The host removed '+target.name+'.');
+      }else return {success:false,error:'Unknown host action'};
+    }
+    this.persist(roomId);return {success:true};
   }
 
   setHouseRules(roomId, playerId, rules) {
@@ -2126,6 +2149,7 @@ export class RoomManager {
       actionVersion: room.actionVersion || 0,
       matchId: room.matchId,
       mode: room.mode,
+      isLocked: Boolean(room.isLocked),
       modeSelectionPolicy: room.modeSelectionPolicy || 'selectable',
       houseRules: room.houseRules,
       status: room.status,
