@@ -4,7 +4,7 @@ export function opponentSeats(count){
  return maps[count]||[];
 }
 export function syncRoundSeating(app){
- const wide=innerWidth>innerHeight&&(innerHeight<=600||matchMedia('(pointer:coarse)').matches||(document.fullscreenElement&&innerWidth<=1800));
+ const wide=innerWidth>innerHeight;
  document.body.classList.toggle('round-table-layout',Boolean(wide&&app.roomId&&!app.clientView?.isSpectator));
  const tools=document.getElementById('tableTools'),round=document.body.classList.contains('round-table-layout');if(tools){const target=round?document.body:document.querySelector('.table-felt');if(target&&tools.parentElement!==target)target.append(tools);}
  const row=app.el.opponentsRow;if(!row)return;
