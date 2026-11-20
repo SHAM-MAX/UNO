@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-friends-features-v40';
+const CACHE_NAME = 'uno-arena-qr-icon-v41';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
