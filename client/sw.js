@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-red-nav-icons-v51';
+const CACHE_NAME = 'uno-arena-real-mode-cards-v52';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',

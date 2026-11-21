@@ -206,3 +206,8 @@ body.in-room:not(.in-arena) .main-content {min-height:0;}
 @media (min-width:901px) and (max-height:700px) {
  body.in-room:not(.in-arena) #entryView.lobby-card {padding:12px 24px 8px;margin-bottom:8px;}
 }
+
+/* Real mode artwork, with no illustrated placeholder frame behind it. */
+.in-room .mode-card-btn .lobby-mode-art{background:none;border:0;box-shadow:none;transform:none;overflow:visible}
+.in-room .mode-card-btn .lobby-mode-art::after{display:none}
+.in-room .mode-card-btn .lobby-mode-art img{display:block;width:auto;height:100%;max-width:100%;object-fit:contain;border-radius:5px;transform:rotate(-6deg);filter:drop-shadow(1px 2px 2px #24180d45)}
