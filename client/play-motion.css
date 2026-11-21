@@ -38,3 +38,11 @@ html body.in-arena .hand-cards{width:max(100%,var(--local-hand-width,100%))!impo
 html body.in-arena .hand-cards{margin:0!important}
 
 html body.in-arena .hand-scroll-container{scroll-snap-type:none!important;scroll-behavior:auto!important}
+
+.local-play-ghost{position:fixed;z-index:100050;pointer-events:none;contain:layout style;will-change:transform}.local-play-ghost .game-card{width:100%!important;height:100%!important;pointer-events:none}
+.local-play-notice{position:fixed;left:50%;top:58%;transform:translateX(-50%);z-index:100060;background:#103b2ceF;color:#fff5d8;border:1px solid #dfbf66;border-radius:20px;padding:5px 12px;font:600 12px sans-serif;pointer-events:none}
+@media(hover:hover) and (pointer:fine){html body.in-arena .hand-cards .card-wrapper.playable:hover{translate:0 -18px!important;z-index:250!important;filter:drop-shadow(0 4px 4px #0005)!important}}
+html body.in-arena .hand-cards .card-wrapper.playable:active{translate:0 -10px;transition:translate 90ms ease-out!important}
+@media(max-width:1024px){html body.in-arena .hand-cards .card-wrapper.is-selected{box-shadow:0 0 0 2px #f5ce00!important;filter:none!important}html body.in-arena #playDirection svg{filter:none!important}}
+
+@media(hover:none){html body.in-arena .hand-cards .card-wrapper.playable:active{transform:rotate(var(--card-rot,0deg))!important;box-shadow:none!important;filter:none!important}}

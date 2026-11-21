@@ -1,3 +1,4 @@
+import {beginLocalPlay,cancelLocalPlay,reconcileLocalPlay} from './local-play-feedback.js';
 import {syncDrawFourDecision} from './draw-four-decision.js';
 import {initPlayMotion,syncPlayDirection} from './play-motion.js';
 import {prepareCardArt,gateCardArt,clearCardArtGate} from './card-atlas.js';
@@ -1946,6 +1947,8 @@ class UnoArenaApp {
           this.catchRequestPending = false;
           this.showCaughtFailedModal(msg.data);
         } else if (msg.type === 'error') {
+          cancelLocalPlay(this,true);
+          this.isPlayInFlight=false;
           this.cancelQuickMatchTimerOnly();
           this.rematchRequestPending = false; this.rematchActionPending = false; this.rematchDismissAfterResponseId = null; this.unoRequestPending = false; this.catchRequestPending = false; this.pendingClassicMotion = null;
           this.clearClassicAnimations?.();
@@ -1972,6 +1975,7 @@ class UnoArenaApp {
     };
 
     this.ws.onclose = () => {
+      cancelLocalPlay(this);
       if (this.gameState) {
         this.cancelCardDrag?.();
         this.clearClassicAnimations?.();
@@ -2011,6 +2015,14 @@ class UnoArenaApp {
   }
 
   send(payload) {
+    if(payload.type==='player_card_hovered'){
+      if(navigator.maxTouchPoints>0||this.localPlayPreview)return;
+      this.pendingHoverIndex=payload.data?.cardIndex??null;
+      if(this.hoverSendTimer)return;
+      this.hoverSendTimer=setTimeout(()=>{this.hoverSendTimer=null;if(this.localPlayPreview||this.ws?.readyState!==WebSocket.OPEN)return;this.ws.send(JSON.stringify({roomId:this.roomId,sessionToken:this.sessionToken,type:'player_card_hovered',data:{cardIndex:this.pendingHoverIndex}}));},65);
+      return;
+    }
+    if(this.localPlayPreview&&['play_card','draw_card','pass_turn','call_uno','catch_uno'].includes(payload.type))return false;
     const roomAction=!['join','ping'].includes(payload.type);
     if(this.roomId && this.connectionRecovering && roomAction){this.isMoveInFlight=false;return false;}
     if (['classic', 'no_mercy'].includes(this.gameState?.mode) && ['draw_card', 'play_card'].includes(payload.type)) {
@@ -2026,9 +2038,14 @@ class UnoArenaApp {
       expectedActionVersion: ['classic', 'no_mercy'].includes(this.gameState?.mode) ? this.gameState.actionVersion : undefined,
     };
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      if(payload.type==='play_card'){
+        clearTimeout(this.hoverSendTimer);this.hoverSendTimer=null;
+        if(!this.dragDropSubmitting)beginLocalPlay(this,payload.data?.cardId);
+        if(this.pendingClassicMotion)this.pendingClassicMotion.localPreview=!this.dragDropSubmitting;
+      }
       this.ws.send(JSON.stringify(full));
     } else if (this.gameState && ['play_card', 'draw_card', 'pass_turn', 'choose_color', 'challenge_draw4', 'call_uno', 'catch_uno', 'rematch', 'start_game', 'rematch_propose', 'rematch_respond', 'rematch_vote', 'rematch_cancel'].includes(payload.type)) {
-      this.isMoveInFlight = false;
+      this.isMoveInFlight = false;this.isPlayInFlight=false;
       this.showToast('Connection lost. Wait for the table to reconnect.');
       return false;
     } else if (payload.type !== 'join') {
@@ -2087,6 +2104,7 @@ class UnoArenaApp {
     this.releaseDroppedCard?.();
     const previous = this.clientView;
     const classicGeometry = this.captureClassicGeometry();
+    classicGeometry.previewedCardId=reconcileLocalPlay(this,view);
     if (!previous || previous.gameState.matchId !== view.gameState.matchId) this.clearClassicAnimations();
     const playSource = previous && this.el.playerHandCards.querySelector(`[data-card-id="${view.gameState.topDiscard?.id}"]`);
     const playRect = playSource?.getBoundingClientRect();
@@ -2098,7 +2116,7 @@ class UnoArenaApp {
     music.setScene(['game_over','round_over'].includes(view.gameState.status)?'victory':view.gameState.status==='playing'?view.gameState.mode:'lobby');
     this.clientView = view;
     this.gameState = view.gameState;
-    this.isPlayInFlight = false;
+    this.isPlayInFlight = Boolean(this.localPlayPreview);
     this.isMoveInFlight = false;
     if (this.inFlightCardId) {
       if (view.gameState.topDiscard?.id === this.inFlightCardId || !view.myHand.some(c => c.id === this.inFlightCardId)) {
@@ -2467,7 +2485,7 @@ class UnoArenaApp {
     animatePowerCard(this, previous.gameState);
     if (current.gameState.mode === 'no_mercy') this.animateNoMercyAction(previous, geometry);
     const newTop = current.gameState.topDiscard;
-    if (newTop?.id !== previous.gameState.topDiscard?.id && geometry.hand.has(newTop?.id)) {
+    if (newTop?.id !== previous.gameState.topDiscard?.id && geometry.hand.has(newTop?.id) && geometry.previewedCardId!==newTop.id) {
       const from = geometry.pending?.cardId === newTop.id ? geometry.pending : geometry.hand.get(newTop.id);
       this.travelClassicCard(from.rect, this.el.discardPile.querySelector('.game-card'), from.html, from.html);
     }
@@ -3244,7 +3262,7 @@ class UnoArenaApp {
           e.preventDefault();
           e.stopPropagation();
           if (wrapper.getAttribute('aria-disabled') === 'true') return;
-          this.handleCardClick(card, wrapper, e.detail!==0 && (e.pointerType==='touch' || matchMedia('(pointer: coarse)').matches));
+          this.handleCardClick(card, wrapper);
         });
         wrapper.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -3417,14 +3435,14 @@ class UnoArenaApp {
     // Regular Card Play
     this.isPlayInFlight = true;
     clearTimeout(this.playFlightTimer);
-    this.playFlightTimer = setTimeout(() => { this.isPlayInFlight = false; }, 350);
+    // The authoritative reply releases the play lock, not a short timer.
 
     sounds.playSnap();
 
     // Fly once from the captured hand position after the authoritative update.
     if (wrapperEl) {
       this.inFlightCardId = card.id;
-      wrapperEl.style.opacity = '0.35';
+      wrapperEl.style.opacity = '1';
     }
 
     this.send({
