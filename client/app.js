@@ -1,3 +1,4 @@
+import {syncDrawFourDecision} from './draw-four-decision.js';
 import {initPlayMotion,syncPlayDirection} from './play-motion.js';
 import {prepareCardArt,gateCardArt,clearCardArtGate} from './card-atlas.js';
 import {syncRoundSeating} from './round-seating.js';
@@ -2196,7 +2197,8 @@ class UnoArenaApp {
     syncTableTools(this);
     syncPlayDirection(this);
     syncRoundSeating(this);
-    if(view.gameState.rouletteInProgress){updateTurnStatus(this,0,false);this.el.playerHandCards.setAttribute('inert','');this.el.drawPileBtn.disabled=true;this.el.btnDrawAction.disabled=true;this.el.btnPassAction.disabled=true;this.el.btnUnoAction.disabled=true;}
+    syncDrawFourDecision(this);
+    if(view.gameState.rouletteInProgress || view.gameState.pendingAction?.type === 'draw4_challenge'){updateTurnStatus(this,0,false);this.el.playerHandCards.setAttribute('inert','');this.el.drawPileBtn.disabled=true;this.el.btnDrawAction.disabled=true;this.el.btnPassAction.disabled=true;this.el.btnUnoAction.disabled=true;}
     else {this.el.btnPassAction.disabled=false;this.el.btnUnoAction.disabled=false;}
   }
 
@@ -3215,7 +3217,14 @@ class UnoArenaApp {
     const angleStep = rowCount > 1 ? maxAngle / (rowCount - 1) : 0;
 
     const rowWidth = maxCardW + Math.max(0,rowCount - 1) * (maxCardW + overlapMargin);
-    rowEl.style.minWidth = Math.ceil(rowWidth + maxCardW * .45) + 'px';
+    rowEl.style.width = Math.ceil(rowWidth + maxCardW * .6) + 'px';
+    this.el.playerHandCards.style.setProperty('--local-hand-width', rowEl.style.width);
+    const layoutKey = rowCards.map(card=>card.id).join(',') + ':' + innerWidth + ':' + innerHeight;
+    if (rowEl.dataset.layoutKey !== layoutKey) {
+      rowEl.dataset.layoutKey = layoutKey;
+      requestAnimationFrame(()=>{ const scroller=this.el.playerHandCards.closest('.hand-scroll-container'); if(scroller)scroller.scrollLeft=Math.max(0,(scroller.scrollWidth-scroller.clientWidth)/2); });
+    }
+
     rowCards.forEach((card, idx) => {
       const globalIdx = startIndex + idx;
       const isPlayable = canPlayIds.includes(card.id);

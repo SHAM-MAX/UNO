@@ -1371,6 +1371,7 @@ export class RoomManager {
   playCard(roomId, playerId, payload) {
     const room = this.rooms.get(roomId);
     if(this.isRouletteInProgress(room))return {success:false,error:'Roulette in progress. Wait for the result.'};
+    if(room?.pendingAction?.type==='draw4_challenge')return {success:false,error:'Challenge in progress. Wait for the decision.'};
     if (!room || room.status !== 'playing') {
       return { success: false, error: 'Game is not currently active' };
     }
@@ -1695,6 +1696,7 @@ export class RoomManager {
   drawCard(roomId, playerId) {
     const room = this.rooms.get(roomId);
     if(this.isRouletteInProgress(room))return {success:false,error:'Roulette in progress. Wait for the result.'};
+    if(room?.pendingAction?.type==='draw4_challenge' && room.pendingAction.targetPlayerId!==playerId)return {success:false,error:'Challenge in progress. Wait for the decision.'};
     if (!room || room.status !== 'playing') {
       return { success: false, error: 'Game not active' };
     }
@@ -1840,6 +1842,7 @@ export class RoomManager {
   passTurn(roomId, playerId) {
     const room = this.rooms.get(roomId);
     if(this.isRouletteInProgress(room))return {success:false,error:'Roulette in progress. Wait for the result.'};
+    if(room?.pendingAction?.type==='draw4_challenge')return {success:false,error:'Challenge in progress. Wait for the decision.'};
     if (!room || room.status !== 'playing') return { success: false, error: 'Game not active' };
 
     const currentPlayer = room.players[room.currentTurn];
@@ -1872,6 +1875,7 @@ export class RoomManager {
   callUno(roomId, playerId) {
     const room = this.rooms.get(roomId);
     if(this.isRouletteInProgress(room))return {success:false,error:'Roulette in progress. Wait for the result.'};
+    if(room?.pendingAction?.type==='draw4_challenge')return {success:false,error:'Challenge in progress. Wait for the decision.'};
     if (!room || room.status !== 'playing') return { success: false, error: 'Game not active' };
 
     const player = room.players.find((p) => p.id === playerId);
@@ -1913,6 +1917,7 @@ export class RoomManager {
   catchUno(roomId, challengerId, targetPlayerId) {
     const room = this.rooms.get(roomId);
     if(this.isRouletteInProgress(room))return {success:false,error:'Roulette in progress. Wait for the result.'};
+    if(room?.pendingAction?.type==='draw4_challenge')return {success:false,error:'Challenge in progress. Wait for the decision.'};
     if (!room || room.status !== 'playing') return { success: false, error: 'Game not active' };
 
     const challenger = room.players.find((p) => p.id === challengerId);
@@ -2136,7 +2141,8 @@ export class RoomManager {
     const isSpectator = !myPlayer && (room.spectators || []).some(p=>p.id===playerId);
     const myHand = myPlayer ? room.playerHands[playerId] || [] : [];
     const rouletteInProgress=this.isRouletteInProgress(room);
-    const isMyTurn = !rouletteInProgress && room.status === 'playing' && room.players[room.currentTurn]?.id === playerId;
+    const challengeInProgress=room.pendingAction?.type==='draw4_challenge';
+    const isMyTurn = !rouletteInProgress && !challengeInProgress && room.status === 'playing' && room.players[room.currentTurn]?.id === playerId;
 
     let canPlayCards = [];
     if (isMyTurn) {
@@ -2158,7 +2164,7 @@ export class RoomManager {
     }
     // Uncalled one-card opponents remain catchable until their hand changes.
     // Declared opponents still have a per-player inspection button in the UI.
-    const canCatchUnoTargets = !myPlayer || myPlayer.isEliminated || room.status !== 'playing'||rouletteInProgress ? [] : room.players.filter(p => p.id !== playerId && !p.isEliminated && !p.hasCalledUno && (room.playerHands[p.id] || []).length === 1).map(p => p.id);
+    const canCatchUnoTargets = !myPlayer || myPlayer.isEliminated || room.status !== 'playing'||rouletteInProgress||challengeInProgress ? [] : room.players.filter(p => p.id !== playerId && !p.isEliminated && !p.hasCalledUno && (room.playerHands[p.id] || []).length === 1).map(p => p.id);
     const canCatchUno = room.status === 'playing' ? canCatchUnoTargets[0] || null : null;
     const publicPlayers = room.players.map((p) => ({
       id: p.id,
@@ -2261,7 +2267,7 @@ export class RoomManager {
       canPass: (room.mode === 'no_mercy' || room.houseRules?.drawUntilPlayable)
         ? isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCount > 0 || room.turnDrawnCard)
         : isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCard),
-      canCallUno: !rouletteInProgress && room.status === 'playing' && myHand.length === 2 && !myPlayer?.isEliminated && !myPlayer?.hasCalledUno,
+      canCallUno: !rouletteInProgress && !challengeInProgress && room.status === 'playing' && myHand.length === 2 && !myPlayer?.isEliminated && !myPlayer?.hasCalledUno,
       canCatchUno,
       canCatchUnoTargets,
       drawFourEvidence: room.lastDrawFourResult?.challengerId === playerId ? { id: room.lastDrawFourResult.id, ...room.lastDrawFourResult.evidence } : null,

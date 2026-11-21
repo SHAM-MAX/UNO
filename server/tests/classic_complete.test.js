@@ -210,9 +210,10 @@ for (const n of [2,3]) test(`Classic physical Draw Four bluff succeeds when chal
  assert.equal(rm.getClientView(roomId,ids[0]).gameState.drawFourResult.evidence,undefined);
  const after=r.playerHands[ids[0]].length;assert.equal(rm.resolveDrawFour(roomId,ids[1],true).success,false);assert.equal(r.playerHands[ids[0]].length,after);
 });
-test('Classic challenge uses pre-play hand even when UNO penalty subsequently adds matching-colour cards',()=>{
+test('Classic challenge locks UNO penalties and retains immutable pre-play evidence',()=>{
  const {rm,r,ids,roomId}=setup();r.playerHands[ids[0]]=[{id:'w',color:'wild',type:'wild_draw4'},number('held','blue',5)];r.drawPile=[number('uno1'),number('uno2'),...r.drawPile];
- rm.playCard(roomId,ids[0],{cardId:'w',chosenColor:'blue'});assert.ok(rm.catchUno(roomId,ids[2],ids[0]).success);
+ rm.playCard(roomId,ids[0],{cardId:'w',chosenColor:'blue'});assert.equal(rm.catchUno(roomId,ids[2],ids[0]).success,false);
+ r.playerHands[ids[0]].push(number('external-snapshot-check','red'));
  assert.ok(r.playerHands[ids[0]].some(c=>c.color==='red'));const before=r.playerHands[ids[1]].length;
  assert.ok(rm.resolveDrawFour(roomId,ids[1],true).success);assert.equal(r.playerHands[ids[1]].length,before+6);assert.equal(r.currentTurn,2);assert.equal(rm.getClientView(roomId,ids[1]).drawFourEvidence.hadMatchingColor,false);
 });
@@ -235,10 +236,10 @@ test('Classic pending physical challenge survives server rehydration with privat
  assert.equal(second.getClientView(host.roomId,guest.playerId).drawFourEvidence.hadMatchingColor,true);
  for(const rm of [first,second])for(const timer of rm.turnTimers.values())clearTimeout(timer);
 });
-test('Classic two-card declaration is available during a pending response',()=>{
+test('Classic two-card declaration is disabled during a pending challenge',()=>{
  const {rm,r,ids,roomId}=setup();r.playerHands[ids[0]]=[{id:'w',color:'wild',type:'wild_draw4'},number('held')];r.playerHands[ids[1]]=[number('a'),number('b')];
- rm.playCard(roomId,ids[0],{cardId:'w',chosenColor:'blue'});assert.equal(rm.getClientView(roomId,ids[1]).canCallUno,true);assert.equal(rm.callUno(roomId,ids[1]).success,true);
- rm.resolveDrawFour(roomId,ids[1],true);assert.equal(rm.getClientView(roomId,ids[1]).canCallUno,false);
+ rm.playCard(roomId,ids[0],{cardId:'w',chosenColor:'blue'});assert.equal(rm.getClientView(roomId,ids[1]).canCallUno,false);assert.equal(rm.callUno(roomId,ids[1]).success,false);
+ rm.resolveDrawFour(roomId,ids[1],true);assert.equal(rm.getClientView(roomId,ids[1]).canCallUno,true);
 });
 test('Classic Draw Four challenge follows reversed order and final failed challenge scores all six cards',()=>{
  const {rm,r,ids,roomId}=setup();r.direction=-1;r.playerHands[ids[0]]=[{id:'w',color:'wild',type:'wild_draw4'}];r.playerHands[ids[1]]=[number('b','blue',1)];r.playerHands[ids[2]]=[number('c','blue',1)];r.drawPile=Array.from({length:8},(_,i)=>number(`d${i}`,'blue',9));
@@ -252,4 +253,13 @@ test('Classic repeated UNO and stale catch after declaration do not mutate hand 
  rm.playCard(roomId,ids[0],{cardId:'a'});const hands=JSON.stringify(r.playerHands),turn=r.currentTurn;
  const catchResult=rm.catchUno(roomId,ids[1],ids[0]);assert.equal(catchResult.success,false);assert.match(catchResult.error,/CAUGHT FAILED/);
  assert.equal(JSON.stringify(r.playerHands),hands);assert.equal(r.currentTurn,turn);
+});
+
+for(const decision of ['accept','challenge'])test('Draw Four globally locks unrelated actions until '+decision,()=>{
+ const {rm,r,ids,roomId}=setup();r.playerHands[ids[0]]=[{id:'locked-wild',color:'wild',type:'wild_draw4'},number('kept','blue')];
+ assert.ok(rm.playCard(roomId,ids[0],{cardId:'locked-wild',chosenColor:'yellow'}).success);
+ const before=JSON.stringify({hands:r.playerHands,turn:r.currentTurn,pending:r.pendingAction});
+ for(const id of ids){const view=rm.getClientView(roomId,id);assert.deepEqual(view.canPlayCards,[]);assert.equal(view.canDraw,false);assert.equal(view.canPass,false);assert.equal(view.canCallUno,false);assert.equal(view.isMyTurn,false);assert.equal(rm.playCard(roomId,id,{cardId:r.playerHands[id][0]?.id}).success,false);assert.equal(rm.passTurn(roomId,id).success,false);assert.equal(rm.callUno(roomId,id).success,false);assert.equal(rm.catchUno(roomId,id,ids[0]).success,false);if(id!==ids[1])assert.equal(rm.drawCard(roomId,id).success,false);}
+ assert.equal(JSON.stringify({hands:r.playerHands,turn:r.currentTurn,pending:r.pendingAction}),before);
+ assert.ok((decision==='accept'?rm.drawCard(roomId,ids[1]):rm.resolveDrawFour(roomId,ids[1],true)).success);assert.equal(r.pendingAction,null);assert.equal(rm.getClientView(roomId,r.players[r.currentTurn].id).isMyTurn,true);
 });

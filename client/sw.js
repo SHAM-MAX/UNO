@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-readable-single-hand-v57';
+const CACHE_NAME = 'uno-arena-challenge-overlay-v58';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -25,6 +25,7 @@ const STATIC_SHELL_ASSETS = [
   '/card-atlas.js',
   '/play-motion.js',
   '/play-motion.css?v=1',
+  '/draw-four-decision.js',
   '/card-atlas-manifest.js',
   '/card-atlas.css?v=1',
   '/instant-cards.js',
