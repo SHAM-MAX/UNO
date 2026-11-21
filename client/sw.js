@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-roulette-lock-v46';
+const CACHE_NAME = 'uno-arena-drag-motion-v47';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -24,6 +24,8 @@ const STATIC_SHELL_ASSETS = [
   '/audio.js',
   '/cardGraphics.js',
   '/card-atlas.js',
+  '/play-motion.js',
+  '/play-motion.css?v=1',
   '/card-atlas-manifest.js',
   '/card-atlas.css?v=1',
   '/instant-cards.js',

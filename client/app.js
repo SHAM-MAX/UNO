@@ -1,3 +1,4 @@
+import {initPlayMotion,syncPlayDirection} from './play-motion.js';
 import {prepareCardArt,gateCardArt,clearCardArtGate} from './card-atlas.js';
 import {syncRoundSeating} from './round-seating.js';
 import {initTableTools,syncTableTools,sortedHand,warnTurn} from './table-tools.js';
@@ -71,6 +72,7 @@ class UnoArenaApp {
     this.initElements();
     initSocial(this);
     initTableTools(this);
+    initPlayMotion(this);
     this.playTurnWarning=frequency=>sounds.playSnap(frequency,.06);
     music.init();
     window.addEventListener('online',()=>{
@@ -2081,13 +2083,14 @@ class UnoArenaApp {
 
   handleRoomState(view) {
     if(gateCardArt(this,view))return;
+    this.releaseDroppedCard?.();
     const previous = this.clientView;
     const classicGeometry = this.captureClassicGeometry();
     if (!previous || previous.gameState.matchId !== view.gameState.matchId) this.clearClassicAnimations();
     const playSource = previous && this.el.playerHandCards.querySelector(`[data-card-id="${view.gameState.topDiscard?.id}"]`);
     const playRect = playSource?.getBoundingClientRect();
     const oldIds = new Set(previous?.myHand.map(c => c.id) || []);
-    this.cancelCardDrag?.();
+    if(this.draggingCardId&&(!view.isMyTurn||!view.canPlayCards.includes(this.draggingCardId)||previous?.gameState.flipSide!==view.gameState.flipSide))this.cancelCardDrag?.();
     document.querySelectorAll('.classic-returning-card').forEach(el => el.remove());
     this.el.playerHandCards.removeAttribute('inert');
     if(!view.isMyTurn || !view.myHand.some(c=>c.id===this.selectedCardId) || !view.canPlayCards.includes(this.selectedCardId) || previous?.gameState.flipSide!==view.gameState.flipSide) this.selectedCardId=null;
@@ -2191,6 +2194,7 @@ class UnoArenaApp {
     this.renderRematchProposal();
     syncSocial(this);
     syncTableTools(this);
+    syncPlayDirection(this);
     syncRoundSeating(this);
     if(view.gameState.rouletteInProgress){updateTurnStatus(this,0,false);this.el.playerHandCards.setAttribute('inert','');this.el.drawPileBtn.disabled=true;this.el.btnDrawAction.disabled=true;this.el.btnPassAction.disabled=true;this.el.btnUnoAction.disabled=true;}
     else {this.el.btnPassAction.disabled=false;this.el.btnUnoAction.disabled=false;}
@@ -2374,6 +2378,7 @@ class UnoArenaApp {
     if (!source || source.width <= 0 || source.height <= 0 || !target || !html) return;
     const destination = target.getBoundingClientRect();
     if (destination.width <= 0 || destination.height <= 0) return;
+    if(faceHTML===html&&Math.hypot(destination.left-source.left,destination.top-source.top)<4)return;
     this.classicAnimationCleanups ||= new Set();
     if(this.classicAnimationCleanups.size>=18)this.classicAnimationCleanups.values().next().value?.();
     const pileMotion=target instanceof Node && this.el.discardPile.contains(target);
