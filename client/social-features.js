@@ -67,9 +67,16 @@ function showTutorialStep(app){
  document.getElementById('skipQuickGuide').onclick=endTutorial;document.getElementById('nextQuickGuide').onclick=()=>{if(++tutorialStep>=3)endTutorial();else showTutorialStep(app);};
 }
 export function onPong(app,sentAt){if(Number.isFinite(sentAt)&&Date.now()-sentAt>=0&&Date.now()-sentAt<120000){app.networkRtt=Math.round(Date.now()-sentAt);app.lastPongAt=Date.now();updateConnection(app);}}
-function updateConnection(app){const indicator=document.getElementById('connectionQuality');if(!indicator)return;indicator.hidden=!app.roomId;const elapsed=Date.now()-(app.lastPongAt||Date.now()),rtt=app.networkRtt;
+let connectionNoticeTimer;
+let connectionNoticeKey = null;
+function updateConnection(app){const indicator=document.getElementById('connectionQuality');if(!indicator)return;
+ if(!app.roomId){clearTimeout(connectionNoticeTimer);connectionNoticeKey=null;indicator.hidden=true;return;}
+ const elapsed=Date.now()-(app.lastPongAt||Date.now()),rtt=app.networkRtt;
  const label=app.connectionRecovering?'Reconnecting':elapsed>25000?'Weak network':!Number.isFinite(rtt)?'Measuring…':rtt>800?'Weak network':rtt>250?'Fair connection':'Good connection';
- indicator.dataset.quality=app.connectionRecovering||elapsed>25000||rtt>800?'weak':rtt>250?'fair':'good';indicator.textContent=label;indicator.title=Number.isFinite(rtt)?`Round-trip time: ${rtt} ms`:'Checking connection to the table';}
+ indicator.dataset.quality=app.connectionRecovering||elapsed>25000||rtt>800?'weak':rtt>250?'fair':'good';indicator.textContent=label;
+ const noticeKey=app.roomId+':'+label;
+ if(noticeKey!==connectionNoticeKey){connectionNoticeKey=noticeKey;clearTimeout(connectionNoticeTimer);indicator.hidden=false;connectionNoticeTimer=setTimeout(()=>{indicator.hidden=true;},2000);}
+ indicator.title=Number.isFinite(rtt)?`Round-trip time: ${rtt} ms`:'Checking connection to the table';}
 export function syncSocial(app){
  recordMatch(app);updateConnection(app);
  const summary=document.getElementById('deviceStatsSummary');if(summary)summary.innerHTML=statsMarkup();
@@ -95,4 +102,4 @@ export function initSocial(app){
  const connection=document.createElement('span');connection.id='connectionQuality';connection.setAttribute('aria-label','Connection quality');connection.hidden=true;document.body.append(connection);setInterval(()=>updateConnection(app),5000);
  syncSocial(app);
 }
-export function stopSocial(app){clearTimeout(tutorialTimer);tutorialTimer=null;tutorialRoom=null;document.getElementById('firstGameGuide')?.remove();document.querySelectorAll('.guide-highlight').forEach(n=>n.classList.remove('guide-highlight'));document.getElementById('connectionQuality').hidden=true;app.closeSocialPanel?.();}
+export function stopSocial(app){clearTimeout(connectionNoticeTimer);connectionNoticeKey=null;clearTimeout(tutorialTimer);tutorialTimer=null;tutorialRoom=null;document.getElementById('firstGameGuide')?.remove();document.querySelectorAll('.guide-highlight').forEach(n=>n.classList.remove('guide-highlight'));document.getElementById('connectionQuality').hidden=true;app.closeSocialPanel?.();}

@@ -9,3 +9,8 @@ html body #brandNavToggle .nav-uno-wordmark,html body .mobile-brand .nav-uno-wor
 html body :is(#fullscreenToggleBtn,#settingsBtn,#mobileNavFullscreenBtn,#mobileNavSettingsBtn,#arenaFullscreenBtn,#arenaSettingsBtn,#modeLobbyFullscreenBtn,#modeLobbySettingsBtn){background:transparent!important;background-image:none!important;border-color:transparent!important;box-shadow:none!important;color:#F41908!important}
 html body :is(#fullscreenToggleBtn,#settingsBtn,#mobileNavFullscreenBtn,#mobileNavSettingsBtn,#arenaFullscreenBtn,#arenaSettingsBtn,#modeLobbyFullscreenBtn,#modeLobbySettingsBtn) svg{color:inherit;filter:none}
 html body :is(#fullscreenToggleBtn,#settingsBtn,#mobileNavFullscreenBtn,#mobileNavSettingsBtn,#arenaFullscreenBtn,#arenaSettingsBtn,#modeLobbyFullscreenBtn,#modeLobbySettingsBtn):focus-visible{outline:2px solid #F41908;outline-offset:2px}
+
+html body #navRoomDetails{display:none!important}
+html body .top-nav .nav-controls #fullscreenToggleBtn{order:1}
+html body .top-nav .nav-controls #settingsBtn{order:2}
+html body .top-nav .nav-controls #leaveBtn{order:3}

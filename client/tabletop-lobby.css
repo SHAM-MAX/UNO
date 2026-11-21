@@ -64,7 +64,8 @@ body.in-room:not(.in-arena) #entryView.lobby-card {
 #genericLobbySlot #lobbySection .empty-seat-pill {font:800 13px 'Outfit',sans-serif;background:#e8e2d0;color:#647267;border:1px solid #c9c6b3;padding:4px 18px;}
 #genericLobbySlot #lobbySection #lobbyHostControls {grid-column:1;grid-row:4;margin:0;justify-content:center;gap:22px;}
 #genericLobbySlot #lobbySection #addBotBtn,
-#genericLobbySlot #lobbySection #shuffleSeatsBtn {background:linear-gradient(#fffaed,#ece0c2) !important;color:#163e2d !important;border:1px solid #416344 !important;border-radius:14px !important;min-height:44px;padding:8px 24px !important;box-shadow:0 3px 3px #70512033;font:800 16px Georgia,serif !important;}
+#genericLobbySlot #lobbySection #shuffleSeatsBtn,
+#genericLobbySlot #lobbySection #manageRoomBtn {background:linear-gradient(#fffaed,#ece0c2) !important;color:#163e2d !important;border:1px solid #416344 !important;border-radius:14px !important;min-height:44px;padding:8px 24px !important;box-shadow:0 3px 3px #70512033;font:800 16px Georgia,serif !important;}
 #genericLobbySlot #lobbySection .lobby-footer-section {grid-column:1 / -1;grid-row:5;display:flex;align-items:center;justify-content:space-between;gap:20px;border-top:1px solid #c7a768;padding-top:18px;margin:0;}
 #genericLobbySlot #lobbySection .lobby-start-hint {margin:0;text-align:left;font-size:17px;font-style:italic;color:#617366;}
 #genericLobbySlot #lobbySection .lobby-footer-actions {display:flex;gap:20px;flex-shrink:0;}
@@ -108,7 +109,8 @@ body.in-room:not(.in-arena) #entryView:has(#genericLobbySlot #lobbySection) {min
  #genericLobbySlot #lobbySection .lobby-players-list {min-height:0;max-height:240px;}
  #genericLobbySlot #lobbySection #lobbyHostControls {grid-column:1;grid-row:4;gap:10px;flex-wrap:wrap;}
  #genericLobbySlot #lobbySection #addBotBtn,
- #genericLobbySlot #lobbySection #shuffleSeatsBtn {padding:8px 12px !important;font-size:14px !important;}
+ #genericLobbySlot #lobbySection #shuffleSeatsBtn,
+#genericLobbySlot #lobbySection #manageRoomBtn {padding:8px 12px !important;font-size:14px !important;}
  #genericLobbySlot #lobbySection #lobbyModeSelectContainer {grid-column:1;grid-row:5;padding:0;border:0;}
  #genericLobbySlot #lobbySection #modeSelectorGrid {gap:10px;}
  #genericLobbySlot #lobbySection .mode-card-btn {min-height:80px;}
@@ -173,7 +175,8 @@ body.in-room:not(.in-arena) .main-content {min-height:0;}
  #genericLobbySlot #lobbySection .lobby-empty-label {font-size:22px;}
  #genericLobbySlot #lobbySection .empty-seat-pill {font-size:17px;}
  #genericLobbySlot #lobbySection #addBotBtn,
- #genericLobbySlot #lobbySection #shuffleSeatsBtn {font-size:20px !important;height:48px !important;padding:10px 28px !important;}
+ #genericLobbySlot #lobbySection #shuffleSeatsBtn,
+#genericLobbySlot #lobbySection #manageRoomBtn {font-size:20px !important;height:48px !important;padding:10px 28px !important;}
  #genericLobbySlot #lobbySection .lobby-start-hint {font-size:22px;}
  #genericLobbySlot #lobbySection .lobby-action-btn {min-width:260px;height:58px;font-size:22px !important;}
 }
@@ -222,3 +225,9 @@ body.in-room:not(.in-arena) .main-content {min-height:0;}
 #genericLobbySlot #lobbySection .mode-card-btn{grid-template-columns:104px minmax(0,1fr)}
 #genericLobbySlot #lobbySection .mode-card-btn .lobby-mode-art{width:104px}
 @media(max-width:700px){#genericLobbySlot #lobbySection .mode-card-btn{grid-template-columns:76px minmax(0,1fr)}#genericLobbySlot #lobbySection .mode-card-btn .lobby-mode-art{width:76px}}
+
+#genericLobbySlot #lobbySection #lobbyHostControls{align-items:center;flex-wrap:wrap}
+#genericLobbySlot #lobbySection #manageRoomBtn{text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;line-height:normal}
+#genericLobbySlot #lobbySection #manageRoomBtn[hidden]{display:none!important}
+
+@media(min-width:701px){#genericLobbySlot #lobbySection #lobbyHostControls{gap:14px}#genericLobbySlot #lobbySection :is(#addBotBtn,#shuffleSeatsBtn,#manageRoomBtn){padding:8px 14px!important;font-size:16px!important;height:44px!important;min-height:44px}#genericLobbySlot #lobbySection :is(#addBotBtn,#shuffleSeatsBtn) span::after{font-size:16px}}
