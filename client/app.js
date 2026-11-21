@@ -3122,7 +3122,7 @@ class UnoArenaApp {
           }
           const fanCardsCount = Math.min(Math.max(p.cardCount, 1), 10);
           fanEl.innerHTML = '';
-          const spread = fanCardsCount > 1 ? Math.min(30 / (fanCardsCount - 1), 5.5) : 0;
+          const spread = fanCardsCount > 1 ? Math.min(44 / (fanCardsCount - 1), 9) : 0;
           const startAngle = -((fanCardsCount - 1) * spread) / 2;
           let fanInner = '';
           for (let c = 0; c < fanCardsCount; c++) {
@@ -3203,10 +3203,10 @@ class UnoArenaApp {
     const naturalTotal = rowCount * maxCardW;
     const needsOverlap = naturalTotal > availableW && rowCount > 1;
     const overlapMargin = needsOverlap
-      ? -Math.min(maxCardW - 14, Math.ceil((naturalTotal - availableW) / (rowCount - 1)))
-      : (rowCount > 7 ? -8 : 4);
+      ? -Math.min(maxCardW - 14, Math.max(Math.round(maxCardW * .38), Math.ceil((naturalTotal - availableW) / (rowCount - 1))))
+      : (rowCount > 1 ? -Math.round(maxCardW * .38) : 0);
 
-    const maxAngle = Math.min(rowCount * 1.4, 9);
+    const maxAngle = Math.min(Math.max(0, rowCount - 1) * 7, 44);
     const startAngle = rowCount > 1 ? -maxAngle / 2 : 0;
     const angleStep = rowCount > 1 ? maxAngle / (rowCount - 1) : 0;
 

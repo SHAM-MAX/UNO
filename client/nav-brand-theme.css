@@ -14,3 +14,10 @@ html body #navRoomDetails{display:none!important}
 html body .top-nav .nav-controls #fullscreenToggleBtn{order:1}
 html body .top-nav .nav-controls #settingsBtn{order:2}
 html body .top-nav .nav-controls #leaveBtn{order:3}
+
+/* Gameplay controls use solid UNO red with high-contrast white artwork. */
+html body.in-arena :is(#fullscreenToggleBtn,#settingsBtn,#mobileNavFullscreenBtn,#mobileNavSettingsBtn,#arenaFullscreenBtn,#arenaSettingsBtn,.round-tools-toggle){background:#F41908!important;background-image:none!important;color:#fff!important;border:1px solid #ffffff40!important;border-radius:11px!important;box-shadow:0 2px 0 #a91b0d!important}
+html body.in-arena :is(#leaveBtn,#arenaLeaveBtn,#mobileNavLeaveBtn){font-size:13px!important;line-height:1!important;letter-spacing:.02em!important;font-weight:800!important;padding:8px 10px!important;min-width:66px!important;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center}
+html body.in-arena :is(#leaveBtn,#arenaLeaveBtn,#mobileNavLeaveBtn) span{font-size:inherit!important;line-height:inherit!important}
+
+html body.in-arena.round-table-layout .top-nav #fullscreenToggleBtn,html body.in-arena.round-table-layout .top-nav #settingsBtn{background:#F41908!important;color:white!important}
