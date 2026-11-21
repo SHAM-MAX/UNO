@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-drag-motion-v47';
+const CACHE_NAME = 'uno-arena-nav-palette-v48';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -42,6 +42,7 @@ const STATIC_SHELL_ASSETS = [
   '/shared/rules.js',
   '/manifest.json',
   '/branding.css?v=6',
+  '/nav-brand-theme.css?v=1',
   '/victory.css?v=4',
   '/mobile-layout.css?v=6',
   '/assets/victory-champion-trophy.png',

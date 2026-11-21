@@ -1,0 +1,4 @@
+/* Approved navigation palette; retain the supplied friendship-shaped UNO artwork. */
+html body .top-nav,html body.in-room .top-nav,html body.in-arena .top-nav,html body.in-arena.round-table-layout .top-nav,html body .mobile-nav-bar,html body .nm-top-nav{background:#F5CE00!important;background-image:none!important;border-color:#F5CE00!important}
+html body #brandNavToggle .nav-friends-wordmark,html body .mobile-brand .nav-friends-wordmark{background:transparent!important}
+html body #brandNavToggle .nav-uno-wordmark,html body .mobile-brand .nav-uno-wordmark{color:#F41908!important}
