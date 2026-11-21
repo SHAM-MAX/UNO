@@ -142,6 +142,7 @@ export class RoomManager {
     this.botSecondaryTimers = new Map();
     this.botCatchTimers = new Map();
     this.rematchTimers = new Map();
+    this.rouletteResumeTimers = new Map();
     this.quickMatchStartTimers = new Map();
     this.onStateChange = null;
     this.loadFromStorage();
@@ -159,6 +160,7 @@ export class RoomManager {
         });
         this.rooms.set(item.roomId, state);
         this.scheduleRematch(state);
+        if(state.roulettePauseUntil>Date.now())this.resetTurnTimer(state);
       }
     }
     console.log(`[RoomManager] Rehydrated ${this.rooms.size} active rooms from persistent storage.`);
@@ -780,6 +782,7 @@ export class RoomManager {
     room.discardPile = room.mode === 'no_mercy' ? [...fullDeck.splice(0, initialDiscardIndex), topCard] : [topCard];
     room.topDiscard = topCard;
     room.lastPlay=null;
+    room.roulettePauseUntil=null;clearTimeout(this.rouletteResumeTimers.get(roomId));this.rouletteResumeTimers.delete(roomId);
     room.drawPile = fullDeck;
 
     const initialFace = getActiveFace(topCard, room.mode, 'light');
@@ -922,6 +925,18 @@ export class RoomManager {
     return { success: true };
   }
 
+  isRouletteInProgress(room) {return Boolean(room?.pendingAction?.type==='color_roulette'||room?.roulettePauseUntil>Date.now());}
+
+  scheduleRouletteResume(room) {
+    clearTimeout(this.rouletteResumeTimers.get(room.roomId));
+    const deadline=room.roulettePauseUntil;
+    const timer=setTimeout(()=>{
+      this.rouletteResumeTimers.delete(room.roomId);
+      if(this.rooms.get(room.roomId)!==room||room.roulettePauseUntil!==deadline)return;
+      room.roulettePauseUntil=null;this.resetTurnTimer(room);this.persist(room.roomId);this.onStateChange?.(room.roomId);
+    },Math.max(0,deadline-Date.now()));timer.unref?.();this.rouletteResumeTimers.set(room.roomId,timer);
+  }
+
   resolveRoulette(roomId, playerId, color) {
     const room = this.rooms.get(roomId);
     const action = room?.pendingAction;
@@ -939,7 +954,8 @@ export class RoomManager {
       target.cardCount = room.playerHands[playerId].length;
       if (this.checkKnockout(room, target) || card.color === color) break;
     }
-    room.lastRoulette = { id: action.id, targetPlayerId: playerId, color, revealed };
+    room.roulettePauseUntil=Date.now()+5600;
+    room.lastRoulette = { id: action.id, targetPlayerId: playerId, color, revealed, resumeAt:room.roulettePauseUntil };
     room.unoChallengeWindow = null;
     room.turnDrawnCard = false;
     room.turnDrawnCardId = null;
@@ -1000,6 +1016,7 @@ export class RoomManager {
     }
     this.clearBotTimers(room.roomId);
 
+    if(room.roulettePauseUntil>Date.now()){room.turnDeadline=null;this.scheduleRouletteResume(room);return;}
     if (room.status !== 'playing') {
       room.turnDeadline = null;
       return;
@@ -1007,6 +1024,11 @@ export class RoomManager {
 
     if (room.pendingAction && ['opening_color', 'color_roulette'].includes(room.pendingAction.type)) {
       room.turnDeadline = null;
+      if(room.pendingAction.type==='color_roulette'){
+        const action=room.pendingAction;action.chooseBy ||= Date.now()+10000;
+        clearTimeout(this.rouletteResumeTimers.get(room.roomId));
+        const timer=setTimeout(()=>{if(this.rooms.get(room.roomId)!==room||room.pendingAction?.id!==action.id)return;this.resolveRoulette(room.roomId,action.targetPlayerId,CLASSIC_COLORS[Math.floor(Math.random()*CLASSIC_COLORS.length)]);this.onStateChange?.(room.roomId);},Math.max(0,action.chooseBy-Date.now()));timer.unref?.();this.rouletteResumeTimers.set(room.roomId,timer);
+      }
       this.scheduleBotTurn(room);
       return;
     }
@@ -1028,6 +1050,7 @@ export class RoomManager {
   handleTurnTimeout(roomId, expectedTurn, expectedActionVersion, expectedGeneration) {
     const room = this.rooms.get(roomId);
     if (!room || room.status !== 'playing') return;
+    if(this.isRouletteInProgress(room))return;
     if (expectedGeneration !== undefined && expectedGeneration !== room.turnTimerGeneration) return;
     // Guard against race conditions where turn already advanced
     if (room.currentTurn !== expectedTurn) return;
@@ -1113,7 +1136,7 @@ export class RoomManager {
   }
 
   scheduleBotTurn(room) {
-    if (!room || room.status !== 'playing') return;
+    if (!room || room.status !== 'playing'||room.roulettePauseUntil>Date.now()) return;
     this.clearBotTimers(room.roomId);
 
     let targetBotId = null;
@@ -1347,6 +1370,7 @@ export class RoomManager {
 
   playCard(roomId, playerId, payload) {
     const room = this.rooms.get(roomId);
+    if(this.isRouletteInProgress(room))return {success:false,error:'Roulette in progress. Wait for the result.'};
     if (!room || room.status !== 'playing') {
       return { success: false, error: 'Game is not currently active' };
     }
@@ -1670,6 +1694,7 @@ export class RoomManager {
 
   drawCard(roomId, playerId) {
     const room = this.rooms.get(roomId);
+    if(this.isRouletteInProgress(room))return {success:false,error:'Roulette in progress. Wait for the result.'};
     if (!room || room.status !== 'playing') {
       return { success: false, error: 'Game not active' };
     }
@@ -1814,6 +1839,7 @@ export class RoomManager {
 
   passTurn(roomId, playerId) {
     const room = this.rooms.get(roomId);
+    if(this.isRouletteInProgress(room))return {success:false,error:'Roulette in progress. Wait for the result.'};
     if (!room || room.status !== 'playing') return { success: false, error: 'Game not active' };
 
     const currentPlayer = room.players[room.currentTurn];
@@ -1845,6 +1871,7 @@ export class RoomManager {
 
   callUno(roomId, playerId) {
     const room = this.rooms.get(roomId);
+    if(this.isRouletteInProgress(room))return {success:false,error:'Roulette in progress. Wait for the result.'};
     if (!room || room.status !== 'playing') return { success: false, error: 'Game not active' };
 
     const player = room.players.find((p) => p.id === playerId);
@@ -1885,6 +1912,7 @@ export class RoomManager {
 
   catchUno(roomId, challengerId, targetPlayerId) {
     const room = this.rooms.get(roomId);
+    if(this.isRouletteInProgress(room))return {success:false,error:'Roulette in progress. Wait for the result.'};
     if (!room || room.status !== 'playing') return { success: false, error: 'Game not active' };
 
     const challenger = room.players.find((p) => p.id === challengerId);
@@ -2107,7 +2135,8 @@ export class RoomManager {
     const myPlayer = room.players.find((p) => p.id === playerId);
     const isSpectator = !myPlayer && (room.spectators || []).some(p=>p.id===playerId);
     const myHand = myPlayer ? room.playerHands[playerId] || [] : [];
-    const isMyTurn = room.status === 'playing' && room.players[room.currentTurn]?.id === playerId;
+    const rouletteInProgress=this.isRouletteInProgress(room);
+    const isMyTurn = !rouletteInProgress && room.status === 'playing' && room.players[room.currentTurn]?.id === playerId;
 
     let canPlayCards = [];
     if (isMyTurn) {
@@ -2129,7 +2158,7 @@ export class RoomManager {
     }
     // Uncalled one-card opponents remain catchable until their hand changes.
     // Declared opponents still have a per-player inspection button in the UI.
-    const canCatchUnoTargets = !myPlayer || myPlayer.isEliminated || room.status !== 'playing' ? [] : room.players.filter(p => p.id !== playerId && !p.isEliminated && !p.hasCalledUno && (room.playerHands[p.id] || []).length === 1).map(p => p.id);
+    const canCatchUnoTargets = !myPlayer || myPlayer.isEliminated || room.status !== 'playing'||rouletteInProgress ? [] : room.players.filter(p => p.id !== playerId && !p.isEliminated && !p.hasCalledUno && (room.playerHands[p.id] || []).length === 1).map(p => p.id);
     const canCatchUno = room.status === 'playing' ? canCatchUnoTargets[0] || null : null;
     const publicPlayers = room.players.map((p) => ({
       id: p.id,
@@ -2175,6 +2204,8 @@ export class RoomManager {
       pendingAction: room.mode === 'classic' && room.pendingAction ? { id: room.pendingAction.id, type: room.pendingAction.type, offenderId: room.pendingAction.offenderId, targetPlayerId: room.pendingAction.targetPlayerId } : room.pendingAction,
       drawFourResult: room.lastDrawFourResult ? Object.fromEntries(Object.entries(room.lastDrawFourResult).filter(([key]) => key !== 'evidence')) : null,
       noMercyAction: room.mode === 'no_mercy' ? room.lastNoMercyAction || null : null,
+      rouletteInProgress,
+      rouletteResumeAt:room.roulettePauseUntil||null,
       rouletteResult: room.mode === 'no_mercy' ? room.lastRoulette || null : null,
       roundResult: room.roundResult,
       roundHistory: room.roundHistory||[],
@@ -2230,7 +2261,7 @@ export class RoomManager {
       canPass: (room.mode === 'no_mercy' || room.houseRules?.drawUntilPlayable)
         ? isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCount > 0 || room.turnDrawnCard)
         : isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCard),
-      canCallUno: room.status === 'playing' && myHand.length === 2 && !myPlayer?.isEliminated && !myPlayer?.hasCalledUno,
+      canCallUno: !rouletteInProgress && room.status === 'playing' && myHand.length === 2 && !myPlayer?.isEliminated && !myPlayer?.hasCalledUno,
       canCatchUno,
       canCatchUnoTargets,
       drawFourEvidence: room.lastDrawFourResult?.challengerId === playerId ? { id: room.lastDrawFourResult.id, ...room.lastDrawFourResult.evidence } : null,

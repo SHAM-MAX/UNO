@@ -2192,6 +2192,8 @@ class UnoArenaApp {
     syncSocial(this);
     syncTableTools(this);
     syncRoundSeating(this);
+    if(view.gameState.rouletteInProgress){updateTurnStatus(this,0,false);this.el.playerHandCards.setAttribute('inert','');this.el.drawPileBtn.disabled=true;this.el.btnDrawAction.disabled=true;this.el.btnPassAction.disabled=true;this.el.btnUnoAction.disabled=true;}
+    else {this.el.btnPassAction.disabled=false;this.el.btnUnoAction.disabled=false;}
   }
 
   sendRematchAction(type, data = {}) {
@@ -3284,7 +3286,7 @@ class UnoArenaApp {
 
     const tick = () => {
       if (this.activeTurnStatus !== 'playing' || !this.activeTurnDeadline) {
-        const label=document.getElementById('tableTurnStatus');if(label)label.hidden=true;
+        updateTurnStatus(this,0,false);
         if (this.turnTimerInterval) {
           clearInterval(this.turnTimerInterval);
           this.turnTimerInterval = null;
@@ -3635,6 +3637,7 @@ class UnoArenaApp {
     this.renderRouletteCardFan(mode);
     this.renderRouletteWheelSvg();
 
+    document.getElementById('rouletteTitle').textContent=isTargetPlayer?'COLOR ROULETTE':'Roulette in progress';
     this.isRouletteInteractive = isTargetPlayer;
     this.isRouletteDecelerating = false;
 
@@ -3656,7 +3659,7 @@ class UnoArenaApp {
         this.el.rouletteActionBtn.classList.remove('clickable');
         this.el.rouletteStatusText.textContent = 'Spinning...';
         if (this.el.rouletteSpinnerIcon) this.el.rouletteSpinnerIcon.style.display = 'inline-block';
-        if (this.el.rouletteSubtitle) this.el.rouletteSubtitle.textContent = 'Spinning to choose the next color...';
+        if (this.el.rouletteSubtitle) this.el.rouletteSubtitle.textContent = 'Waiting for the roulette color. All card play is paused.';
         this.el.rouletteWheelFrame?.classList.add('spinning-free');
       }
     }
@@ -3739,7 +3742,9 @@ class UnoArenaApp {
       this.currentRouletteAngle = totalRotation;
 
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const duration = prefersReducedMotion ? 400 : 2200;
+      const budget=roulette.resumeAt?Math.max(0,roulette.resumeAt-Date.now()-2000):3600;
+      const duration = Math.min(prefersReducedMotion ? 400 : 2200,budget);
+      const landedHold=Math.min(1400,Math.max(0,budget-duration));
 
       this.el.rouletteWheelFrame.style.transition = `transform ${duration}ms cubic-bezier(0.15, 0.9, 0.25, 1)`;
       this.el.rouletteWheelFrame.style.transform = `rotate(${totalRotation}deg)`;
@@ -3764,7 +3769,7 @@ class UnoArenaApp {
         this.rouletteCloseTimer = setTimeout(() => {
           this.closeRouletteModal();
           if (typeof onComplete === 'function') onComplete();
-        }, 1400);
+        }, landedHold);
       }, duration);
     } else {
       if (typeof onComplete === 'function') onComplete();

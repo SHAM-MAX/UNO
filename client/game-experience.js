@@ -9,10 +9,11 @@ export function updateTurnStatus(app, remaining, critical) {
   const active=app.gameState?.players[app.gameState.currentTurn];
   const playing=app.gameState?.status==='playing';label.hidden=!playing;
   const mine=active?.id===app.playerId;
-  const text=mine?'Your turn':`${active?.name || 'Player'}’s turn`;
+  const paused=app.gameState?.rouletteInProgress;
+  const text=paused?'Roulette in progress':mine?'Your turn':`${active?.name || 'Player'}’s turn`;
   // Only announce a turn change, not every countdown tick.
-  if(label.dataset.player!==active?.id){label.textContent=text;label.dataset.player=active?.id||'';}
-  label.dataset.mine=String(mine);label.classList.toggle('is-urgent',mine&&critical);
+  if(label.dataset.player!==active?.id||label.dataset.roulette!==String(paused)){label.textContent=text;label.dataset.player=active?.id||'';label.dataset.roulette=String(paused);}
+  label.dataset.mine=String(mine);label.classList.toggle('is-urgent',mine&&critical&&!paused);
   label.setAttribute('title',`${remaining} seconds remaining`);
 }
 export function renderMatchStandings(app, state) {

@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-ready-art-v45';
+const CACHE_NAME = 'uno-arena-roulette-lock-v46';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
