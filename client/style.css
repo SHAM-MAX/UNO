@@ -623,8 +623,8 @@ body::before {
 }
 
 .hand-cards .card-wrapper.unplayable {
-  opacity: 0.65;
-  filter: brightness(0.85);
+  opacity: 1;
+  filter: none;
   cursor: not-allowed;
 }
 

@@ -929,7 +929,7 @@ body.in-arena::after {
   .in-arena .hand-cards .card-wrapper.unplayable:hover {
     transform: rotate(var(--card-rot, 0deg)) !important;
     cursor: not-allowed;
-    filter: brightness(0.55) contrast(0.9) grayscale(0.2) !important;
+    filter: none;
     box-shadow: none !important;
   }
 }
@@ -970,8 +970,8 @@ body.in-arena::after {
 }
 
 .in-arena .hand-cards .card-wrapper.unplayable {
-  opacity: 0.65;
-  filter: brightness(0.85);
+  opacity: 1;
+  filter: none;
   cursor: not-allowed;
 }
 
@@ -1428,7 +1428,7 @@ body.no-mercy-arena .table-action-bar .action-btn { padding:8px 14px; min-height
 #noMercyStatus { padding:4px 10px; border-left:5px solid; border-radius:5px; background:#12372a; color:#fff4d4; font-size:12px; font-weight:800; }
 body.no-mercy-arena .opponent-card-badge.eliminated { opacity:.45; }
 @media (max-width:760px) { body.no-mercy-arena .table-action-bar .action-btn { flex:1 1 auto; } }
-body.no-mercy-arena .hand-cards .card-wrapper.unplayable { filter:brightness(0.55) contrast(0.9); opacity:0.65; transition:filter 0.15s ease, opacity 0.15s ease; }
+body.no-mercy-arena .hand-cards .card-wrapper.unplayable { filter: none; opacity: 1; transition:filter 0.15s ease, opacity 0.15s ease; }
 body.no-mercy-arena .direction-indicator { top:-12px !important; }
 @media (orientation:landscape) and (max-width:1024px) and (max-height:520px) {
  body.no-mercy-arena .opponents-row { grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px !important; padding:0; width:100%; }
