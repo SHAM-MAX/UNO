@@ -4,3 +4,8 @@ html body #brandNavToggle .nav-friends-wordmark,html body .mobile-brand .nav-fri
 html body #brandNavToggle .nav-uno-wordmark,html body .mobile-brand .nav-uno-wordmark{color:#F41908!important}
 
 #brandNavToggle .nav-logo-wordmark,.mobile-brand .nav-logo-wordmark{display:block;width:100px;height:48px;object-fit:contain;background:none;filter:none}.nav-logo-wordmark.friends-ready{animation:friendLogoReveal .45s ease-out both}@media(max-width:600px){#brandNavToggle .nav-logo-wordmark,.mobile-brand .nav-logo-wordmark{width:84px;height:40px}}@media(prefers-reduced-motion:reduce){.nav-logo-wordmark.friends-ready{animation:none}}body.reduced-motion .nav-logo-wordmark.friends-ready{animation:none}
+
+/* Icon-only navigation controls share the UNO red, without button tiles. */
+html body :is(#fullscreenToggleBtn,#settingsBtn,#mobileNavFullscreenBtn,#mobileNavSettingsBtn,#arenaFullscreenBtn,#arenaSettingsBtn,#modeLobbyFullscreenBtn,#modeLobbySettingsBtn){background:transparent!important;background-image:none!important;border-color:transparent!important;box-shadow:none!important;color:#F41908!important}
+html body :is(#fullscreenToggleBtn,#settingsBtn,#mobileNavFullscreenBtn,#mobileNavSettingsBtn,#arenaFullscreenBtn,#arenaSettingsBtn,#modeLobbyFullscreenBtn,#modeLobbySettingsBtn) svg{color:inherit;filter:none}
+html body :is(#fullscreenToggleBtn,#settingsBtn,#mobileNavFullscreenBtn,#mobileNavSettingsBtn,#arenaFullscreenBtn,#arenaSettingsBtn,#modeLobbyFullscreenBtn,#modeLobbySettingsBtn):focus-visible{outline:2px solid #F41908;outline-offset:2px}
