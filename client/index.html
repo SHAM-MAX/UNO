@@ -46,12 +46,12 @@
   </script>
 </head>
 <body>
-  <svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none"><defs><filter id="navBrandInk" color-interpolation-filters="sRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0.956862745  0 0 0 0 0.098039216  0 0 0 0 0.031372549  -12 12 0 0 0"/></filter></defs></svg>
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none"><defs><filter id="unoLogoRedInk" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 .956862745 0 0 0 0 .098039216 0 0 0 0 .031372549 12 -18 0 0 -2" result="redLettering"/><feMorphology in="redLettering" operator="dilate" radius="7" result="letterOutline"/><feColorMatrix in="letterOutline" type="matrix" values="0 0 0 0 0.04 0 0 0 0 0.04 0 0 0 0 0.04 0 0 0 1 0" result="darkOutline"/><feMerge><feMergeNode in="darkOutline"/><feMergeNode in="redLettering"/></feMerge></filter></defs></svg>
 
   <!-- Top Navigation Bar -->
   <header class="top-nav">
     <div class="nav-left">
-      <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="UNO Arena home" title="UNO Arena"><svg class="nav-friends-wordmark" viewBox="450 45 1240 640" role="img" aria-label="UNO friends"><image filter="url(#navBrandInk)" href="./assets/friends-uno-nav.png" width="2172" height="724"/></svg></button>
+      <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="UNO Arena home" title="UNO Arena"><svg class="nav-logo-wordmark" viewBox="90 95 870 515" role="img" aria-label="UNO"><image href="./assets/uno-brand-v4.png" width="1024" height="765" filter="url(#unoLogoRedInk)"/></svg></button>
     </div>
 
     <div id="navRoomDetails" class="nav-room-details" style="display: none;">
@@ -287,7 +287,7 @@
         <div id="mobileLandingContainer" class="mobile-landing-container" aria-label="UNO Arena Mobile Home">
           <!-- 1. Top Navigation Bar -->
           <header class="mobile-nav-bar" aria-label="Mobile Navigation">
-            <div class="mobile-brand"><svg class="nav-friends-wordmark" viewBox="450 45 1240 640" role="img" aria-label="UNO friends"><image filter="url(#navBrandInk)" href="./assets/friends-uno-nav.png" width="2172" height="724"/></svg></div>
+            <div class="mobile-brand"><svg class="nav-logo-wordmark" viewBox="90 95 870 515" role="img" aria-label="UNO"><image href="./assets/uno-brand-v4.png" width="1024" height="765" filter="url(#unoLogoRedInk)"/></svg></div>
             <div class="mobile-nav-actions">
               <button id="mobileNavFullscreenBtn" class="mobile-nav-action-btn nav-btn-icon" type="button" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">
                 <svg class="nav-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

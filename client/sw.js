@@ -1,9 +1,8 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-nav-palette-v48';
+const CACHE_NAME = 'uno-arena-uno-lettering-v49';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
-  '/assets/friends-uno-nav.png',
   '/navigation.js',
   '/mode-entrance.js',
   '/power-effects.js',

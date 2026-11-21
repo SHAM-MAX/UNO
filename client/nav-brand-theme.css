@@ -2,3 +2,5 @@
 html body .top-nav,html body.in-room .top-nav,html body.in-arena .top-nav,html body.in-arena.round-table-layout .top-nav,html body .mobile-nav-bar,html body .nm-top-nav{background:#F5CE00!important;background-image:none!important;border-color:#F5CE00!important}
 html body #brandNavToggle .nav-friends-wordmark,html body .mobile-brand .nav-friends-wordmark{background:transparent!important}
 html body #brandNavToggle .nav-uno-wordmark,html body .mobile-brand .nav-uno-wordmark{color:#F41908!important}
+
+#brandNavToggle .nav-logo-wordmark,.mobile-brand .nav-logo-wordmark{display:block;width:100px;height:48px;object-fit:contain;background:none;filter:none}.nav-logo-wordmark.friends-ready{animation:friendLogoReveal .45s ease-out both}@media(max-width:600px){#brandNavToggle .nav-logo-wordmark,.mobile-brand .nav-logo-wordmark{width:84px;height:40px}}@media(prefers-reduced-motion:reduce){.nav-logo-wordmark.friends-ready{animation:none}}body.reduced-motion .nav-logo-wordmark.friends-ready{animation:none}
