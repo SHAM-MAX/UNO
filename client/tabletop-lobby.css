@@ -211,3 +211,14 @@ body.in-room:not(.in-arena) .main-content {min-height:0;}
 .in-room .mode-card-btn .lobby-mode-art{background:none;border:0;box-shadow:none;transform:none;overflow:visible}
 .in-room .mode-card-btn .lobby-mode-art::after{display:none}
 .in-room .mode-card-btn .lobby-mode-art img{display:block;width:auto;height:100%;max-width:100%;object-fit:contain;border-radius:5px;transform:rotate(-6deg);filter:drop-shadow(1px 2px 2px #24180d45)}
+
+/* Four power cards fan around a common lower pivot, like a held hand. */
+.in-room .mode-card-btn .lobby-mode-art img{position:absolute;bottom:6%;left:50%;height:78%;width:auto;max-width:none;transform-origin:50% 95%;border-radius:3px;filter:drop-shadow(1px 1px 1px #160c084d);pointer-events:none}
+.in-room .mode-card-btn .lobby-mode-art img:nth-child(1){transform:translateX(-72%) rotate(-26deg);z-index:1}
+.in-room .mode-card-btn .lobby-mode-art img:nth-child(2){transform:translateX(-58%) rotate(-10deg);z-index:2}
+.in-room .mode-card-btn .lobby-mode-art img:nth-child(3){transform:translateX(-43%) rotate(7deg);z-index:3}
+.in-room .mode-card-btn .lobby-mode-art img:nth-child(4){transform:translateX(-28%) rotate(24deg);z-index:4}
+
+#genericLobbySlot #lobbySection .mode-card-btn{grid-template-columns:104px minmax(0,1fr)}
+#genericLobbySlot #lobbySection .mode-card-btn .lobby-mode-art{width:104px}
+@media(max-width:700px){#genericLobbySlot #lobbySection .mode-card-btn{grid-template-columns:76px minmax(0,1fr)}#genericLobbySlot #lobbySection .mode-card-btn .lobby-mode-art{width:76px}}

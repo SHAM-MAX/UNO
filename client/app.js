@@ -2629,17 +2629,17 @@ class UnoArenaApp {
         const disableFlipAndMercy = playerCount > 6;
         this.el.modeSelectorGrid.innerHTML = `
           <button class="mode-card-btn ${this.gameState.mode === 'classic' ? 'selected' : ''}" data-mode="classic" ${!isHost ? 'disabled' : ''} type="button" title="${isHost ? 'Select Classic UNO' : 'Current Mode: Classic UNO'}">
-            <span class="lobby-mode-art mode-art-classic" aria-hidden="true"><img src="./assets/classic-cards-svg/back.svg" alt="" decoding="async" width="68" height="104"></span>
+            <span class="lobby-mode-art mode-art-classic" aria-hidden="true"><img src="./assets/classic-cards-svg/red-skip.svg" alt="" decoding="async" width="68" height="104"><img src="./assets/classic-cards-svg/blue-reverse.svg" alt="" decoding="async" width="68" height="104"><img src="./assets/classic-cards-svg/green-draw2.svg" alt="" decoding="async" width="68" height="104"><img src="./assets/classic-cards-svg/wild-draw4.svg" alt="" decoding="async" width="68" height="104"></span>
             <strong>Classic</strong>
             <span style="font-size: 0.72rem; color: #94A3B8;">108 Cards • Standard UNO</span>
           </button>
           <button class="mode-card-btn ${this.gameState.mode === 'flip' ? 'selected' : ''}" data-mode="flip" ${!isHost || disableFlipAndMercy ? 'disabled' : ''} type="button" title="${!isHost ? 'Current Mode: UNO Flip' : (disableFlipAndMercy ? 'Max 6 players for Flip' : 'Select UNO Flip')}">
-            <span class="lobby-mode-art mode-art-flip" aria-hidden="true"><img src="./assets/flip-cards/Purple_FLIP.jpg" alt="" decoding="async" width="68" height="104"></span>
+            <span class="lobby-mode-art mode-art-flip" aria-hidden="true"><img src="./assets/flip-cards/Pink_SKIP_EVERYONE.jpg" alt="" decoding="async" width="68" height="104"><img src="./assets/flip-cards/Orange_DRAW_FIVE.jpg" alt="" decoding="async" width="68" height="104"><img src="./assets/flip-cards/Teal_REVERSE.jpg" alt="" decoding="async" width="68" height="104"><img src="./assets/flip-cards/Purple_FLIP.jpg" alt="" decoding="async" width="68" height="104"></span>
             <strong>UNO Flip</strong>
             <span style="font-size: 0.72rem; color: #94A3B8;">Double-Sided • Dark Side</span>
           </button>
           <button class="mode-card-btn ${this.gameState.mode === 'no_mercy' ? 'selected' : ''}" data-mode="no_mercy" ${!isHost || disableFlipAndMercy ? 'disabled' : ''} type="button" title="${!isHost ? 'Current Mode: No Mercy' : (disableFlipAndMercy ? 'Max 6 players for No Mercy' : 'Select No Mercy')}">
-            <span class="lobby-mode-art mode-art-mercy" aria-hidden="true"><img src="./assets/no-mercy-cards/wild_draw10.webp" alt="" decoding="async" width="68" height="104"></span>
+            <span class="lobby-mode-art mode-art-mercy" aria-hidden="true"><img src="./assets/no-mercy-cards/red_discard_all.webp" alt="" decoding="async" width="68" height="104"><img src="./assets/no-mercy-cards/wild_draw6.webp" alt="" decoding="async" width="68" height="104"><img src="./assets/no-mercy-cards/wild_roulette.webp" alt="" decoding="async" width="68" height="104"><img src="./assets/no-mercy-cards/wild_draw10.webp" alt="" decoding="async" width="68" height="104"></span>
             <strong>No Mercy</strong>
             <span style="font-size: 0.72rem; color: #94A3B8;">168 Cards • Knockout</span>
           </button>
