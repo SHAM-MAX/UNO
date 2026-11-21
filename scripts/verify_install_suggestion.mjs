@@ -210,6 +210,7 @@ async function main() {
 
 
     const loadMobile=async()=>{await cdp.setViewport(390,844,true);await cdp.navigate(baseUrl);await cdp.waitForFunction(()=>!!document.getElementById('installSuggestion'));await delay(1900);};
+    await cdp.evaluate(()=>localStorage.setItem('uno_install_dismissed_until',String(Date.now()+7*86400000)));
     await loadMobile();
     if(!await cdp.evaluate(()=>!document.getElementById('installSuggestion').hidden))throw Error('First mobile visit has no suggestion');
     await cdp.evaluate(()=>document.body.classList.add('in-room'));
@@ -224,8 +225,15 @@ async function main() {
     await cdp.evaluate(()=>document.getElementById('installSuggestionAction').click());await delay(100);
     if(!await cdp.evaluate(()=>window.installPromptCalls===1&&document.getElementById('installSuggestion').hidden))throw Error('Install prompt did not hide');
     await cdp.evaluate(()=>localStorage.removeItem('uno_install_dismissed_until'));await loadMobile();
-    await cdp.evaluate(()=>document.getElementById('installSuggestionClose').click());await loadMobile();
-    if(!await cdp.evaluate(()=>document.getElementById('installSuggestion').hidden))throw Error('Dismissal did not persist');
+    await cdp.evaluate(()=>document.getElementById('installSuggestionClose').click());
+    await cdp.evaluate(()=>window.dispatchEvent(new Event('resize')));
+    if(!await cdp.evaluate(()=>document.getElementById('installSuggestion').hidden))throw Error('Dismissal did not last for current visit');
+    await loadMobile();
+    if(!await cdp.evaluate(()=>!document.getElementById('installSuggestion').hidden))throw Error('Suggestion missing on next visit');
+    await cdp.screenshot(path.join(ARTIFACT_DIR,'mobile-3d-wordmark.png'));
+    await cdp.evaluate(()=>document.getElementById('installSuggestionClose').click());
+    await cdp.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));
+    if(!await cdp.evaluate(()=>!document.getElementById('installSuggestion').hidden))throw Error('Suggestion missing on history return');
     await cdp.evaluate(()=>localStorage.clear());await cdp.setViewport(1280,800,false);await cdp.navigate(baseUrl);await delay(1900);
     if(!await cdp.evaluate(()=>document.getElementById('installSuggestion').hidden))throw Error('Desktop suggestion shown');
     await cdp.send('Network.setUserAgentOverride',{userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'});
@@ -234,7 +242,7 @@ async function main() {
     await cdp.setViewport(320,568,true);await cdp.screenshot(path.join(ARTIFACT_DIR,'iphone-install.png'));
     await cdp.evaluate(()=>{Object.defineProperty(navigator,'standalone',{configurable:true,value:true});window.dispatchEvent(new Event('resize'));});
     if(!await cdp.evaluate(()=>document.getElementById('installSuggestion').hidden))throw Error('Installed app suggestion shown');
-    console.log('PASS install suggestion, browser prompt click, cooldown, game-flow suppression, desktop suppression, iPhone instructions, installed mode');
+    console.log('PASS install suggestion, browser prompt click, repeat visits, history return, game-flow suppression, desktop suppression, iPhone instructions, installed mode');
     cdp.close();
   } finally {
     chromeProc.kill();

@@ -1,5 +1,4 @@
 // Native install prompts must follow a user click; other browsers get instructions.
-const cooldownKey = 'uno_install_dismissed_until';
 let deferredPrompt = null;
 let installedThisVisit = false;
 let dismissedThisVisit = false;
@@ -21,20 +20,15 @@ document.body.appendChild(banner);
 const action = banner.querySelector('#installSuggestionAction');
 const help = banner.querySelector('#installSuggestionHelp');
 
-function dismissed() {
-  try { return Number(localStorage.getItem(cooldownKey)) > Date.now(); }
-  catch { return false; }
-}
 function dismiss() {
   dismissedThisVisit = true;
-  try { localStorage.setItem(cooldownKey, String(Date.now() + 7 * 86400000)); } catch {}
   banner.hidden = true;
 }
 function update() {
   const mobile = innerWidth <= 800 || (navigator.maxTouchPoints > 0 && innerWidth <= 1024);
   const inGameFlow = document.body.matches('.in-room, .in-arena, .in-mode-setup');
   banner.hidden = !ready || !mobile || inGameFlow || installedThisVisit || dismissedThisVisit ||
-    standalone.matches || fullscreen.matches || navigator.standalone === true || dismissed();
+    standalone.matches || fullscreen.matches || navigator.standalone === true;
   action.textContent = deferredPrompt ? 'Install game' : 'How to install';
 }
 banner.querySelector('#installSuggestionClose').addEventListener('click', dismiss);
@@ -77,6 +71,13 @@ window.addEventListener('appinstalled', () => {
 standalone.addEventListener('change', update);
 fullscreen.addEventListener('change', update);
 window.addEventListener('resize', update);
-window.addEventListener('storage', update);
+// A dismissal lasts only for this visit, including a return from browser history.
+window.addEventListener('pageshow', event => {
+  if (event.persisted) {
+    dismissedThisVisit = false;
+    help.hidden = true;
+    update();
+  }
+});
 new MutationObserver(update).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 setTimeout(() => { ready = true; update(); }, 1800);

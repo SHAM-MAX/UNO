@@ -46,12 +46,22 @@
   </script>
 </head>
 <body>
-  <svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none"><defs><filter id="unoLogoRedInk" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 .956862745 0 0 0 0 .098039216 0 0 0 0 .031372549 12 -18 0 0 -2" result="redLettering"/><feMorphology in="redLettering" operator="dilate" radius="7" result="letterOutline"/><feColorMatrix in="letterOutline" type="matrix" values="0 0 0 0 0.04 0 0 0 0 0.04 0 0 0 0 0.04 0 0 0 1 0" result="darkOutline"/><feMerge><feMergeNode in="darkOutline"/><feMergeNode in="redLettering"/></feMerge></filter></defs></svg>
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute;pointer-events:none"><defs><filter id="unoLogoRedInk" x="-20%" y="-20%" width="150%" height="150%" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 .956862745 0 0 0 0 .098039216 0 0 0 0 .031372549 12 -18 0 0 -2" result="redLettering"/><feMorphology in="redLettering" operator="dilate" radius="7" result="letterOutline"/><feColorMatrix in="letterOutline" type="matrix" values="0 0 0 0 0.04 0 0 0 0 0.04 0 0 0 0 0.04 0 0 0 1 0" result="darkOutline"/><feOffset in="darkOutline" dx="20" dy="30" result="depthEnd"/>
+      <feGaussianBlur in="depthEnd" stdDeviation="10" result="softShadow"/>
+      <feColorMatrix in="letterOutline" type="matrix" values="0 0 0 0 .48 0 0 0 0 .035 0 0 0 0 .015 0 0 0 1 0" result="redEdge"/>
+      <feOffset in="redEdge" dx="15" dy="22" result="depthFar"/>
+      <feOffset in="redEdge" dx="10" dy="15" result="depthMid"/>
+      <feOffset in="redEdge" dx="5" dy="8" result="depthNear"/>
+      <feOffset in="redLettering" dx="0" dy="5" result="highlightCut"/>
+      <feComposite in="redLettering" in2="highlightCut" operator="out" result="highlightMask"/>
+      <feFlood flood-color="#fff1b4" flood-opacity=".8" result="highlightInk"/>
+      <feComposite in="highlightInk" in2="highlightMask" operator="in" result="highlight"/>
+      <feMerge><feMergeNode in="softShadow"/><feMergeNode in="depthEnd"/><feMergeNode in="depthFar"/><feMergeNode in="depthMid"/><feMergeNode in="depthNear"/><feMergeNode in="darkOutline"/><feMergeNode in="redLettering"/><feMergeNode in="highlight"/></feMerge></filter></defs></svg>
 
   <!-- Top Navigation Bar -->
   <header class="top-nav">
     <div class="nav-left">
-      <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="UNO Arena home" title="UNO Arena"><svg class="nav-logo-wordmark" viewBox="90 95 870 515" role="img" aria-label="UNO"><image href="./assets/uno-brand-v4.png" width="1024" height="765" filter="url(#unoLogoRedInk)"/></svg></button>
+      <button id="brandNavToggle" class="brand-logo" type="button" aria-expanded="false" aria-label="UNO Arena home" title="UNO Arena"><svg class="nav-logo-wordmark" viewBox="75 80 910 565" role="img" aria-label="UNO"><image href="./assets/uno-brand-v4.png" width="1024" height="765" filter="url(#unoLogoRedInk)"/></svg></button>
     </div>
 
     <div id="navRoomDetails" class="nav-room-details" style="display: none;">
@@ -287,7 +297,7 @@
         <div id="mobileLandingContainer" class="mobile-landing-container" aria-label="UNO Arena Mobile Home">
           <!-- 1. Top Navigation Bar -->
           <header class="mobile-nav-bar" aria-label="Mobile Navigation">
-            <div class="mobile-brand"><svg class="nav-logo-wordmark" viewBox="90 95 870 515" role="img" aria-label="UNO"><image href="./assets/uno-brand-v4.png" width="1024" height="765" filter="url(#unoLogoRedInk)"/></svg></div>
+            <div class="mobile-brand"><svg class="nav-logo-wordmark" viewBox="75 80 910 565" role="img" aria-label="UNO"><image href="./assets/uno-brand-v4.png" width="1024" height="765" filter="url(#unoLogoRedInk)"/></svg></div>
             <div class="mobile-nav-actions">
               <button id="mobileNavFullscreenBtn" class="mobile-nav-action-btn nav-btn-icon" type="button" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">
                 <svg class="nav-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
