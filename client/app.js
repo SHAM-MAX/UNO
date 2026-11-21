@@ -3151,7 +3151,7 @@ class UnoArenaApp {
 
     const isMobile = document.body.classList.contains('mobile-viewport') || window.innerWidth <= 800;
     // On mobile, if > 7 cards, use two compact rows. On desktop, if > 14 cards, use two rows.
-    const useTwoRows = isMobile ? count > 7 : count > 14;
+    const useTwoRows = false; // Hands expand horizontally; never shrink into a second row.
     container.classList.toggle('two-rows', useTwoRows);
 
     // Track active card IDs and prune departed DOM nodes
@@ -3195,21 +3195,27 @@ class UnoArenaApp {
 
   populateHandRow(rowEl, rowCards, startIndex, canPlayIds, mode, flipSide, isMobile) {
     const rowCount = rowCards.length;
-    const maxCardW = isMobile ? Math.min(54, Math.max(46, Math.round(window.innerWidth * 0.125))) : 86;
+    const landscape = window.innerWidth > window.innerHeight;
+    const cardH = isMobile ? (landscape ? Math.min(112, Math.max(68, innerHeight * .25)) : Math.min(142, Math.max(110, innerHeight * .18))) : Math.min(158, Math.max(118, innerHeight * .22));
+    const maxCardW = Math.round(cardH * .68);
+    this.el.playerHandCards.style.setProperty('--local-card-height',cardH+'px');
+    this.el.playerHandCards.style.setProperty('--local-card-width',maxCardW+'px');
     const parentContainer = this.el.playerHandCards.parentElement;
     const containerW = (parentContainer && parentContainer.clientWidth) || this.el.playerHandCards.clientWidth || (isMobile ? window.innerWidth - 24 : window.innerWidth);
-    const availableW = Math.max(160, Math.min(containerW - (isMobile ? 26 : 14), isMobile ? (window.innerWidth - 36) : 860));
+    const availableW = Math.max(160, Math.min(containerW - (isMobile ? 26 : 14), window.innerWidth - 36));
 
     const naturalTotal = rowCount * maxCardW;
     const needsOverlap = naturalTotal > availableW && rowCount > 1;
     const overlapMargin = needsOverlap
-      ? -Math.min(maxCardW - 14, Math.max(Math.round(maxCardW * .38), Math.ceil((naturalTotal - availableW) / (rowCount - 1))))
+      ? -Math.min(maxCardW - Math.min(28, maxCardW * .3), Math.max(Math.round(maxCardW * .20), Math.ceil((naturalTotal - availableW) / (rowCount - 1))))
       : (rowCount > 1 ? -Math.round(maxCardW * .38) : 0);
 
-    const maxAngle = Math.min(Math.max(0, rowCount - 1) * 7, 44);
+    const maxAngle = Math.min(Math.max(0, rowCount - 1) * 6, 32);
     const startAngle = rowCount > 1 ? -maxAngle / 2 : 0;
     const angleStep = rowCount > 1 ? maxAngle / (rowCount - 1) : 0;
 
+    const rowWidth = maxCardW + Math.max(0,rowCount - 1) * (maxCardW + overlapMargin);
+    rowEl.style.minWidth = Math.ceil(rowWidth + maxCardW * .45) + 'px';
     rowCards.forEach((card, idx) => {
       const globalIdx = startIndex + idx;
       const isPlayable = canPlayIds.includes(card.id);
@@ -3228,11 +3234,13 @@ class UnoArenaApp {
         wrapper.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          if (wrapper.getAttribute('aria-disabled') === 'true') return;
           this.handleCardClick(card, wrapper, e.detail!==0 && (e.pointerType==='touch' || matchMedia('(pointer: coarse)').matches));
         });
         wrapper.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
+            if (wrapper.getAttribute('aria-disabled') === 'true') return;
             this.handleCardClick(card, wrapper);
           }
         });
@@ -3259,7 +3267,8 @@ class UnoArenaApp {
       wrapper.className = `card-wrapper ${isPlayable ? 'playable' : 'unplayable'} ${isSelected ? 'is-selected' : ''}`;
       wrapper.style.zIndex = isSelected ? 200 : (idx + 1);
       wrapper.style.marginLeft = idx > 0 ? `${overlapMargin}px` : '0px';
-      wrapper.setAttribute('role', isPlayable ? 'button' : 'img');
+      wrapper.setAttribute('role', 'button');
+      wrapper.setAttribute('aria-disabled', String(!isPlayable));
       wrapper.setAttribute('tabindex', isPlayable ? '0' : '-1');
 
       const cardTitle = card.type === 'number' ? `${card.color || ''} ${card.value}` : `${card.color || ''} ${card.type}`;

@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-solid-hand-cards-v56';
+const CACHE_NAME = 'uno-arena-readable-single-hand-v57';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',

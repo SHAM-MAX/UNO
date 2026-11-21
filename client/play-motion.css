@@ -5,3 +5,18 @@ body.in-arena .hand-cards .card-wrapper[data-card-id]{transition:transform 170ms
 
 body.in-arena .hand-cards .card-wrapper[data-card-id]{transform-origin:50% 95%}
 body.in-arena .hand-row{padding-top:12px;padding-bottom:7px;box-sizing:border-box}
+
+/* One readable hand expands across the table; crowded hands scroll sideways. */
+html body.in-arena .card-rack-container{width:94%!important;max-width:none!important}
+html body.in-arena .hand-scroll-container{overflow-x:auto!important;overflow-y:hidden!important;padding:20px 20px 12px!important;max-height:none!important;scrollbar-width:thin;touch-action:pan-x}
+html body.in-arena .hand-cards{min-height:0!important;width:max-content!important;min-width:100%;max-width:none!important;flex-direction:row!important}
+html body.in-arena .hand-cards .card-wrapper[data-card-id]{height:var(--local-card-height,140px)!important;width:var(--local-card-width,95px)!important;flex:none}
+html body.in-arena .hand-cards .card-wrapper .game-card{width:100%!important;height:100%!important}
+html body.in-arena .hand-row{flex:none;width:100%;padding-top:8px;padding-bottom:8px}
+html body.in-arena .hand-cards .card-wrapper.unplayable:hover{translate:0 0!important;cursor:not-allowed;filter:none!important}
+html body.in-arena.round-table-layout .player-bottom-area{max-height:34%!important}
+html body.in-arena.round-table-layout .card-rack-groove{padding:0!important}
+
+html body.in-arena.round-table-layout .card-rack-container{width:94%!important;max-width:none!important}
+
+html body.in-arena .hand-cards .card-wrapper[data-card-id]{touch-action:pan-x!important}
