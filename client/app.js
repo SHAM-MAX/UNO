@@ -1,3 +1,4 @@
+import {initPlayerHUD} from './player-hud.js';
 import {initArenaMenu} from './arena-menu.js';
 import {initPerformance} from './performance.js';
 import {beginLocalPlay,cancelLocalPlay,reconcileLocalPlay,syncLocalPlayTarget} from './local-play-feedback.js';
@@ -75,6 +76,7 @@ class UnoArenaApp {
     initSocial(this);
     initTableTools(this);
     initArenaMenu(this);
+    initPlayerHUD(this);
     initPlayMotion(this);
     initPerformance(this);
     this.playTurnWarning=frequency=>sounds.playSnap(frequency,.06);
@@ -1370,6 +1372,7 @@ class UnoArenaApp {
       if (this.gameState?.status === 'playing' && this.clientView) {
         this.renderPlayerHand(this.clientView.myHand || [], this.clientView.canPlayCards || [], this.gameState.mode || 'classic', this.gameState.flipSide || 'light');
       }
+      this.syncPlayerHUD?.();
       if (window.visualViewport?.height < window.innerHeight * .8 && document.activeElement?.matches('input, textarea, select')) {
         document.activeElement.scrollIntoView({ block: 'center', inline: 'nearest' });
       }
@@ -2235,6 +2238,7 @@ class UnoArenaApp {
     this.performanceMetrics?.record('render',performance.now()-renderStarted);
     this.syncPerformance?.();
     this.syncArenaMenu?.();
+    this.syncPlayerHUD?.();
     syncLocalPlayTarget(this);
     syncDrawFourDecision(this);
     if(view.gameState.rouletteInProgress || view.gameState.pendingAction?.type === 'draw4_challenge'){updateTurnStatus(this,0,false);this.el.playerHandCards.setAttribute('inert','');this.el.drawPileBtn.disabled=true;this.el.btnDrawAction.disabled=true;this.el.btnPassAction.disabled=true;this.el.btnUnoAction.disabled=true;}
@@ -2954,11 +2958,11 @@ class UnoArenaApp {
     // UNO and Catch buttons
     this.el.btnUnoAction.disabled = !canCallUno;
     setActionVisible(this.el.btnUnoAction,myHand.length >= 1 && myHand.length <= 2 && canCallUno);
-    this.el.btnUnoAction.innerHTML = '<span class="btn-icon">📢</span> CALL UNO!';
+    this.el.btnUnoAction.textContent = 'Call UNO';
     if (canCatchUno) {
       const caughtPlayer = gameState.players.find((p) => p.id === canCatchUno);
       setActionVisible(this.el.btnCatchAction,true);
-      this.el.btnCatchAction.textContent = gameState.mode !== 'flip' ? 'CAUGHT' : `CATCH ${caughtPlayer?.name?.toUpperCase()} (MISSED UNO)!`;
+      this.el.btnCatchAction.textContent = 'Caught';
       this.el.btnCatchAction.setAttribute('aria-label', `Catch ${caughtPlayer?.name} for missed UNO`);
     } else {
       setActionVisible(this.el.btnCatchAction,false);

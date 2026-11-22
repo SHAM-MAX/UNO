@@ -1,0 +1,28 @@
+
+/* Keep the player's identity outside the hand's stacking and clipping context. */
+html body.in-arena #localPlayerProfile{position:fixed!important;left:max(12px,env(safe-area-inset-left))!important;bottom:max(14px,env(safe-area-inset-bottom))!important;z-index:100!important;max-width:min(270px,calc(100vw - 90px))!important;width:max-content!important;min-height:52px;padding:7px 10px!important;margin:0!important;box-sizing:border-box;border:1px solid #d9b850!important;border-radius:16px!important;background:#103c2c!important;box-shadow:0 4px 16px #0005;pointer-events:auto;display:flex;align-items:center;gap:10px;color:#fff8df!important}
+html body.in-arena #localPlayerProfile .local-profile-left{display:flex;align-items:center;gap:9px;min-width:0}
+html body.in-arena #localPlayerProfile .local-info{min-width:0}
+html body.in-arena #localPlayerProfile .local-name{font:600 15px/1.3 'Outfit',sans-serif!important;color:#fff8df!important;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:none!important;-webkit-text-stroke:0!important}
+html body.in-arena #localPlayerProfile .local-cards-count{font:400 12px/1.4 'Outfit',sans-serif!important;color:#d5e4d9!important}
+html body.in-arena #localPlayerProfile .local-avatar{width:34px!important;height:34px!important;min-width:34px!important;position:relative}
+html body.in-arena #localPlayerProfile .avatar-turn-timer-wrap{display:none!important}
+html body.in-arena #localPlayerProfile .local-turn-clock{position:static!important;display:grid!important;place-items:center;flex-shrink:0;min-width:38px;min-height:30px;padding:2px 6px!important;border:0!important;border-radius:9px!important;background:#f5ce00!important;color:#17372a!important;font:700 15px/1 'Outfit',sans-serif!important;font-variant-numeric:tabular-nums;transform:none!important;text-shadow:none!important}
+html body:not(.in-arena) #localPlayerProfile{display:none!important}
+/* The message launcher has its own viewport corner, away from table actions. */
+html body.in-arena #playerMessagesDock{position:fixed!important;right:max(14px,env(safe-area-inset-right))!important;bottom:max(14px,env(safe-area-inset-bottom))!important;left:auto!important;top:auto!important;transform:none!important;z-index:110!important;margin:0!important;width:50px;height:50px;pointer-events:auto}
+html body.in-arena #reactionToggleBtn{display:grid!important;place-items:center;width:50px!important;height:50px!important;min-width:50px!important;padding:0!important;border:1px solid #e2c368!important;border-radius:16px!important;background:#103c2c!important;color:#fff8df!important;box-shadow:0 3px 12px #0005;font:600 15px sans-serif!important}
+html body.in-arena #reactionTray{position:absolute!important;right:0!important;left:auto!important;bottom:62px!important;top:auto!important;transform:none!important;max-width:calc(100vw - 28px);background:#fff7df;border:1px solid #d6b76a;border-radius:16px;box-shadow:0 8px 24px #0005}
+/* Readable actions share one row under the felt; visibility remains server-driven. */
+html body.in-arena .table-action-bar{gap:8px!important;max-width:min(92vw,520px)!important;flex-wrap:wrap!important;align-items:center!important;justify-content:center!important;z-index:45!important}
+html body.in-arena .table-action-bar :is(#btnPassAction,#btnUnoAction,#btnCatchAction){position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;min-height:44px!important;min-width:104px!important;max-width:160px;padding:10px 14px!important;margin:0!important;border:1px solid #e2c368!important;border-radius:13px!important;font:600 14px/1.25 'Outfit',sans-serif!important;letter-spacing:0!important;text-transform:none!important;text-shadow:none!important;-webkit-text-stroke:0!important;white-space:nowrap;box-shadow:0 3px 0 #0003!important;cursor:pointer}
+html body.in-arena .table-action-bar #btnPassAction{background:#12583e!important;color:#fff9e7!important}
+html body.in-arena .table-action-bar #btnUnoAction{background:#e72725!important;color:white!important}
+html body.in-arena .table-action-bar #btnCatchAction{background:#f5ce00!important;color:#18392b!important}
+html body.in-arena .table-action-bar :is(#btnPassAction,#btnUnoAction,#btnCatchAction):focus-visible{outline:2px solid #fff1ae;outline-offset:3px}
+@media(max-height:520px){html body.in-arena #localPlayerProfile{min-height:42px;padding:5px 8px!important;bottom:max(8px,env(safe-area-inset-bottom))!important}html body.in-arena #localPlayerProfile .local-avatar{width:28px!important;height:28px!important;min-width:28px!important}html body.in-arena #localPlayerProfile .local-name{font-size:13px!important}html body.in-arena #localPlayerProfile .local-cards-count{font-size:11px!important}html body.in-arena .table-action-bar :is(#btnPassAction,#btnUnoAction,#btnCatchAction){min-height:40px!important;padding:8px 11px!important;min-width:96px!important;font-size:13px!important}}
+
+html body.in-arena #playerActionDock{position:fixed!important;left:var(--hud-actions-x)!important;top:var(--hud-actions-y)!important;bottom:auto!important;right:auto!important;transform:translateX(-50%)!important;z-index:95!important;width:max-content!important;margin:0!important;pointer-events:auto}
+html body.in-arena .opponent-caught-btn{font:600 11px/1.2 'Outfit',sans-serif!important;text-shadow:none!important;-webkit-text-stroke:0!important;letter-spacing:0!important;padding:5px 7px!important;min-height:26px!important;border:1px solid #d0aa42!important;border-radius:9px!important;background:#f5ce00!important;color:#18392b!important;box-shadow:none!important}
+
+html body.in-arena .table-action-bar :is(#btnPassAction,#btnUnoAction,#btnCatchAction){animation:none!important}

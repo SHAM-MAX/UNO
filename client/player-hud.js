@@ -1,0 +1,10 @@
+export function initPlayerHUD(app){
+ const profile=app.el.localPlayerProfile,home=profile?.parentElement,reactions=document.getElementById('reactionToggleBtn')?.closest('.reaction-picker-wrapper'),reactionHome=reactions?.parentElement;
+ const actions=app.el.btnPassAction.closest('.table-action-bar'),actionHome=actions.parentElement;
+ if(reactions)reactions.id='playerMessagesDock';
+ const chat=document.getElementById('reactionToggleBtn');if(chat)chat.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H5l-3 2V11.5A8.5 8.5 0 0 1 10.5 3h2A8.5 8.5 0 0 1 21 11.5Z"/><path d="M7 11h.01M12 11h.01M17 11h.01"/></svg>';
+ app.syncPlayerHUD=()=>{const active=document.body.classList.contains('in-arena')&&app.gameState?.status==='playing';if(profile){const target=active?document.body:home;if(target&&profile.parentElement!==target)target.append(profile);if(!active)profile.style.display='none';const mine=active&&app.clientView?.isMyTurn&&app.gameState.turnDeadline;let clock=profile.querySelector('.local-turn-clock');if(mine){if(!clock){clock=document.createElement('span');clock.className='local-turn-clock avatar-turn-seconds';clock.setAttribute('aria-label','Turn time remaining');profile.append(clock);}clock.textContent=Math.max(0,Math.ceil((app.gameState.turnDeadline-Date.now())/1000))+'s';}else clock?.remove();}
+ if(actions){const target=active?document.body:actionHome;if(actions.parentElement!==target)target.append(actions);if(active){actions.id='playerActionDock';const felt=app.el.tableFelt.getBoundingClientRect();actions.style.setProperty('--hud-actions-x',(felt.left+felt.width/2)+'px');actions.style.setProperty('--hud-actions-y',(felt.bottom-36)+'px');}else actions.removeAttribute('id');}
+ if(reactions){const target=active?document.body:reactionHome;if(target&&reactions.parentElement!==target)target.append(reactions);reactions.hidden=!active;}
+ };
+}

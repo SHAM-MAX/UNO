@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-dimmed-colour-cards-v64';
+const CACHE_NAME = 'uno-arena-readable-player-hud-v65';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -29,6 +29,8 @@ const STATIC_SHELL_ASSETS = [
   '/local-play-feedback.js',
   '/performance.js',
   '/arena-menu.js',
+  '/player-hud.js',
+  '/player-hud.css?v=1',
   '/card-atlas-manifest.js',
   '/card-atlas.css?v=1',
   '/instant-cards.js',
