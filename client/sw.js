@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-left-fullscreen-v61';
+const CACHE_NAME = 'uno-arena-polished-hand-menu-v62';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -28,6 +28,7 @@ const STATIC_SHELL_ASSETS = [
   '/draw-four-decision.js',
   '/local-play-feedback.js',
   '/performance.js',
+  '/arena-menu.js',
   '/card-atlas-manifest.js',
   '/card-atlas.css?v=1',
   '/instant-cards.js',

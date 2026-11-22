@@ -53,3 +53,21 @@ body.performance-lite.in-arena .card-wrapper{filter:none!important}
 body.performance-lite.in-arena .table-felt{box-shadow:0 5px 8px #0005!important}
 body.performance-lite.in-arena #playDirection svg{filter:none!important}
 body.performance-lite.in-arena .power-card-effect{display:none!important}
+
+/* Opaque disabled artwork; playable cards sit visibly above the hand. */
+html body.in-arena .hand-cards .card-wrapper.playable{translate:0 -7px;cursor:pointer}
+html body.in-arena .hand-cards .card-wrapper.playable .game-card{box-shadow:0 0 0 2px #ffe077,0 4px 7px #0004!important}
+html body.in-arena .hand-cards .card-wrapper.unplayable{opacity:1!important;translate:0 3px!important;cursor:not-allowed}
+html body.in-arena .hand-cards .card-wrapper.unplayable .game-card{filter:saturate(.25);box-shadow:0 0 0 1px #746b5b!important}
+html body.in-arena .hand-cards .card-wrapper.unplayable::after{content:'×';position:absolute;right:5px;top:5px;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#292b2c;color:#eee;font:700 15px sans-serif;pointer-events:none}
+html body.in-arena .hand-scroll-container{padding-top:42px!important}
+@media(hover:hover) and (pointer:fine){html body.in-arena .hand-cards .card-wrapper.playable:hover{translate:0 -26px!important;transform:rotate(0deg) scale(1.035)!important;filter:none!important;transition:transform 190ms cubic-bezier(.2,.8,.2,1),translate 190ms cubic-bezier(.2,.8,.2,1)!important}}
+@media(max-height:520px){html body.in-arena .hand-scroll-container{padding-top:30px!important}}
+@media(prefers-reduced-motion:reduce){html body.in-arena .hand-cards .card-wrapper.playable:hover{translate:0 -7px!important;transform:rotate(var(--card-rot))!important}}
+
+html body.in-arena .hand-cards .card-wrapper.unplayable:hover{translate:0 3px!important;transform:rotate(var(--card-rot,0deg))!important}
+
+@media(hover:hover) and (pointer:fine){html body.in-arena .hand-cards .card-wrapper[data-card-id].playable:hover:not(.is-selected){transform:rotate(0deg) scale(1.035)!important;translate:0 -26px!important;transition:transform 190ms cubic-bezier(.2,.8,.2,1),translate 190ms cubic-bezier(.2,.8,.2,1)!important}}
+
+@media(prefers-reduced-motion:reduce){html body.in-arena .hand-cards .card-wrapper[data-card-id].playable:hover:not(.is-selected){transform:rotate(var(--card-rot,0deg))!important;translate:0 -7px!important;transition:none!important}}
+html body.in-arena.reduced-motion .hand-cards .card-wrapper[data-card-id]{transition:none!important}

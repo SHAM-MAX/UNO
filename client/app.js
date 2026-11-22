@@ -1,5 +1,6 @@
+import {initArenaMenu} from './arena-menu.js';
 import {initPerformance} from './performance.js';
-import {beginLocalPlay,cancelLocalPlay,reconcileLocalPlay} from './local-play-feedback.js';
+import {beginLocalPlay,cancelLocalPlay,reconcileLocalPlay,syncLocalPlayTarget} from './local-play-feedback.js';
 import {syncDrawFourDecision} from './draw-four-decision.js';
 import {initPlayMotion,syncPlayDirection} from './play-motion.js';
 import {prepareCardArt,gateCardArt,clearCardArtGate} from './card-atlas.js';
@@ -73,6 +74,7 @@ class UnoArenaApp {
     this.initElements();
     initSocial(this);
     initTableTools(this);
+    initArenaMenu(this);
     initPlayMotion(this);
     initPerformance(this);
     this.playTurnWarning=frequency=>sounds.playSnap(frequency,.06);
@@ -2109,6 +2111,8 @@ class UnoArenaApp {
     if(gateCardArt(this,view))return;
     this.releaseDroppedCard?.();
     const renderStarted=performance.now();
+    const fingerprint=JSON.stringify(view);
+    if(!this.skipNextStateAnimations&&!this.localPlayPreview&&!this.finishingLocalPlay&&this.lastRoomViewFingerprint===fingerprint){this.performanceMetrics?.bump('stateSkips');this.performanceMetrics?.record('render',performance.now()-renderStarted);return;}
     const previous = this.clientView;
     const stateGap=Number.isFinite(previous?.gameState.actionVersion)&&view.gameState.actionVersion-previous.gameState.actionVersion>1;
     const animateView=Boolean(previous&&!this.skipNextStateAnimations&&!stateGap&&previous.gameState.status==='playing'&&view.gameState.status==='playing'&&(previous.gameState.topDiscard?.id!==view.gameState.topDiscard?.id||previous.gameState.flipSide!==view.gameState.flipSide||previous.myHand.map(c=>c.id).join(',')!==view.myHand.map(c=>c.id).join(',')||previous.gameState.players.some(p=>view.gameState.players.find(n=>n.id===p.id)?.cardCount!==p.cardCount)));
@@ -2226,9 +2230,12 @@ class UnoArenaApp {
     syncTableTools(this);
     syncPlayDirection(this);
     syncRoundSeating(this);
+    this.lastRoomViewFingerprint=fingerprint;
     this.skipNextStateAnimations=false;
     this.performanceMetrics?.record('render',performance.now()-renderStarted);
     this.syncPerformance?.();
+    this.syncArenaMenu?.();
+    syncLocalPlayTarget(this);
     syncDrawFourDecision(this);
     if(view.gameState.rouletteInProgress || view.gameState.pendingAction?.type === 'draw4_challenge'){updateTurnStatus(this,0,false);this.el.playerHandCards.setAttribute('inert','');this.el.drawPileBtn.disabled=true;this.el.btnDrawAction.disabled=true;this.el.btnPassAction.disabled=true;this.el.btnUnoAction.disabled=true;}
     else {this.el.btnPassAction.disabled=false;this.el.btnUnoAction.disabled=false;}
