@@ -3,7 +3,7 @@ import { getActiveFace } from '../shared/deck.js';
 // Table effects are visual-only: they never delay or alter an authoritative move.
 export function animatePowerCard(app, previous) {
   const state = app.gameState;
-  if (!state?.topDiscard || document.body.classList.contains('reduced-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!state?.topDiscard || document.body.classList.contains('performance-lite') || document.body.classList.contains('reduced-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const changed = state.topDiscard.id !== previous.topDiscard?.id;
   const flipped = state.mode === 'flip' && state.flipSide !== previous.flipSide;
   if (!changed && !flipped) return;

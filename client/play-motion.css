@@ -46,3 +46,10 @@ html body.in-arena .hand-cards .card-wrapper.playable:active{translate:0 -10px;t
 @media(max-width:1024px){html body.in-arena .hand-cards .card-wrapper.is-selected{box-shadow:0 0 0 2px #f5ce00!important;filter:none!important}html body.in-arena #playDirection svg{filter:none!important}}
 
 @media(hover:none){html body.in-arena .hand-cards .card-wrapper.playable:active{transform:rotate(var(--card-rot,0deg))!important;box-shadow:none!important;filter:none!important}}
+
+/* Preserve card movement while reducing decoration on constrained devices. */
+body.performance-lite.in-arena :is(.draw-four-decision,.modal-overlay){backdrop-filter:none!important}
+body.performance-lite.in-arena .card-wrapper{filter:none!important}
+body.performance-lite.in-arena .table-felt{box-shadow:0 5px 8px #0005!important}
+body.performance-lite.in-arena #playDirection svg{filter:none!important}
+body.performance-lite.in-arena .power-card-effect{display:none!important}

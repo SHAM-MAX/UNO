@@ -1,14 +1,15 @@
 import {cardAtlases} from './card-atlas-manifest.js';
 const loaded=new Set(),pending=new Map(),retained=new Map();
+const indexes=new Map(Object.entries(cardAtlases).map(([mode,atlas])=>[mode,new Map(atlas.paths.map((path,i)=>[path,i]))]));
 export function cardArtReady(mode){return loaded.has(mode);}
 export function prepareCardArt(mode){
  if(loaded.has(mode))return Promise.resolve();if(pending.has(mode))return pending.get(mode);
  const atlas=cardAtlases[mode];if(!atlas)return Promise.reject(new Error('Unknown card artwork'));
- const task=(async()=>{const image=new Image();image.decoding='async';image.src=atlas.url;await image.decode();retained.set(mode,image);loaded.add(mode);})();
+ const task=(async()=>{const image=new Image();image.decoding='async';image.fetchPriority='high';image.src=atlas.url;await image.decode();retained.set(mode,image);loaded.add(mode);})();
  pending.set(mode,task);task.catch(()=>pending.delete(mode));return task;
 }
 export function atlasFace(mode,path){
- const atlas=cardAtlases[mode],index=atlas?.paths.indexOf(path);if(index===undefined||index<0)return null;
+ const atlas=cardAtlases[mode],index=indexes.get(mode)?.get(path);if(index===undefined||index<0)return null;
  const x=index%atlas.cols,y=Math.floor(index/atlas.cols);
  return '<span class="card-atlas-face" data-art-src="'+path+'" aria-hidden="true" style="background-image:url('+atlas.url+');background-size:'+atlas.cols*100+'% '+atlas.rows*100+'%;background-position:'+x/(atlas.cols-1)*100+'% '+(atlas.rows===1?0:y/(atlas.rows-1)*100)+'%"></span>';
 }

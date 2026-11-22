@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-instant-play-feedback-v59';
+const CACHE_NAME = 'uno-arena-mobile-performance-v60';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -27,6 +27,7 @@ const STATIC_SHELL_ASSETS = [
   '/play-motion.css?v=1',
   '/draw-four-decision.js',
   '/local-play-feedback.js',
+  '/performance.js',
   '/card-atlas-manifest.js',
   '/card-atlas.css?v=1',
   '/instant-cards.js',
@@ -46,17 +47,10 @@ const STATIC_SHELL_ASSETS = [
   '/nav-brand-theme.css?v=1',
   '/victory.css?v=4',
   '/mobile-layout.css?v=6',
-  '/assets/victory-champion-trophy.png',
   '/assets/uno-brand-v4.png',
   '/assets/uno-brand-v4-32.png?v=4',
   '/assets/uno-brand-v4-180.png?v=4',
   '/assets/uno-brand-v4-192.png',
-  '/assets/uno-brand-v4-512.png',
-  '/assets/tabletop-wood.jpg',
-  '/assets/uno-arena-mobile-hero.png',
-  '/assets/game-modes/classic-card.png',
-  '/assets/game-modes/flip-card.png',
-  '/assets/game-modes/no-mercy-card.png',
   '/assets/uno-classic-back.png'
 ];
 
@@ -111,46 +105,16 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .catch(() => caches.match('/index.html') || caches.match('/'))
+        .catch(async () => (await caches.match('/index.html')) || (await caches.match('/')) || Response.error())
     );
     return;
   }
 
-  // Network-first with cache fallback for code assets (CSS, JS) to guarantee latest styles/logic
-  const isCodeAsset = url.pathname.endsWith('.css') || url.pathname.endsWith('.js') || url.pathname.endsWith('.mjs') || url.search.includes('v=');
-  if (isCodeAsset) {
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // Stale-while-revalidate for static media assets (images, audio, fonts)
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => cached);
-
-      return cached || fetchPromise;
-    })
-  );
+  // Version-scoped cache-first assets: no duplicate requests during play.
+  event.respondWith(caches.open(CACHE_NAME).then(async cache=>{
+    const cached=await cache.match(event.request);if(cached)return cached;
+    const response=await fetch(event.request);
+    if(response.status===200&&response.type==='basic')event.waitUntil(cache.put(event.request,response.clone()).catch(()=>{}));
+    return response;
+  }));
 });

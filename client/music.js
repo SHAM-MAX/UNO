@@ -6,6 +6,7 @@ const harmony=[{root:38,notes:[53,57,60,64]},{root:34,notes:[53,57,60,62]},{root
 const phrase=[[null,null,69,null,null,67,null,null],[65,null,null,null,null,null,64,null],[null,65,null,null,69,null,null,null],[null,null,72,null,null,69,null,null],[null,null,70,null,null,null,69,null],[67,null,null,null,null,65,null,null],[null,64,null,null,null,null,61,null],[64,null,null,null,null,null,null,null]];
 const hz=midi=>440*2**((midi-69)/12);
 const nextTask=()=>new Promise(resolve=>setTimeout(resolve,0));
+const idleTask=()=>new Promise(resolve=>{if(window.requestIdleCallback)requestIdleCallback(resolve,{timeout:1200});else setTimeout(resolve,50);});
 export async function composeTheme(style='warm') {
   const bpm=style==='mercy'?112:style==='flip'?108:98;
   const beat=60/bpm,duration=24*4*beat,rate=24000,frames=Math.ceil(duration*rate);
@@ -63,10 +64,10 @@ export async function composeTheme(style='warm') {
     const source=rendered.getChannelData(ch),out=buffer.getChannelData(ch);out.set(source.subarray(0,frames));
     // Carry the final chord release across the loop boundary.
     for(let i=frames;i<source.length;i++)out[i-frames]+=source[i];
-    for(let i=0;i<frames;i++){peak=Math.max(peak,Math.abs(out[i]));energy+=out[i]*out[i];}
+    for(let i=0;i<frames;i++){peak=Math.max(peak,Math.abs(out[i]));energy+=out[i]*out[i];if(i>0&&i%65536===0)await nextTask();}
   }
   const rms=Math.sqrt(energy/(frames*2)),gain=Math.min(.85/Math.max(peak,.001),.095/Math.max(rms,.001));
-  for(let ch=0;ch<2;ch++){const out=buffer.getChannelData(ch);for(let i=0;i<frames;i++)out[i]*=gain;for(let i=0;i<120;i++){out[i]*=i/120;out[frames-1-i]*=i/120;}}
+  for(let ch=0;ch<2;ch++){const out=buffer.getChannelData(ch);for(let i=0;i<frames;i++){out[i]*=gain;if(i>0&&i%65536===0)await nextTask();}for(let i=0;i<120;i++){out[i]*=i/120;out[frames-1-i]*=i/120;}}
   return buffer;
 }
 
@@ -102,7 +103,7 @@ class ThemeMusic {
     const style=this.scene==='no_mercy'?'mercy':this.scene==='flip'?'flip':'warm';
     if(this.currentStyle===style&&this.voices.size){this.setVolume(this.volume);return;}
     try{
-      if(!this.cache.has(style))this.cache.set(style,composeTheme(style));
+      if(!this.cache.has(style)){await idleTask();if(token!==this.token||document.hidden)return;this.cache.set(style,composeTheme(style));}
       const buffer=await this.cache.get(style);
       if(token!==this.token||document.hidden||!this.enabled)return;
       sounds.init();const ctx=sounds.ctx;if(!ctx)return;
