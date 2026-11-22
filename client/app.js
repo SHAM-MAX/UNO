@@ -1,3 +1,4 @@
+import {initDrawHint} from './draw-hint.js';
 import {initPlayerHUD} from './player-hud.js';
 import {initArenaMenu} from './arena-menu.js';
 import {initPerformance} from './performance.js';
@@ -77,6 +78,7 @@ class UnoArenaApp {
     initTableTools(this);
     initArenaMenu(this);
     initPlayerHUD(this);
+    initDrawHint(this);
     initPlayMotion(this);
     initPerformance(this);
     this.playTurnWarning=frequency=>sounds.playSnap(frequency,.06);
@@ -1985,6 +1987,7 @@ class UnoArenaApp {
     };
 
     this.ws.onclose = () => {
+      this.dismissDrawHint?.();
       cancelLocalPlay(this);
       if (this.gameState) {
         this.cancelCardDrag?.();
@@ -2033,6 +2036,7 @@ class UnoArenaApp {
       return;
     }
     if(this.localPlayPreview&&['play_card','draw_card','pass_turn','call_uno','catch_uno'].includes(payload.type))return false;
+    if(['play_card','draw_card','pass_turn','choose_color','challenge_draw4'].includes(payload.type))this.dismissDrawHint?.();
     const roomAction=!['join','ping'].includes(payload.type);
     if(this.roomId && this.connectionRecovering && roomAction){this.isMoveInFlight=false;return false;}
     if (['classic', 'no_mercy'].includes(this.gameState?.mode) && ['draw_card', 'play_card'].includes(payload.type)) {
@@ -2239,6 +2243,7 @@ class UnoArenaApp {
     this.syncPerformance?.();
     this.syncArenaMenu?.();
     this.syncPlayerHUD?.();
+    this.syncDrawHint?.();
     syncLocalPlayTarget(this);
     syncDrawFourDecision(this);
     if(view.gameState.rouletteInProgress || view.gameState.pendingAction?.type === 'draw4_challenge'){updateTurnStatus(this,0,false);this.el.playerHandCards.setAttribute('inert','');this.el.drawPileBtn.disabled=true;this.el.btnDrawAction.disabled=true;this.el.btnPassAction.disabled=true;this.el.btnUnoAction.disabled=true;}
