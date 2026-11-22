@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-deck-draw-hint-v66';
+const CACHE_NAME = 'uno-arena-live-glass-actions-v67';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -31,6 +31,8 @@ const STATIC_SHELL_ASSETS = [
   '/arena-menu.js',
   '/player-hud.js',
   '/draw-hint.js',
+  '/live-actions.js',
+  '/live-actions.css?v=1',
   '/player-hud.css?v=1',
   '/card-atlas-manifest.js',
   '/card-atlas.css?v=1',

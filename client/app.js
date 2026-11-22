@@ -1,3 +1,4 @@
+import {initLiveActions} from './live-actions.js';
 import {initDrawHint} from './draw-hint.js';
 import {initPlayerHUD} from './player-hud.js';
 import {initArenaMenu} from './arena-menu.js';
@@ -79,6 +80,7 @@ class UnoArenaApp {
     initArenaMenu(this);
     initPlayerHUD(this);
     initDrawHint(this);
+    initLiveActions(this);
     initPlayMotion(this);
     initPerformance(this);
     this.playTurnWarning=frequency=>sounds.playSnap(frequency,.06);
@@ -1960,6 +1962,7 @@ class UnoArenaApp {
         } else if (msg.type === 'error') {
           cancelLocalPlay(this,true);
           this.cancelCardDrag?.();
+          this.cancelLiveActions?.();
           this.isPlayInFlight=false;
           this.cancelQuickMatchTimerOnly();
           this.rematchRequestPending = false; this.rematchActionPending = false; this.rematchDismissAfterResponseId = null; this.unoRequestPending = false; this.catchRequestPending = false; this.pendingClassicMotion = null;
@@ -1988,6 +1991,7 @@ class UnoArenaApp {
 
     this.ws.onclose = () => {
       this.dismissDrawHint?.();
+      this.cancelLiveActions?.();
       cancelLocalPlay(this);
       if (this.gameState) {
         this.cancelCardDrag?.();
@@ -2243,6 +2247,7 @@ class UnoArenaApp {
     this.syncPerformance?.();
     this.syncArenaMenu?.();
     this.syncPlayerHUD?.();
+    this.syncLiveActions?.();
     this.syncDrawHint?.();
     syncLocalPlayTarget(this);
     syncDrawFourDecision(this);
@@ -3149,7 +3154,7 @@ class UnoArenaApp {
       let unoStatusHtml = '';
       if (unoActive && !p.isEliminated && gameState.status === 'playing') {
         unoStatusHtml = (p.hasCalledUno ? '<span class="uno-declared-badge">UNO!</span>' : '') +
-          '<button class="opponent-caught-btn" data-catch-target="' + p.id + '" type="button">CAUGHT</button>';
+          '<button class="opponent-caught-btn" data-catch-target="' + p.id + '" type="button">Caught</button>';
       }
       if (unoStatusSlot.innerHTML !== unoStatusHtml) {
         const oldCatch=unoStatusSlot.querySelector('.opponent-caught-btn');

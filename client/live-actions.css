@@ -1,0 +1,32 @@
+
+/* Visual directions stay on the table; status remains available to screen readers. */
+html body.in-arena #tableTurnStatus{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important;box-shadow:none!important}
+html body.in-arena .play-direction-label{display:none!important}
+html body.in-arena #playerActionDock :is(#btnPassAction,#btnUnoAction,#btnCatchAction){--action-tint:36,29,23;--action-edge:255,235,188;display:inline-flex;align-items:center;justify-content:space-between;gap:13px;position:relative!important;isolation:isolate;overflow:hidden!important;min-height:48px!important;min-width:140px!important;max-width:180px;padding:6px 7px 6px 18px!important;border:1px solid rgba(var(--action-edge),.66)!important;border-radius:999px!important;background:linear-gradient(155deg,#fff5d92e,#fff5d908 48%,#fff5d91a),rgba(var(--action-tint),.87)!important;color:#fff6df!important;backdrop-filter:blur(6px);box-shadow:inset 0 1px 0 #fff9e962,inset 0 -1px 0 #fff5d916,0 4px 9px #0005!important;font:500 14px/1.2 'Outfit',sans-serif!important;letter-spacing:.01em!important;transition:translate 170ms cubic-bezier(.2,.8,.2,1),box-shadow 170ms,border-color 170ms!important;cursor:pointer}
+html body.in-arena #playerActionDock #btnUnoAction{--action-tint:93,20,30;--action-edge:255,179,156}
+html body.in-arena #playerActionDock #btnCatchAction{--action-tint:77,48,13;--action-edge:255,221,126}
+.live-action-label{position:relative;z-index:2;white-space:nowrap;pointer-events:none}
+.live-action-icon{display:grid;place-items:center;flex:none;width:32px;height:32px;border:1px solid #fff0c940;border-radius:50%;background:linear-gradient(145deg,#fff9e92b,#fff9e905);box-shadow:inset 0 1px 1px #fff9e938;color:inherit;pointer-events:none;transition:translate 200ms}
+.live-action-icon svg{width:19px;height:19px}
+html body.in-arena #playerActionDock .live-action::before{content:'';position:absolute;inset:2px;border:1px solid #fff7db12;border-radius:inherit;pointer-events:none}
+html body.in-arena #playerActionDock .live-action::after{content:'';position:absolute;inset:-40% auto -40% -70%;width:35%;background:linear-gradient(90deg,transparent,#fff8dc25,transparent);transform:skewX(-22deg);transition:translate 600ms cubic-bezier(.2,.7,.3,1);pointer-events:none}
+@media(hover:hover){html body.in-arena #playerActionDock .live-action:hover:not(:disabled){translate:0 -2px;border-color:#fff5d9!important;box-shadow:inset 0 1px 0 #fff9e990,0 7px 16px #0005!important}html body.in-arena #playerActionDock .live-action:hover::after{translate:650% 0}html body.in-arena #playerActionDock .live-action:hover .live-action-icon{translate:2px 0}}
+html body.in-arena #playerActionDock .live-action:active:not(:disabled){translate:0 1px;box-shadow:inset 0 2px 5px #0005,0 1px 3px #0003!important;filter:none!important}
+html body.in-arena #playerActionDock .live-action:focus-visible{outline:2px solid #ffe18a;outline-offset:4px}
+html body.in-arena #playerActionDock .live-action[data-busy="true"]{pointer-events:none}
+html body.in-arena #playerActionDock #btnPassAction .live-action-icon svg{animation:passNudge 2.8s ease-in-out infinite}
+html body.in-arena #playerActionDock #btnPassAction[data-busy="true"] .live-action-icon{animation:passAwait 800ms linear infinite}
+.live-action-ripple{position:absolute;z-index:1;width:30px;height:30px;border-radius:50%;background:#fff1c4;pointer-events:none}
+.turn-handoff{position:fixed;z-index:500;display:grid;place-items:center;width:30px;height:30px;border:1px solid #ffe5a2;border-radius:50%;background:#f5ce00;box-shadow:0 3px 12px #0005;color:#342a10;pointer-events:none;will-change:transform}
+.turn-handoff svg{width:20px;height:20px}
+.turn-received{outline:2px solid #ffe19a!important;outline-offset:3px}
+@keyframes passNudge{0%,65%,100%{translate:0 0}78%{translate:3px 0}90%{translate:0 0}}
+@keyframes passAwait{to{rotate:360deg}}
+@media(max-width:600px),(max-height:520px){html body.in-arena #playerActionDock :is(#btnPassAction,#btnUnoAction,#btnCatchAction){min-width:104px!important;min-height:42px!important;gap:7px;padding:5px 5px 5px 11px!important;font-size:12px!important}.live-action-icon{width:27px;height:27px}.live-action-icon svg{width:16px;height:16px}}
+body.performance-lite #playerActionDock .live-action{backdrop-filter:none!important}
+@media(prefers-reduced-motion:reduce){html body.in-arena #playerActionDock .live-action,html body.in-arena #playerActionDock .live-action::after,.live-action-icon{transition:none!important}.live-action-icon,.live-action-icon svg{animation:none!important}}
+body.reduced-motion .live-action-icon,body.reduced-motion .live-action-icon svg{animation:none!important}
+
+html body.in-arena .opponent-caught-btn{border-radius:999px!important;border:1px solid #ead39a!important;background:linear-gradient(145deg,#fff0c330,#fff0c308),#503b1be8!important;color:#fff4d9!important;box-shadow:inset 0 1px 0 #fff8db40,0 2px 5px #0002!important;font-weight:500!important}
+@media(prefers-reduced-motion:reduce){html body.in-arena #playerActionDock :is(#btnPassAction,#btnUnoAction,#btnCatchAction){transition:none!important}}
+html body.in-arena.reduced-motion #playerActionDock :is(#btnPassAction,#btnUnoAction,#btnCatchAction){transition:none!important}
