@@ -2396,7 +2396,7 @@ class UnoArenaApp {
     profile.dataset.profileId = me.id;
     profile.innerHTML = `<div class="opponent-avatar">${this.classicAvatarHTML(me, isMyTurn && !!gameState.turnDeadline)}</div><span>${escapeHtml(me.name)}<small>${myHand.length} cards</small></span>`;
     controls.appendChild(this.el.btnUnoAction);
-    setActionVisible(this.el.btnUnoAction,myHand.length === 2 && canCallUno && !me.hasCalledUno);
+    setActionVisible(this.el.btnUnoAction,myHand.length >= 1 && myHand.length <= 2 && canCallUno && !me.hasCalledUno);
   }
 
   captureClassicGeometry() {
@@ -2953,7 +2953,7 @@ class UnoArenaApp {
 
     // UNO and Catch buttons
     this.el.btnUnoAction.disabled = !canCallUno;
-    setActionVisible(this.el.btnUnoAction,myHand.length === 2 && canCallUno);
+    setActionVisible(this.el.btnUnoAction,myHand.length >= 1 && myHand.length <= 2 && canCallUno);
     this.el.btnUnoAction.innerHTML = '<span class="btn-icon">📢</span> CALL UNO!';
     if (canCatchUno) {
       const caughtPlayer = gameState.players.find((p) => p.id === canCatchUno);
@@ -3015,7 +3015,7 @@ class UnoArenaApp {
       }
     }
 
-    // The single authoritative UNO control is hidden unless the hand has two cards.
+    // The single authoritative UNO control is shown for one or two cards until UNO is declared.
     if (this.el.contextualUnoContainer) this.el.contextualUnoContainer.style.display = 'none';
 
     // Synchronized Turn Timer (invoked after all DOM elements are mounted)

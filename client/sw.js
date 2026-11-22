@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-polished-hand-menu-v62';
+const CACHE_NAME = 'uno-arena-colour-uno-one-or-two-v63';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',

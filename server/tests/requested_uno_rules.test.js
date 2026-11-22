@@ -36,3 +36,10 @@ for(const mode of ['classic','flip','no_mercy']) {
   assert.match(result.error,/Alice already called UNO/);assert.equal(room.playerHands[ids[0]].length,1);assert.equal(room.drawPile.length,before);
  });
 }
+
+for(const mode of ['classic','flip','no_mercy'])test(mode+': one-card UNO stays available without a temporary catch window',()=>{
+ const {rm,room,ids,id}=setup(mode,5);room.playerHands[ids[0]]=room.drawPile.splice(0,1);room.players[0].hasCalledUno=false;room.players[0].isUnoArmed=false;room.unoChallengeWindow=null;room.unoChallengeTargets=[];
+ assert.equal(rm.getClientView(id,ids[0]).canCallUno,true);assert.ok(rm.callUno(id,ids[0]).success);assert.equal(room.players[0].hasCalledUno,true);assert.equal(room.players[0].isUnoArmed,false);assert.equal(rm.getClientView(id,ids[0]).canCallUno,false);assert.equal(rm.callUno(id,ids[0]).success,false);assert.equal(rm.catchUno(id,ids[1],ids[0]).success,false);
+ room.players[0].hasCalledUno=false;room.playerHands[ids[0]]=[];assert.equal(rm.getClientView(id,ids[0]).canCallUno,false);assert.equal(rm.callUno(id,ids[0]).success,false);
+ room.playerHands[ids[0]]=room.drawPile.splice(0,3);assert.equal(rm.getClientView(id,ids[0]).canCallUno,false);assert.equal(rm.callUno(id,ids[0]).success,false);
+});

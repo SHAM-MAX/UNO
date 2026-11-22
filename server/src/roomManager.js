@@ -1883,10 +1883,9 @@ export class RoomManager {
 
     const hand = room.playerHands[playerId] || [];
     const isTwoCardArming = hand.length === 2 && !player.isEliminated;
-    const isCatchWindowTarget = room.unoChallengeWindow?.targetPlayerId === playerId || (room.mode === 'no_mercy' && room.unoChallengeTargets?.includes(playerId));
 
-    if (!isTwoCardArming && !(hand.length === 1 && isCatchWindowTarget)) {
-      return { success: false, error: 'Call UNO when playing down to one card' };
+    if (player.isEliminated || hand.length < 1 || hand.length > 2) {
+      return { success: false, error: 'Call UNO when holding one or two cards' };
     }
     if (player.hasCalledUno || player.isUnoArmed) {
       return { success: false, error: 'UNO already called' };
@@ -2267,7 +2266,7 @@ export class RoomManager {
       canPass: (room.mode === 'no_mercy' || room.houseRules?.drawUntilPlayable)
         ? isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCount > 0 || room.turnDrawnCard)
         : isMyTurn && !room.pendingAction && !room.pendingDrawPenalty && Boolean(room.turnDrawnCard),
-      canCallUno: !rouletteInProgress && !challengeInProgress && room.status === 'playing' && myHand.length === 2 && !myPlayer?.isEliminated && !myPlayer?.hasCalledUno,
+      canCallUno: !rouletteInProgress && !challengeInProgress && room.status === 'playing' && myHand.length >= 1 && myHand.length <= 2 && !myPlayer?.isEliminated && !myPlayer?.hasCalledUno,
       canCatchUno,
       canCatchUnoTargets,
       drawFourEvidence: room.lastDrawFourResult?.challengerId === playerId ? { id: room.lastDrawFourResult.id, ...room.lastDrawFourResult.evidence } : null,
