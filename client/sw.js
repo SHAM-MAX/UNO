@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-sculpted-nav-flow-v68';
+const CACHE_NAME = 'uno-arena-deck-penalty-tap-v69';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',

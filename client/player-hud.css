@@ -36,3 +36,20 @@ html body.in-arena #drawPileBtn.deck-needs-draw{outline:2px solid #ffe18a;outlin
 @keyframes pointToDeck{0%,100%{translate:-4px 0}50%{translate:3px 0}}
 @media(prefers-reduced-motion:reduce){#deckDrawHint{animation:none}}
 body.reduced-motion #deckDrawHint{animation:none}
+
+/* One penalty count, attached to the draw deck rather than the discard. */
+html body.in-arena #penaltyTag{display:none!important}
+html body.in-arena #drawPenaltyBadge{position:absolute!important;top:-8px!important;right:-8px!important;left:auto!important;bottom:auto!important;z-index:12;min-width:31px;min-height:27px;padding:4px 8px!important;box-sizing:border-box;border:2px solid #fff1ce!important;border-radius:999px!important;background:#F41908!important;color:white!important;box-shadow:0 2px 5px #0005!important;font:700 14px/1.1 'Outfit',sans-serif!important;letter-spacing:0!important;text-shadow:none!important;-webkit-text-stroke:0!important;pointer-events:none}
+/* A real tap gesture: the index finger presses and two contact rings expand. */
+#deckDrawHint{left:-57px;top:29%;width:76px;height:76px;animation:none}
+#deckDrawHint svg{display:block;width:76px;height:76px;overflow:visible}
+.tap-gesture-hand{transform-origin:33px 12px;animation:deckFingerTap 1.65s cubic-bezier(.3,.6,.3,1) infinite}
+.tap-click-ring{transform-origin:33px 12px;animation:deckClickRing 1.65s ease-out infinite;opacity:0}
+.tap-click-ring-outer{animation-delay:90ms}
+@keyframes deckFingerTap{0%,65%,100%{transform:translateY(4px) scale(1)}25%,35%{transform:translateY(-3px) scale(.96)}}
+@keyframes deckClickRing{0%,22%{transform:scale(.35);opacity:0}30%{opacity:.9}65%,100%{transform:scale(1.65);opacity:0}}
+@media(max-height:520px){#deckDrawHint{left:-47px;width:63px;height:63px}#deckDrawHint svg{width:63px;height:63px}}
+@media(prefers-reduced-motion:reduce){.tap-gesture-hand,.tap-click-ring{animation:none!important}.tap-click-ring{display:none}}
+body.reduced-motion .tap-gesture-hand,body.reduced-motion .tap-click-ring{animation:none!important}
+
+html body.in-arena #drawPenaltyBadge{animation:none!important}

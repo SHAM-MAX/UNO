@@ -36,10 +36,10 @@ html body.in-arena.has-arena-menu #arenaMenuPanel:not([hidden]){display:flex;fle
 @keyframes arenaMenuIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){#arenaMenuPanel{animation:none!important}}
 
 /* Enamel lettering and extruded edges echo the centre UNO wordmark. */
-html body.in-arena .top-nav #leaveBtn,html body.in-arena.round-table-layout .top-nav #leaveBtn{width:78px!important;min-width:78px!important;height:39px!important;min-height:39px!important;padding:6px 10px!important;border:1px solid #ffe994!important;border-bottom:3px solid #b77a16!important;border-radius:12px!important;background:linear-gradient(145deg,#fff4b5,#f5ce00 72%)!important;box-shadow:inset 0 1px 0 #fffbdc,2px 3px 0 #54220b,3px 5px 0 #2b190b!important;color:#F41908!important;transition:translate 120ms ease-out,box-shadow 120ms ease-out!important}
-html body.in-arena .top-nav #leaveBtn span{display:block;transform:skew(-7deg);font:900 14px/1 'Arial Black',Arial,sans-serif!important;letter-spacing:.04em!important;color:#F41908!important;-webkit-text-stroke:.55px #37150b;paint-order:stroke fill;text-shadow:1px 1px #9e1c0b,2px 2px #38180b!important}
+html body.in-arena .top-nav #leaveBtn,html body.in-arena.round-table-layout .top-nav #leaveBtn{width:78px!important;min-width:78px!important;height:39px!important;min-height:39px!important;padding:6px 10px!important;border:1px solid #ff9d75!important;border-bottom:3px solid #9e190c!important;border-radius:12px!important;background:#F41908!important;box-shadow:inset 0 1px 0 #ff9e76,2px 3px 0 #80170b,3px 5px 0 #35170d!important;color:white!important;transition:translate 120ms ease-out,box-shadow 120ms ease-out!important}
+html body.in-arena .top-nav #leaveBtn span{display:block;transform:skew(-7deg);font:900 14px/1 'Arial Black',Arial,sans-serif!important;letter-spacing:.04em!important;color:white!important;-webkit-text-stroke:0!important;paint-order:stroke fill;text-shadow:0 1px 1px #9b160d!important}
 html body.in-arena .top-nav #leaveBtn:hover{translate:0 -1px}
-html body.in-arena .top-nav #leaveBtn:active{translate:2px 3px;box-shadow:inset 0 1px 2px #ab731955,0 1px 0 #54220b!important}
+html body.in-arena .top-nav #leaveBtn:active{translate:2px 3px;box-shadow:inset 0 2px 3px #9b160d,0 1px 0 #69160c!important}
 html body.in-arena #arenaMenuToggle svg{width:26px;height:32px;overflow:visible;transition:translate 120ms ease-out}
 html body.in-arena #arenaMenuToggle:hover svg{translate:0 -1px}
 html body.in-arena #arenaMenuToggle:active svg{translate:1px 2px}
