@@ -1,3 +1,4 @@
+import {REACTIONS} from '../../shared/reactions.js';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -507,7 +508,7 @@ wss.on('connection', (ws, req) => {
         }
 
         case 'send_reaction': {
-          const validEmotes = ['laugh', 'shocked', 'fire', 'lightning', 'skull', 'cry'];
+          const validEmotes = REACTIONS.map(r=>r.id);
           const emoteId = String(data?.emoteId || '').toLowerCase();
           if (!validEmotes.includes(emoteId)) break;
           const targetPlayerId = data?.targetPlayerId || null;

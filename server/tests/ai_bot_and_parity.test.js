@@ -201,9 +201,9 @@ test('AI Bot System and Social Parity Features', async (t) => {
     assert.equal(reactionMsg.data.playerId, client1.playerId);
     assert.equal(reactionMsg.data.targetPlayerId, null);
     await new Promise(resolve=>setTimeout(resolve,1550));
-    client1.send('send_reaction', { data: { emoteId: 'laugh', targetPlayerId: 'outside-room-player' } });
-    client1.send('send_reaction', { data: { emoteId: 'laugh', targetPlayerId: client2.playerId } });
-    const targeted = await client2.waitFor(m=>m.type==='player_reaction'&&m.data.emoteId==='laugh');
+    client1.send('send_reaction', { data: { emoteId: 'trophy', targetPlayerId: 'outside-room-player' } });
+    client1.send('send_reaction', { data: { emoteId: 'trophy', targetPlayerId: client2.playerId } });
+    const targeted = await client2.waitFor(m=>m.type==='player_reaction'&&m.data.emoteId==='trophy');
     assert.equal(targeted.data.targetPlayerId,client2.playerId);
     assert.equal(targeted.data.playerId,client1.playerId);
 
