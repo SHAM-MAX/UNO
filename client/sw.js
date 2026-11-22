@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-colour-uno-one-or-two-v63';
+const CACHE_NAME = 'uno-arena-dimmed-colour-cards-v64';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
