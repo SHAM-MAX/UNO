@@ -955,7 +955,7 @@ export class RoomManager {
       if (this.checkKnockout(room, target) || card.color === color) break;
     }
     room.roulettePauseUntil=Date.now()+5600;
-    room.lastRoulette = { id: action.id, targetPlayerId: playerId, color, revealed, resumeAt:room.roulettePauseUntil };
+    room.lastRoulette = { id: action.id, sourcePlayerId: action.sourcePlayerId, targetPlayerId: playerId, color, revealed, resumeAt:room.roulettePauseUntil };
     room.unoChallengeWindow = null;
     room.turnDrawnCard = false;
     room.turnDrawnCardId = null;
@@ -1605,7 +1605,7 @@ export class RoomManager {
       }
     } else if (room.mode === 'no_mercy' && face.type === 'wild_color_roulette') {
       const target = room.players[getNextPlayerIndex(room.currentTurn, room.direction, room.players)];
-      room.pendingAction = { id: randomUUID(), type: 'color_roulette', targetPlayerId: target.id };
+      room.pendingAction = { id: randomUUID(), type: 'color_roulette', sourcePlayerId: currentPlayer.id, targetPlayerId: target.id };
       this.addLog(room, `${target.name} must choose the Roulette colour.`);
     } else if (face.type === 'wild_draw_color') {
       step = 2;

@@ -44,3 +44,29 @@ html body.in-arena .opponent-caught-btn:active{translate:0 2px}
 @media(hover:hover){html body.in-arena #playerActionDock .live-action:hover:not(:disabled){translate:0 -3px;box-shadow:none!important;filter:brightness(1.08)!important}}
 @media(max-width:600px),(max-height:520px){html body.in-arena #playerActionDock :is(#btnPassAction,#btnUnoAction,#btnCatchAction){width:138px;height:44px;min-height:44px!important}html body.in-arena #playerActionDock{max-width:96vw!important;gap:6px!important}}
 @media(prefers-reduced-motion:reduce){html body.in-arena #playerActionDock .live-action{transition:none!important}}
+
+/* Shared burgundy and gold treatment for the roulette receipt. */
+html body .roulette-draw-notice{background:linear-gradient(145deg,#8f1324,#36050c)!important;border:2px solid #edc85c!important;border-left:5px solid var(--roulette-color)!important;box-shadow:inset 0 0 0 2px #54101b,0 4px 0 #6f460e,0 12px 28px #0006!important;border-radius:18px!important;color:#fff1c9!important}
+#rouletteMatchup{font:600 clamp(14px,2vw,20px)/1.35 Outfit,sans-serif;color:#ffe28c;margin:12px 0 0;overflow-wrap:anywhere}
+#rouletteModal .color-picker-badge{background:#f5ce00!important;overflow:hidden;border-radius:999px!important}
+#rouletteModal .color-picker-badge svg{width:100px;height:54px;display:block}
+#rouletteModal .color-picker-badge img{border-radius:999px!important;object-fit:contain}
+html body.in-room .top-nav #leaveBtn,html body.in-arena.round-table-layout .top-nav #leaveBtn{background:transparent url('/assets/action-buttons/leave.png') center/contain no-repeat!important;border:0!important;border-radius:0!important;box-shadow:none!important;width:112px!important;min-width:112px!important;height:44px!important;min-height:44px!important;padding:0!important}
+html body.in-room .top-nav #leaveBtn span{position:absolute!important;width:1px;height:1px;clip-path:inset(50%);overflow:hidden}
+#playerActionDock .uno-confirmed .action-art{opacity:.2;transition:opacity 180ms ease}
+#playerActionDock .uno-confirmation{position:absolute;inset:0;display:grid;place-items:center;color:#ffe074;font:800 13px/1 Outfit,sans-serif;text-shadow:0 1px #5b1900;pointer-events:none}
+.opponent-card-badge{position:relative}
+.opponent-gift{position:absolute;right:-8px;bottom:-22px;width:32px;height:32px;display:grid;place-items:center;border:1px solid #efd175;border-radius:10px;background:linear-gradient(145deg,#9b2034,#480714);color:#ffe49a;box-shadow:0 3px 6px #0005;z-index:5;cursor:pointer;touch-action:manipulation;transition:translate 140ms}
+.opponent-gift svg{width:22px;height:22px;pointer-events:none}
+.opponent-gift:hover{translate:0 -2px}.opponent-gift:active{translate:0 2px}.opponent-gift:focus-visible{outline:2px solid #ffe597;outline-offset:2px}
+#reactionTray{flex-wrap:wrap;max-width:min(360px,calc(100vw - 28px));background:linear-gradient(145deg,#7b1428,#36070f)!important;border:2px solid #e8bd54!important;border-radius:16px!important;box-shadow:0 5px 0 #57310f,0 8px 24px #0006}
+#reactionTray[data-target-name]::before{content:attr(data-target-name);display:block;width:100%;font:500 13px/1.3 Outfit,sans-serif;color:#ffe6a1;padding:3px 8px;overflow-wrap:anywhere}
+#reactionTray .reaction-item-btn{transition:transform 150ms ease;touch-action:manipulation}#reactionTray .reaction-item-btn:hover{transform:translateY(-3px) scale(1.12)}#reactionTray .reaction-item-btn:active{transform:scale(.9)}
+.gift-flight{position:fixed;z-index:300;pointer-events:none;font-size:38px;line-height:40px;width:40px;height:40px;filter:drop-shadow(0 4px 3px #0006);will-change:transform,opacity}
+.gift-received{position:fixed;left:calc(50% - 85px);top:calc(50% - 85px);width:170px;height:170px;display:grid;place-items:center;font-size:140px;line-height:1;pointer-events:none;z-index:500;filter:drop-shadow(0 5px 10px #0006)}
+@media(max-height:520px){.opponent-gift{width:28px;height:28px;bottom:-18px}.opponent-gift svg{width:19px;height:19px}}
+@media(prefers-reduced-motion:reduce){.opponent-gift,#reactionTray .reaction-item-btn{transition:none}}
+
+#playerActionDock .uno-confirmation{animation:unoConfirmIn 220ms ease-out}#playerActionDock .uno-confirmed{pointer-events:none}
+@keyframes unoConfirmIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){#playerActionDock .uno-confirmation{animation:none}}

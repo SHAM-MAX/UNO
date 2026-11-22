@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-pixel-action-buttons-v70';
+const CACHE_NAME = 'uno-arena-gifts-roulette-v71';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -32,6 +32,8 @@ const STATIC_SHELL_ASSETS = [
   '/player-hud.js',
   '/draw-hint.js',
   '/live-actions.js',
+  '/social-gifts.js',
+  '/assets/action-buttons/leave.png',
   '/assets/action-buttons/call-uno.png',
   '/assets/action-buttons/caught.png',
   '/assets/action-buttons/pass-turn.png',

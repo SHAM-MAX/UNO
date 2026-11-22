@@ -1,3 +1,4 @@
+import {initSocialGifts} from './social-gifts.js';
 import {initLiveActions} from './live-actions.js';
 import {initDrawHint} from './draw-hint.js';
 import {initPlayerHUD} from './player-hud.js';
@@ -80,7 +81,7 @@ class UnoArenaApp {
     initArenaMenu(this);
     initPlayerHUD(this);
     initDrawHint(this);
-    initLiveActions(this);
+    initLiveActions(this);initSocialGifts(this);
     initPlayMotion(this);
     initPerformance(this);
     this.playTurnWarning=frequency=>sounds.playSnap(frequency,.06);
@@ -1072,6 +1073,7 @@ class UnoArenaApp {
     if (this.el.reactionToggleBtn) {
       this.el.reactionToggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        this.giftTargetPlayerId=null;this.el.reactionTray?.removeAttribute('data-target-name');
         if (this.el.reactionTray) {
           const isShown = this.el.reactionTray.style.display === 'flex';
           this.el.reactionTray.style.display = isShown ? 'none' : 'flex';
@@ -1094,7 +1096,7 @@ class UnoArenaApp {
           document.querySelectorAll('.reaction-item-btn').forEach(n=>n.disabled=true);
           clearTimeout(this.reactionCooldownTimer);this.reactionCooldownTimer=setTimeout(()=>document.querySelectorAll('.reaction-item-btn').forEach(n=>n.disabled=false),1500);
           sounds.playSnap?.(520, 0.1);
-          this.send({ type: 'send_reaction', data: { emoteId: emote } });
+          this.send({ type: 'send_reaction', data: { emoteId: emote, targetPlayerId:this.giftTargetPlayerId||null } });
           if (this.el.reactionTray) this.el.reactionTray.style.display = 'none';
         }
       });
@@ -1169,7 +1171,7 @@ class UnoArenaApp {
       this.unoRequestPending = true;
       sounds.playUnoCall();
       this.send({ type: 'call_uno' });
-      if (this.gameState.mode !== 'classic') this.showToast('UNO called! 📢');
+
     });
 
     this.el.btnCatchAction.addEventListener('click', () => {
@@ -2085,36 +2087,7 @@ class UnoArenaApp {
   }
 
   handlePlayerReaction(data) {
-    const { playerId, emoteId } = data || {};
-    const EMOTE_MAP = {
-      laugh: '😄',
-      shocked: '😱',
-      fire: '🔥',
-      lightning: '⚡',
-      skull: '💀',
-      cry: '😭',
-    };
-    const emoji = EMOTE_MAP[emoteId] || '😄';
-
-    let avatarEl = null;
-    if (playerId === this.playerId) {
-      avatarEl = this.el.localPlayerProfile?.querySelector('.local-avatar') || document.querySelector('.player-bottom-area');
-    } else {
-      avatarEl = document.querySelector(`.opponent-box[data-player-id="${playerId}"] .opponent-avatar`) ||
-        document.querySelector(`.opponent-box[data-player-id="${playerId}"]`);
-    }
-    if (!avatarEl) return;
-
-    sounds.playSnap?.(560, 0.08);
-
-    const bubble = document.createElement('div');
-    bubble.className = 'player-emote-bubble';
-    bubble.innerHTML = `<span class="emote-icon">${emoji}</span>`;
-    avatarEl.appendChild(bubble);
-
-    setTimeout(() => {
-      if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
-    }, 2200);
+    this.showGiftReaction?.(data);
   }
 
   handleRoomState(view) {
@@ -2141,6 +2114,8 @@ class UnoArenaApp {
     music.setScene(['game_over','round_over'].includes(view.gameState.status)?'victory':view.gameState.status==='playing'?view.gameState.mode:'lobby');
     this.clientView = view;
     this.gameState = view.gameState;
+    const mine=view.gameState.players.find(p=>p.id===this.playerId),wasMine=previous?.gameState.players.find(p=>p.id===this.playerId);
+    if(mine?.hasCalledUno&&!wasMine?.hasCalledUno&&previous?.gameState.matchId===view.gameState.matchId){this.unoConfirmedUntil=Date.now()+1800;clearTimeout(this.unoConfirmationTimer);this.unoConfirmationTimer=setTimeout(()=>{this.unoConfirmedUntil=0;this.syncLiveActions?.();},1850);}
     this.isPlayInFlight = Boolean(this.localPlayPreview);
     this.isMoveInFlight = false;
     if (this.inFlightCardId) {
@@ -2410,7 +2385,7 @@ class UnoArenaApp {
     profile.dataset.profileId = me.id;
     profile.innerHTML = `<div class="opponent-avatar">${this.classicAvatarHTML(me, isMyTurn && !!gameState.turnDeadline)}</div><span>${escapeHtml(me.name)}<small>${myHand.length} cards</small></span>`;
     controls.appendChild(this.el.btnUnoAction);
-    setActionVisible(this.el.btnUnoAction,myHand.length >= 1 && myHand.length <= 2 && canCallUno && !me.hasCalledUno);
+    setActionVisible(this.el.btnUnoAction,((myHand.length >= 1 && myHand.length <= 2 && canCallUno && !me.hasCalledUno)||this.unoConfirmedUntil>Date.now()));
   }
 
   captureClassicGeometry() {
@@ -2512,9 +2487,6 @@ class UnoArenaApp {
   animateClassicState(previous, geometry) {
     const current = this.clientView;
     this.pendingClassicMotion = null;
-    const me = current.gameState.players.find(p => p.id === this.playerId);
-    const beforeMe = previous.gameState.players.find(p => p.id === this.playerId);
-    if (me?.hasCalledUno && !beforeMe?.hasCalledUno) this.showToast('UNO!');
     if(previous.gameState.status==='playing' && previous.gameState.roomId===current.gameState.roomId) playPowerSound(previous.gameState,current.gameState);
     if (previous.gameState.mode !== current.gameState.mode || previous.gameState.status !== 'playing' || previous.gameState.roomId !== current.gameState.roomId || matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduced-motion')) return;
     animatePowerCard(this, previous.gameState);
@@ -2967,7 +2939,7 @@ class UnoArenaApp {
 
     // UNO and Catch buttons
     this.el.btnUnoAction.disabled = !canCallUno;
-    setActionVisible(this.el.btnUnoAction,myHand.length >= 1 && myHand.length <= 2 && canCallUno);
+    setActionVisible(this.el.btnUnoAction,(myHand.length >= 1 && myHand.length <= 2 && canCallUno)||this.unoConfirmedUntil>Date.now());
     this.el.btnUnoAction.textContent = 'Call UNO';
     if (canCatchUno) {
       const caughtPlayer = gameState.players.find((p) => p.id === canCatchUno);
@@ -3722,6 +3694,11 @@ class UnoArenaApp {
     this.renderRouletteWheelSvg();
 
     document.getElementById('rouletteTitle').textContent=isTargetPlayer?'COLOR ROULETTE':'Roulette in progress';
+    let matchup=document.getElementById('rouletteMatchup');if(!matchup){matchup=document.createElement('p');matchup.id='rouletteMatchup';document.getElementById('rouletteTitle').closest('.color-picker-header')?.append(matchup);if(!matchup.isConnected)this.el.rouletteSubtitle.after(matchup);}
+    const action=this.gameState.pendingAction?.type==='color_roulette'?this.gameState.pendingAction:this.gameState.rouletteResult;
+    const sender=this.gameState.players.find(p=>p.id===(action?.sourcePlayerId||this.gameState.lastPlay?.playerId));const receiver=this.gameState.players.find(p=>p.id===action?.targetPlayerId);
+    matchup.textContent=(sender?.name||'Player')+' → '+(receiver?.name||'Player');
+    const brand=this.el.rouletteModal.querySelector('.color-picker-badge');if(brand&&!brand.querySelector('svg')){const navLogo=document.querySelector('.top-nav svg[viewBox="75 80 910 565"]');if(navLogo)brand.replaceChildren(navLogo.cloneNode(true));}
     this.isRouletteInteractive = isTargetPlayer;
     this.isRouletteDecelerating = false;
 

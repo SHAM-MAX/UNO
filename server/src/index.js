@@ -510,6 +510,9 @@ wss.on('connection', (ws, req) => {
           const validEmotes = ['laugh', 'shocked', 'fire', 'lightning', 'skull', 'cry'];
           const emoteId = String(data?.emoteId || '').toLowerCase();
           if (!validEmotes.includes(emoteId)) break;
+          const targetPlayerId = data?.targetPlayerId || null;
+          const reactionRoom = roomManager.getRoom(cleanRoomId);
+          if (!reactionRoom || (targetPlayerId && (targetPlayerId === playerId || !reactionRoom.players.some(p => p.id === targetPlayerId && !p.isEliminated)))) break;
           const now = Date.now();
           if (authenticated.lastReactionAt && now - authenticated.lastReactionAt < 1500) {
             break; // Rate limit 1.5s
@@ -517,7 +520,7 @@ wss.on('connection', (ws, req) => {
           authenticated.lastReactionAt = now;
           const msg = JSON.stringify({
             type: 'player_reaction',
-            data: { playerId, emoteId, timestamp: now },
+            data: { playerId, targetPlayerId, emoteId, timestamp: now },
           });
           for (const [otherWs, meta] of clientSockets.forRoom(cleanRoomId).entries()) {
             if (meta.roomId === cleanRoomId && otherWs.readyState === WebSocket.OPEN) {
