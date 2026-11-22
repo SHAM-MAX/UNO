@@ -21,3 +21,6 @@ html body.in-arena :is(#leaveBtn,#arenaLeaveBtn,#mobileNavLeaveBtn){font-size:13
 html body.in-arena :is(#leaveBtn,#arenaLeaveBtn,#mobileNavLeaveBtn) span{font-size:inherit!important;line-height:inherit!important}
 
 html body.in-arena.round-table-layout .top-nav #fullscreenToggleBtn,html body.in-arena.round-table-layout .top-nav #settingsBtn{background:#F41908!important;color:white!important}
+
+/* Landing navigation: fullscreen at the left edge, settings at the right. */
+html body:not(.in-room):not(.in-mode-setup) .top-nav #fullscreenToggleBtn,html body:not(.in-room):not(.in-mode-setup) .mobile-nav-bar #mobileNavFullscreenBtn{position:absolute!important;left:12px!important;right:auto!important;top:50%!important;transform:translateY(-50%)!important;margin:0!important}

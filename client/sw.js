@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-mobile-performance-v60';
+const CACHE_NAME = 'uno-arena-left-fullscreen-v61';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
