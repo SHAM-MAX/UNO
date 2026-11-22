@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-deck-penalty-tap-v69';
+const CACHE_NAME = 'uno-arena-pixel-action-buttons-v70';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -32,6 +32,9 @@ const STATIC_SHELL_ASSETS = [
   '/player-hud.js',
   '/draw-hint.js',
   '/live-actions.js',
+  '/assets/action-buttons/call-uno.png',
+  '/assets/action-buttons/caught.png',
+  '/assets/action-buttons/pass-turn.png',
   '/live-actions.css?v=1',
   '/player-hud.css?v=1',
   '/card-atlas-manifest.js',
