@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-launch-intro-v73';
+const CACHE_NAME = 'uno-arena-launch-intro-v74';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -119,7 +119,7 @@ self.addEventListener('fetch', (event) => {
   // Network-first with cache fallback for navigation / HTML
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: 'reload' })
         .catch(async () => (await caches.match('/index.html')) || (await caches.match('/')) || Response.error())
     );
     return;

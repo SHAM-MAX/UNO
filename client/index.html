@@ -20,6 +20,10 @@
       height: auto;
       animation: launch-logo-enter 480ms cubic-bezier(.2,.8,.2,1) both;
     }
+    .launch-intro.is-waiting,
+    .launch-intro.is-waiting svg {
+      animation-play-state: paused;
+    }
     @keyframes launch-logo-enter {
       from { opacity: 0; transform: scale(.88); }
       to { opacity: 1; transform: scale(1); }
@@ -94,6 +98,26 @@
       <image href="./assets/uno-brand-v4.png" width="1024" height="765" filter="url(#unoLogoRedInk)"/>
     </svg>
   </div>
+
+  <script>
+    (() => {
+      const intro = document.querySelector('.launch-intro');
+      intro.classList.add('is-waiting');
+
+      function startWhenVisible() {
+        if (document.visibilityState !== 'visible') return;
+
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (document.visibilityState !== 'visible') return;
+          intro.classList.remove('is-waiting');
+          document.removeEventListener('visibilitychange', startWhenVisible);
+        }));
+      }
+
+      document.addEventListener('visibilitychange', startWhenVisible);
+      startWhenVisible();
+    })();
+  </script>
 
   <!-- Top Navigation Bar -->
   <header class="top-nav">
