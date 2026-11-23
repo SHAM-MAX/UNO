@@ -4,6 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>UNO Arena - Online Multiplayer Card Game</title>
+  <link rel="preload" as="image" href="./assets/uno-brand-v4.png">
+  <style>
+    .launch-intro {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      display: grid;
+      place-items: center;
+      background: #F5CE00;
+      animation: launch-intro-exit 1.55s ease-in-out both;
+    }
+    .launch-intro svg {
+      width: min(64vw, 400px, 72vh);
+      height: auto;
+      animation: launch-logo-enter 480ms cubic-bezier(.2,.8,.2,1) both;
+    }
+    @keyframes launch-logo-enter {
+      from { opacity: 0; transform: scale(.88); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes launch-intro-exit {
+      0%, 68% { opacity: 1; visibility: visible; }
+      100% { opacity: 0; visibility: hidden; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .launch-intro { display: none; }
+    }
+  </style>
   <link rel="manifest" href="./manifest.json">
   <link rel="stylesheet" href="./install.css?v=1">
   <script type="module" src="./install.js?v=1"></script>
@@ -60,6 +88,12 @@
       <feFlood flood-color="#fff1b4" flood-opacity=".8" result="highlightInk"/>
       <feComposite in="highlightInk" in2="highlightMask" operator="in" result="highlight"/>
       <feMerge><feMergeNode in="softShadow"/><feMergeNode in="depthEnd"/><feMergeNode in="depthFar"/><feMergeNode in="depthMid"/><feMergeNode in="depthNear"/><feMergeNode in="darkOutline"/><feMergeNode in="redLettering"/><feMergeNode in="highlight"/></feMerge></filter></defs></svg>
+
+  <div class="launch-intro" aria-hidden="true">
+    <svg viewBox="75 80 910 565">
+      <image href="./assets/uno-brand-v4.png" width="1024" height="765" filter="url(#unoLogoRedInk)"/>
+    </svg>
+  </div>
 
   <!-- Top Navigation Bar -->
   <header class="top-nav">
