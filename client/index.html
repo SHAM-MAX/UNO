@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>UNO Arena - Online Multiplayer Card Game</title>
-  <link rel="preload" as="image" href="./assets/uno-brand-v4.png">
+  <link rel="preload" as="image" href="./assets/uno-wordmark-512.png">
   <style>
     .launch-intro {
       position: fixed;
@@ -15,13 +15,13 @@
       background: #F5CE00;
       animation: launch-intro-exit 1.55s ease-in-out both;
     }
-    .launch-intro svg {
+    .launch-intro img {
       width: min(64vw, 400px, 72vh);
       height: auto;
       animation: launch-logo-enter 480ms cubic-bezier(.2,.8,.2,1) both;
     }
     .launch-intro.is-waiting,
-    .launch-intro.is-waiting svg {
+    .launch-intro.is-waiting img {
       animation-play-state: paused;
     }
     @keyframes launch-logo-enter {
@@ -63,10 +63,10 @@
   <link rel="stylesheet" href="./player-hud.css?v=1">
   <link rel="stylesheet" href="./live-actions.css?v=1">
   <link rel="stylesheet" href="./reaction-stickers.css?v=1">
-  <link rel="icon" type="image/png" sizes="32x32" href="./assets/game-icon-round-32.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="./assets/game-icon-round-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="./assets/game-icon-round-512.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="./assets/game-icon-round-180.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/uno-wordmark-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/uno-wordmark-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./assets/uno-wordmark-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/uno-wordmark-180.png">
   <meta property="og:image" content="/assets/uno-brand-v4.png">
   <script>
     (function() {
@@ -94,9 +94,7 @@
       <feMerge><feMergeNode in="softShadow"/><feMergeNode in="depthEnd"/><feMergeNode in="depthFar"/><feMergeNode in="depthMid"/><feMergeNode in="depthNear"/><feMergeNode in="darkOutline"/><feMergeNode in="redLettering"/><feMergeNode in="highlight"/></feMerge></filter></defs></svg>
 
   <div class="launch-intro" aria-hidden="true">
-    <svg viewBox="75 80 910 565">
-      <image href="./assets/uno-brand-v4.png" width="1024" height="765" filter="url(#unoLogoRedInk)"/>
-    </svg>
+    <img src="./assets/uno-wordmark-512.png" width="512" height="512" alt="">
   </div>
 
   <script>
@@ -1019,7 +1017,7 @@
         <!-- Close button (dismisses celebration to reveal table) -->
 
 
-        <div class="victory-eyebrow"><img src="./assets/game-icon-round-192.png" alt="" loading="lazy" decoding="async"><span>UNO ARENA <b> / </b> MATCH COMPLETE</span></div>
+        <div class="victory-eyebrow"><img src="./assets/uno-wordmark-192.png" alt="" loading="lazy" decoding="async"><span>UNO ARENA <b> / </b> MATCH COMPLETE</span></div>
         <!-- Top UNO Decorative Ribbon -->
         <div class="victory-ribbon-bar" aria-hidden="true">
           <span class="ribbon-seg red"></span>
