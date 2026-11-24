@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>UNO Arena - Online Multiplayer Card Game</title>
+  <link rel="preload" as="image" href="./assets/uno-wordmark-512.png">
   <style>
     .launch-intro {
       position: fixed;
@@ -12,38 +13,44 @@
       display: grid;
       place-items: center;
       background: #F5CE00;
-      pointer-events: none;
-      animation: launch-intro-exit 2.65s ease-in-out both;
+      animation: launch-intro-exit 1.55s ease-in-out both;
     }
-    .launch-wordmark { width: min(84vw, 760px, 125vh); height: auto; overflow: visible; }
-    .launch-letter {
-      transform-box: fill-box;
-      transform-origin: center;
-      animation: launch-letter-land 730ms cubic-bezier(.22,.72,.24,1) both;
-    }
-    .launch-letter-u { --entry: translate(-28%, 55%) rotate(-16deg) scale(.65); }
-    .launch-letter-n { --entry: translate(0, -62%) rotate(12deg) scale(.66); animation-delay: 130ms; }
-    .launch-letter-o { --entry: translate(65%, 10%) rotate(65deg) scale(.58); animation-delay: 260ms; }
-    .launch-accent {
-      transform-origin: 500px 350px;
-      animation: launch-accent-pop 520ms 820ms ease-out both;
+    .launch-intro img {
+      width: min(64vw, 400px, 72vh);
+      height: auto;
+      animation: launch-logo-enter 480ms cubic-bezier(.2,.8,.2,1) both;
     }
     .launch-intro.is-waiting,
-    .launch-intro.is-waiting .launch-letter,
-    .launch-intro.is-waiting .launch-accent { animation-play-state: paused; }
-    @keyframes launch-letter-land {
-      0% { opacity: 0; transform: var(--entry); }
-      55% { opacity: 1; transform: translateY(2%) scale(1.09,.92); }
-      76% { transform: translateY(-3%) scale(.98,1.04); }
-      100% { opacity: 1; transform: none; }
+    .launch-intro.is-waiting img {
+      animation-play-state: paused;
     }
-    @keyframes launch-accent-pop {
-      0% { opacity: 0; transform: scale(.68); }
-      30% { opacity: 1; }
-      100% { opacity: 0; transform: scale(1.16); }
+    .launch-intro video {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: min(100vw, calc(100dvh * 848 / 478), 1280px);
+      height: auto;
+      aspect-ratio: 848 / 478;
+      transform: translate(-50%, -50%);
+      object-fit: contain;
+      filter: url(#launch-video-color);
+      mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent),
+                  linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+      mask-composite: intersect;
+      visibility: hidden;
+    }
+    .launch-intro.is-playing video { visibility: visible; }
+    .launch-intro.is-finished {
+      animation: none;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease-out;
+    }
+    @keyframes launch-logo-enter {
+      from { opacity: 0; transform: scale(.88); }
+      to { opacity: 1; transform: scale(1); }
     }
     @keyframes launch-intro-exit {
-      0%, 86% { opacity: 1; visibility: visible; pointer-events: auto; }
+      0%, 68% { opacity: 1; visibility: visible; }
       100% { opacity: 0; visibility: hidden; }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -108,52 +115,65 @@
       <feMerge><feMergeNode in="softShadow"/><feMergeNode in="depthEnd"/><feMergeNode in="depthFar"/><feMergeNode in="depthMid"/><feMergeNode in="depthNear"/><feMergeNode in="darkOutline"/><feMergeNode in="redLettering"/><feMergeNode in="highlight"/></feMerge></filter></defs></svg>
 
   <div class="launch-intro" aria-hidden="true">
-    <svg class="launch-wordmark" viewBox="35 45 970 610" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <path id="launch-u" d="M153 319 193 305 254 464Q272 515 314 498Q354 482 337 435L276 275 317 259 382 424Q416 508 333 544Q249 581 215 493Z"/>
-        <path id="launch-n" d="M343 253 386 239 547 365 490 200 535 184 628 449 583 465 424 339 481 506 436 521Z"/>
-        <path id="launch-o" fill-rule="evenodd" d="M692 132C765 102 842 133 876 213C911 296 880 372 806 403C731 434 655 400 621 322C587 240 617 163 692 132ZM709 178C662 198 649 246 671 301C693 354 740 377 787 357C834 337 847 290 825 235C803 182 756 158 709 178Z"/>
-      </defs>
-      <g class="launch-accent" fill="none" stroke-linecap="round" stroke-width="12">
-        <path stroke="#D82014" d="M109 271 80 257M859 99 879 72M904 405 946 416"/>
-        <path stroke="#9B531B" d="M142 533 120 551M504 564 501 589M568 141 577 115"/>
-      </g>
-      <g stroke-linejoin="round" paint-order="stroke">
-        <g class="launch-letter launch-letter-u">
-          <use href="#launch-u" transform="translate(-14 20)" fill="#171C24" stroke="#171C24" stroke-width="28"/>
-          <use href="#launch-u" fill="#EE2014" stroke="#171C24" stroke-width="26"/>
-          <use href="#launch-u" fill="#EE2014" stroke="#FFB830" stroke-width="8"/>
-        </g>
-        <g class="launch-letter launch-letter-n">
-          <use href="#launch-n" transform="translate(-14 20)" fill="#171C24" stroke="#171C24" stroke-width="28"/>
-          <use href="#launch-n" fill="#EE2014" stroke="#171C24" stroke-width="26"/>
-          <use href="#launch-n" fill="#EE2014" stroke="#FFB830" stroke-width="8"/>
-        </g>
-        <g class="launch-letter launch-letter-o">
-          <g transform="translate(35 -12)">
-            <use href="#launch-o" transform="translate(-14 20)" fill="#171C24" stroke="#171C24" stroke-width="28"/>
-            <use href="#launch-o" fill="#EE2014" stroke="#171C24" stroke-width="26"/>
-            <use href="#launch-o" fill="#EE2014" stroke="#FFB830" stroke-width="8"/>
-          </g>
-        </g>
-      </g>
+    <img src="./assets/uno-wordmark-512.png" width="512" height="512" alt="">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <filter id="launch-video-color" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feConvolveMatrix order="3" kernelMatrix="0 -.14 0 -.14 1.56 -.14 0 -.14 0" edgeMode="duplicate" preserveAlpha="true" result="sharp"/>
+        <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 12 -6.6 0 -7.7" result="yellowMask"/>
+        <feFlood flood-color="#F5CE00" result="yellow"/>
+        <feComposite in="yellow" in2="yellowMask" operator="in" result="matchedYellow"/>
+        <feMerge><feMergeNode in="sharp"/><feMergeNode in="matchedYellow"/></feMerge>
+      </filter>
     </svg>
+    <video src="./assets/uno-launch-intro.mp4" preload="none" muted playsinline disablepictureinpicture></video>
   </div>
+
   <script>
     (() => {
       const intro = document.querySelector('.launch-intro');
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-      function startWhenVisible() {
-        if (document.visibilityState !== 'visible') return;
-        intro.classList.remove('is-waiting');
-        document.removeEventListener('visibilitychange', startWhenVisible);
+      const video = intro.querySelector('video');
+      let finished = false;
+      let timeout;
+      intro.classList.add('is-waiting');
+
+      function finish() {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timeout);
+        video.pause();
+        if (intro.classList.contains('is-playing')) {
+          intro.classList.add('is-finished');
+        } else {
+          intro.classList.remove('is-waiting');
+        }
       }
 
-      if (document.visibilityState !== 'visible') {
-        intro.classList.add('is-waiting');
-        document.addEventListener('visibilitychange', startWhenVisible);
+      video.addEventListener('playing', () => {
+        if (finished) return;
+        intro.classList.add('is-playing');
+        clearTimeout(timeout);
+        timeout = setTimeout(finish, 7000);
+      }, { once: true });
+      video.addEventListener('ended', finish, { once: true });
+      video.addEventListener('error', finish, { once: true });
+
+      function startWhenVisible() {
+        if (document.visibilityState !== 'visible') return;
+
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (document.visibilityState !== 'visible') return;
+          document.removeEventListener('visibilitychange', startWhenVisible);
+          if (finished || timeout !== undefined) return;
+          timeout = setTimeout(finish, 1800);
+          video.muted = true;
+          video.play().catch(finish);
+        }));
       }
+
+      document.addEventListener('visibilitychange', startWhenVisible);
+      startWhenVisible();
     })();
   </script>
 
