@@ -24,6 +24,21 @@
     .launch-intro.is-waiting img {
       animation-play-state: paused;
     }
+    .launch-intro video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      visibility: hidden;
+    }
+    .launch-intro.is-playing video { visibility: visible; }
+    .launch-intro.is-finished {
+      animation: none;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease-out;
+    }
     @keyframes launch-logo-enter {
       from { opacity: 0; transform: scale(.88); }
       to { opacity: 1; transform: scale(1); }
@@ -95,20 +110,50 @@
 
   <div class="launch-intro" aria-hidden="true">
     <img src="./assets/uno-wordmark-512.png" width="512" height="512" alt="">
+    <video src="./assets/uno-launch-intro.mp4" preload="none" muted playsinline disablepictureinpicture></video>
   </div>
 
   <script>
     (() => {
       const intro = document.querySelector('.launch-intro');
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const video = intro.querySelector('video');
+      let finished = false;
+      let timeout;
       intro.classList.add('is-waiting');
+
+      function finish() {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timeout);
+        video.pause();
+        if (intro.classList.contains('is-playing')) {
+          intro.classList.add('is-finished');
+        } else {
+          intro.classList.remove('is-waiting');
+        }
+      }
+
+      video.addEventListener('playing', () => {
+        if (finished) return;
+        intro.classList.add('is-playing');
+        clearTimeout(timeout);
+        timeout = setTimeout(finish, 7000);
+      }, { once: true });
+      video.addEventListener('ended', finish, { once: true });
+      video.addEventListener('error', finish, { once: true });
 
       function startWhenVisible() {
         if (document.visibilityState !== 'visible') return;
 
         requestAnimationFrame(() => requestAnimationFrame(() => {
           if (document.visibilityState !== 'visible') return;
-          intro.classList.remove('is-waiting');
           document.removeEventListener('visibilitychange', startWhenVisible);
+          if (finished || timeout !== undefined) return;
+          timeout = setTimeout(finish, 1800);
+          video.muted = true;
+          video.play().catch(finish);
         }));
       }
 
