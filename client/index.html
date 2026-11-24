@@ -12,46 +12,43 @@
       z-index: 2147483647;
       display: grid;
       place-items: center;
+      overflow: hidden;
       background: #F5CE00;
-      animation: launch-intro-exit 1.55s ease-in-out both;
+      animation: launch-intro-exit 4.29s ease-in-out both;
     }
-    .launch-intro img {
-      width: min(64vw, 400px, 72vh);
-      height: auto;
-      animation: launch-logo-enter 480ms cubic-bezier(.2,.8,.2,1) both;
+    .launch-art { width: min(100vw, 145vh, 1500px); height: auto; display: block; }
+    .launch-letter {
+      transform-box: view-box;
+      transform-origin: center;
+      animation: launch-letter-enter .79s var(--delay, 0s) cubic-bezier(.22,.7,.25,1) both;
+    }
+    .launch-pieces { animation: launch-pieces-hide 1.72s step-end both; }
+    .launch-complete { animation: launch-complete-show 1.72s step-end both; }
+    .launch-confetti {
+      transform-box: view-box;
+      transform-origin: center;
+      animation: launch-confetti-pop 2.5s 1.15s ease-out both;
     }
     .launch-intro.is-waiting,
-    .launch-intro.is-waiting img {
-      animation-play-state: paused;
+    .launch-intro.is-waiting .launch-art * { animation-play-state: paused; }
+    @keyframes launch-letter-enter {
+      0% { opacity: 0; transform: var(--entry); }
+      18% { opacity: 1; }
+      63% { transform: translate(var(--land-x, 0), -2%) scale(1.035,.955); }
+      81% { transform: translateY(-3%) scale(.99,1.015); }
+      100% { opacity: 1; transform: none; }
     }
-    .launch-intro video {
-      position: absolute;
-      inset: 50% auto auto 50%;
-      width: min(100vw, calc(100dvh * 848 / 478), 1280px);
-      height: auto;
-      aspect-ratio: 848 / 478;
-      transform: translate(-50%, -50%);
-      object-fit: contain;
-      filter: url(#launch-video-color);
-      mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent),
-                  linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
-      mask-composite: intersect;
-      visibility: hidden;
-    }
-    .launch-intro.is-playing video { visibility: visible; }
-    .launch-intro.is-finished {
-      animation: none;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 220ms ease-out;
-    }
-    @keyframes launch-logo-enter {
-      from { opacity: 0; transform: scale(.88); }
-      to { opacity: 1; transform: scale(1); }
+    @keyframes launch-pieces-hide { to { opacity: 0; } }
+    @keyframes launch-complete-show { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes launch-confetti-pop {
+      0% { opacity: 0; transform: scale(.58); }
+      23% { opacity: .8; }
+      74% { opacity: .59; }
+      100% { opacity: 0; transform: translateY(3%) scale(1.13); }
     }
     @keyframes launch-intro-exit {
-      0%, 68% { opacity: 1; visibility: visible; }
-      100% { opacity: 0; visibility: hidden; }
+      0%, 94% { opacity: 1; visibility: visible; pointer-events: auto; }
+      100% { opacity: 0; visibility: hidden; pointer-events: none; }
     }
     @media (prefers-reduced-motion: reduce) {
       .launch-intro { display: none; }
@@ -115,65 +112,69 @@
       <feMerge><feMergeNode in="softShadow"/><feMergeNode in="depthEnd"/><feMergeNode in="depthFar"/><feMergeNode in="depthMid"/><feMergeNode in="depthNear"/><feMergeNode in="darkOutline"/><feMergeNode in="redLettering"/><feMergeNode in="highlight"/></feMerge></filter></defs></svg>
 
   <div class="launch-intro" aria-hidden="true">
-    <img src="./assets/uno-wordmark-512.png" width="512" height="512" alt="">
-    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-      <filter id="launch-video-color" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-        <feConvolveMatrix order="3" kernelMatrix="0 -.14 0 -.14 1.56 -.14 0 -.14 0" edgeMode="duplicate" preserveAlpha="true" result="sharp"/>
-        <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 12 -6.6 0 -7.7" result="yellowMask"/>
-        <feFlood flood-color="#F5CE00" result="yellow"/>
-        <feComposite in="yellow" in2="yellowMask" operator="in" result="matchedYellow"/>
-        <feMerge><feMergeNode in="sharp"/><feMergeNode in="matchedYellow"/></feMerge>
-      </filter>
+    <svg class="launch-art" viewBox="0 0 1100 620" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <image id="launch-original-wordmark" href="./assets/uno-wordmark-512.png" x="273" y="33" width="554" height="554"/>
+        <clipPath id="launch-clip-u"><path d="M250 100H416L528 480V530H250Z"/></clipPath>
+        <clipPath id="launch-clip-n"><path d="M416 100H576L715 480V530H528V480Z"/></clipPath>
+        <clipPath id="launch-clip-o"><path d="M576 100H850V530H715V480Z"/></clipPath>
+      </defs>
+      <g class="launch-confetti">
+        <g transform="translate(840 310)" fill="#a65b14"><path d="M-7 -5 8 -3 -1 8Z" transform="rotate(0)"/></g>
+        <g transform="translate(298 440)" fill="#fff1ac"><circle r="5"/></g>
+        <g transform="translate(584 101)" fill="#df6113"><circle r="6"/></g>
+        <g transform="translate(821 491)" fill="#ed9a02"><circle r="7"/></g>
+        <g transform="translate(60 267)" fill="#a65b14"><path d="M-7 -5 8 -3 -1 8Z" transform="rotate(212)"/></g>
+        <g transform="translate(795 168)" fill="#fff1ac"><circle r="9"/></g>
+        <g transform="translate(461 478)" fill="#df6113"><circle r="10"/></g>
+        <g transform="translate(368 140)" fill="#ed9a02"><circle r="4"/></g>
+        <g transform="translate(969 382)" fill="#a65b14"><path d="M-7 -5 8 -3 -1 8Z" transform="rotate(424)"/></g>
+        <g transform="translate(90 397)" fill="#fff1ac"><circle r="6"/></g>
+        <g transform="translate(673 87)" fill="#df6113"><circle r="7"/></g>
+        <g transform="translate(652 562)" fill="#ed9a02"><circle r="8"/></g>
+        <g transform="translate(209 223)" fill="#a65b14"><path d="M-7 -5 8 -3 -1 8Z" transform="rotate(636)"/></g>
+        <g transform="translate(986 269)" fill="#fff1ac"><circle r="10"/></g>
+        <g transform="translate(264 482)" fill="#df6113"><circle r="4"/></g>
+        <g transform="translate(513 84)" fill="#ed9a02"><circle r="5"/></g>
+        <g transform="translate(812 469)" fill="#a65b14"><path d="M-7 -5 8 -3 -1 8Z" transform="rotate(848)"/></g>
+        <g transform="translate(156 321)" fill="#fff1ac"><circle r="7"/></g>
+        <g transform="translate(866 187)" fill="#df6113"><circle r="8"/></g>
+        <g transform="translate(527 502)" fill="#ed9a02"><circle r="9"/></g>
+        <g transform="translate(364 149)" fill="#a65b14"><path d="M-7 -5 8 -3 -1 8Z" transform="rotate(1060)"/></g>
+        <g transform="translate(889 340)" fill="#fff1ac"><circle r="4"/></g>
+        <g transform="translate(227 451)" fill="#df6113"><circle r="5"/></g>
+        <g transform="translate(648 52)" fill="#ed9a02"><circle r="6"/></g>
+        <g transform="translate(798 461)" fill="#a65b14"><path d="M-7 -5 8 -3 -1 8Z" transform="rotate(1272)"/></g>
+        <g transform="translate(274 252)" fill="#fff1ac"><circle r="8"/></g>
+        <g transform="translate(860 222)" fill="#df6113"><circle r="9"/></g>
+        <g transform="translate(398 520)" fill="#ed9a02"><circle r="10"/></g>
+      </g>
+      <g class="launch-pieces">
+        <g class="launch-letter" style="--entry:translate(-10%,42%) rotate(-12deg) scale(.68);--land-x:-1%">
+          <use href="#launch-original-wordmark" clip-path="url(#launch-clip-u)"/>
+        </g>
+        <g class="launch-letter" style="--delay:.3s;--entry:translate(-9%,-37%) rotate(10deg) scale(.7)">
+          <use href="#launch-original-wordmark" clip-path="url(#launch-clip-n)"/>
+        </g>
+        <g class="launch-letter" style="--delay:.59s;--entry:translate(29%,2%) rotate(28deg) scale(.72);--land-x:1%">
+          <use href="#launch-original-wordmark" clip-path="url(#launch-clip-o)"/>
+        </g>
+      </g>
+      <use class="launch-complete" href="#launch-original-wordmark"/>
     </svg>
-    <video src="./assets/uno-launch-intro.mp4?v=2" preload="none" muted playsinline disablepictureinpicture></video>
   </div>
 
   <script>
     (() => {
       const intro = document.querySelector('.launch-intro');
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-      const video = intro.querySelector('video');
-      let finished = false;
-      let timeout;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches || !document.hidden) return;
       intro.classList.add('is-waiting');
-
-      function finish() {
-        if (finished) return;
-        finished = true;
-        clearTimeout(timeout);
-        video.pause();
-        if (intro.classList.contains('is-playing')) {
-          intro.classList.add('is-finished');
-        } else {
-          intro.classList.remove('is-waiting');
-        }
+      function resumeIntro() {
+        if (document.hidden) return;
+        intro.classList.remove('is-waiting');
+        document.removeEventListener('visibilitychange', resumeIntro);
       }
-
-      video.addEventListener('playing', () => {
-        if (finished) return;
-        intro.classList.add('is-playing');
-        clearTimeout(timeout);
-        timeout = setTimeout(finish, 7000);
-      }, { once: true });
-      video.addEventListener('ended', finish, { once: true });
-      video.addEventListener('error', finish, { once: true });
-
-      function startWhenVisible() {
-        if (document.visibilityState !== 'visible') return;
-
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          if (document.visibilityState !== 'visible') return;
-          document.removeEventListener('visibilitychange', startWhenVisible);
-          if (finished || timeout !== undefined) return;
-          timeout = setTimeout(finish, 1800);
-          video.muted = true;
-          video.play().catch(finish);
-        }));
-      }
-
-      document.addEventListener('visibilitychange', startWhenVisible);
-      startWhenVisible();
+      document.addEventListener('visibilitychange', resumeIntro);
     })();
   </script>
 

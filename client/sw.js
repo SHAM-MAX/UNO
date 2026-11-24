@@ -1,5 +1,5 @@
 // UNO Arena Service Worker — Version 2.2.0
-const CACHE_NAME = 'uno-arena-launch-intro-v83';
+const CACHE_NAME = 'uno-arena-launch-intro-v84';
 const STATIC_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -113,7 +113,6 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/health') ||
     url.protocol === 'ws:' ||
     url.protocol === 'wss:' ||
-    url.pathname === '/assets/uno-launch-intro.mp4' ||
     event.request.method !== 'GET'
   ) {
     return;
